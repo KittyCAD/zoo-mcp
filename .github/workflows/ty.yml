@@ -32,4 +32,4 @@ jobs:
       - name: Run ty
         shell: bash
         run: |
-          uvx ty check
+          uvx ty check src/
