@@ -37,6 +37,6 @@ where = ["src"]
 [dependency-groups]
 dev = [
     "ty>=0.0.1a20",
-    "pytest",
+    "pytest-asyncio==1.1.0",
     "ruff==0.12.11"
 ]
