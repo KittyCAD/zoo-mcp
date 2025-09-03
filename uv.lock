@@ -789,7 +789,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pytest-asyncio" },
+    { name = "pytest-asyncio", specifier = "==1.1.0" },
     { name = "ruff", specifier = "==0.12.11" },
     { name = "ty", specifier = ">=0.0.1a20" },
 ]
