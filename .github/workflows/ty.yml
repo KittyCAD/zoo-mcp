@@ -1,0 +1,35 @@
+name: ty
+on:
+  push:
+    branches: main
+    paths:
+      - '**.py'
+      - ty.yml
+      - 'pyproject.toml'
+  pull_request:
+    paths:
+      - '**.py'
+      - ty.yml
+      - 'pyproject.toml'
+jobs:
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install the project
+        run: uv sync --dev
+
+      - name: Run ty
+        shell: bash
+        run: |
+          uvx ty check
