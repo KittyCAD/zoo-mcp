@@ -1,7 +1,12 @@
 import time
 
 from kittycad import KittyCAD
-from kittycad.models import ApiCallStatus, FileExportFormat, TextToCadCreateBody, TextToCad
+from kittycad.models import (
+    ApiCallStatus,
+    FileExportFormat,
+    TextToCad,
+    TextToCadCreateBody,
+)
 
 kittycad_client = KittyCAD()
 
