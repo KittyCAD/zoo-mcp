@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zoo-mcp"
+version = "0.0.1"
+requires-python = ">=3.12"
+
+dependencies = [
+    "kittycad==1.1.0",
+    "mcp[cli]==1.13.1",
+    "setuptools~=80.9",
+]
+
+authors = [
+    { name = "Ryan Barton", email = "ryan@zoo.dev" },
+]
+maintainers = [
+    { name = "Ryan Barton", email = "ryan@zoo.dev" }
+]
+description = "An MCP server utilizing Zoo's various tools"
+readme = "README.md"
+
+[project.urls]
+Repository = "https://github.com/KittyCAD/zoo-mcp"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.*"]
+
+[dependency-groups]
+dev = [
+    "ty>=0.0.1a20",
+    "pytest",
+    "ruff==0.12.11"
+]
