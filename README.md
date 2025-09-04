@@ -52,5 +52,5 @@ The server can be integrated with [Claude desktop](https://claude.ai/download) u
 
 The server can also be tested using the [MCP Inspector](https://modelcontextprotocol.io/legacy/tools/inspector#python)
 ```bash
-  uv run mcp dev server.py
+  uv run mcp dev src/zoo_mcp/server.py
 ```
