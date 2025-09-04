@@ -1,6 +1,13 @@
 # Zoo Model Context Protocol (MCP) Server
 An MCP server housing various Zoo built utilities
 
+## Prerequisites
+1. An API key for Zoo, get one [here](https://zoo.dev/account)
+2. An environment variable `ZOO_API_TOKEN` set to your API key
+    ```bash
+    export ZOO_API_TOKEN="your_api_key_here"
+    ```
+
 ## Installation
 1. [Ensure uv has been installed](https://docs.astral.sh/uv/getting-started/installation/)
 
@@ -18,8 +25,15 @@ An MCP server housing various Zoo built utilities
 
 ## Running the Server
 
-The server can be started locally by using uv
-`uv run -m zoo_mcp`
+The server can be started locally by using uv and the zoo_mcp module
+```bash
+  uv run -m zoo_mcp
+```
+
+The server can also be run with the [mcp package](https://github.com/modelcontextprotocol/python-sdk)
+```bash
+  uv run mcp run src/zoo_mcp/server.py
+```
 
 ## Integrations
 
