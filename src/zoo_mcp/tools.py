@@ -1,4 +1,4 @@
-import time
+import asyncio
 
 from kittycad import KittyCAD
 from kittycad.models import (
@@ -36,7 +36,7 @@ async def text_to_cad(prompt: str) -> str:
     # check if the request has either completed or failed, otherwise sleep and try again
     while result.root.status not in [ApiCallStatus.COMPLETED, ApiCallStatus.FAILED]:
         result = kittycad_client.ml.get_text_to_cad_model_for_user(id=t2c.id)
-        time.sleep(5)
+        await asyncio.sleep(5)
 
     # get the data object (root) of the response
     response = result.root
