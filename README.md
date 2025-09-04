@@ -30,7 +30,7 @@ from zoo_mcp.server import mcp
 mcp.run()
 ```
 
-Individual tools can be used in your own code as well
+Individual tools can be used in your own python code as well
 ```python
 from mcp.server.fastmcp import FastMCP
 from zoo_mcp.tools import text_to_cad
@@ -43,4 +43,14 @@ async def my_text_text_to_cad(prompt: str) -> str:
     Example tool that uses the text_to_cad function from zoo_mcp.tools
     """
     return await text_to_cad(prompt=prompt)
+```
+
+The server can be integrated with [Claude desktop](https://claude.ai/download) using the following command
+```bash 
+  uv run mcp install src/zoo_mcp/server.py
+```
+
+The server can also be tested using the [MCP Inspector](https://modelcontextprotocol.io/legacy/tools/inspector#python)
+```bash
+  uv run mcp dev server.py
 ```
