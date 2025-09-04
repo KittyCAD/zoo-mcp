@@ -1,7 +1,9 @@
 # Zoo Model Context Protocol (MCP) Server
+
 An MCP server housing various Zoo built utilities
 
 ## Prerequisites
+
 1. An API key for Zoo, get one [here](https://zoo.dev/account)
 2. An environment variable `ZOO_API_TOKEN` set to your API key
     ```bash
@@ -9,6 +11,7 @@ An MCP server housing various Zoo built utilities
     ```
 
 ## Installation
+
 1. [Ensure uv has been installed](https://docs.astral.sh/uv/getting-started/installation/)
 
 2. [Create a uv environment](https://docs.astral.sh/uv/pip/environments/)
