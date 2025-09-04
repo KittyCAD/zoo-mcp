@@ -1,11 +1,13 @@
 import sys
 
+from zoo_mcp import logger
 from zoo_mcp.server import mcp
 
 if __name__ == "__main__":
     try:
+        logger.info("Starting MCP server...")
         mcp.run()
 
     except KeyboardInterrupt:
-        print("Shutting down MCP server...")
+        logger.info("Shutting down MCP server...")
         sys.exit(0)
