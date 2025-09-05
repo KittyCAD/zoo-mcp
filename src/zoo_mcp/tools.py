@@ -12,7 +12,7 @@ kittycad_client = KittyCAD()
 
 
 async def text_to_cad(prompt: str) -> str:
-    """ Send a prompt to Zoo's Text To CAD endpoint
+    """Send a prompt to Zoo's Text To CAD endpoint
 
     Args:
         prompt (str): a description of the CAD model to be created

@@ -10,7 +10,7 @@ mcp = FastMCP(
 
 @mcp.tool()
 async def call_text_to_cad(prompt: str) -> str:
-    """ Generate CAD code from a text prompt.
+    """Generate CAD code from a text prompt.
 
     Args:
         prompt (str): The text prompt to be converted to CAD code.

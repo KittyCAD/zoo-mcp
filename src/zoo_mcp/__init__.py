@@ -2,6 +2,7 @@
 
 A lightweight service that enables AI assistants to execute Zoo commands through the Model Context Protocol (MCP).
 """
+
 import logging
 import sys
 from importlib.metadata import PackageNotFoundError, version
@@ -14,5 +15,7 @@ except PackageNotFoundError:
 
 FORMAT = "%(asctime)s | %(levelname)-7s | %(filename)s:%(lineno)d | %(funcName)s | %(message)s"
 
-logging.basicConfig(level=logging.INFO, format=FORMAT, handlers=[logging.StreamHandler(sys.stderr)])
+logging.basicConfig(
+    level=logging.INFO, format=FORMAT, handlers=[logging.StreamHandler(sys.stderr)]
+)
 logger = logging.getLogger("zoo_mcp")
