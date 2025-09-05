@@ -12,14 +12,14 @@ kittycad_client = KittyCAD()
 
 
 async def _text_to_cad(prompt: str) -> str:
-    """Send a prompt to Zoo's Text To CAD endpoint
+    """Send a prompt to Zoo's Text-To-CAD endpoint
 
     Args:
         prompt (str): a description of the CAD model to be created
 
     Returns:
-        A string containing the complete KCL code of the CAD model if Text To CAD was successful, otherwise an error
-        message from Text To CAD
+        A string containing the complete KCL code of the CAD model if Text-To-CAD was successful, otherwise an error
+        message from Text-To-CAD
     """
     # send prompt via the kittycad client
     t2c = kittycad_client.ml.create_text_to_cad(
