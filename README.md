@@ -82,9 +82,8 @@ PRs will need to pass tests and linting before being merged.
 
 ### [ruff](https://docs.astral.sh/ruff/) is used for linting and formatting.
 ```bash
-  uvx ruff check
-  uvx ruff format
-```
+uvx ruff check
+uvx ruff format
 
 ### [ty](https://docs.astral.sh/ty/) is used for type checking.
 ```bash
