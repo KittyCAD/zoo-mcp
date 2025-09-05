@@ -71,3 +71,10 @@ The server can also be tested using the [MCP Inspector](https://modelcontextprot
 ```bash
   uv run mcp dev src/zoo_mcp/server.py
 ```
+
+## Testing
+
+The server includes tests located in [`tests`](`tests`). To run the tests, use the following command:
+```bash
+  uv run pytest
+```
