@@ -6,13 +6,6 @@ from zoo_mcp.server import mcp
 
 
 @pytest.mark.asyncio
-async def test_text_to_cad():
-    prompt = "Create a 10x10x10 cube."
-    response = await mcp.call_tool("text_to_cad", arguments={"prompt": prompt})
-    assert isinstance(response, Sequence | dict)
-
-
-@pytest.mark.asyncio
 async def test_text_to_cad_success():
     prompt = "Create a 10x10x10 cube."
     response = await mcp.call_tool("text_to_cad", arguments={"prompt": prompt})
