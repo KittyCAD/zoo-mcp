@@ -13,8 +13,8 @@
 ### Testing and Quality
 - `uv run pytest` - Run all tests
 - `uv run pytest tests/test_server.py` - Run specific test file
-- `uv run ruff check` - Run linter
-- `uv run ruff format` - Format code
+- `uvx ruff check` - Run linter
+- `uvx ruff format` - Format code
 - `uvx ty check src/` - Type check source code
 
 ### Integration Commands
