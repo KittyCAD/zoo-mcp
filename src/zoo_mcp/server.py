@@ -18,7 +18,7 @@ async def text_to_cad(prompt: str) -> str:
     Returns:
         str: The generated KCL code if Text-to-CAD is successful, otherwise the error message.
     """
-    logger.info(f"Received Text-To-CAD prompt: {prompt}")
+    logger.info("Received Text-To-CAD prompt: %s", prompt)
     return await _text_to_cad(prompt=prompt)
 
 
