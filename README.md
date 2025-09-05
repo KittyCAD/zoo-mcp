@@ -30,7 +30,7 @@ An MCP server housing various Zoo built utilities
 
 The server can be started locally by using uv and the zoo_mcp module
 ```bash
-  uv run -m zoo_mcp
+uv run -m zoo_mcp
 ```
 
 The server can also be run with the [mcp package](https://github.com/modelcontextprotocol/python-sdk)
