@@ -71,7 +71,7 @@ uv run mcp install src/zoo_mcp/server.py
 
 The server can also be tested using the [MCP Inspector](https://modelcontextprotocol.io/legacy/tools/inspector#python)
 ```bash
-  uv run mcp dev src/zoo_mcp/server.py
+uv run mcp dev src/zoo_mcp/server.py
 ```
 
 ## Contributing
