@@ -66,7 +66,7 @@ async def my_text_text_to_cad(prompt: str) -> str:
 
 The server can be integrated with [Claude desktop](https://claude.ai/download) using the following command
 ```bash 
-  uv run mcp install src/zoo_mcp/server.py
+uv run mcp install src/zoo_mcp/server.py
 ```
 
 The server can also be tested using the [MCP Inspector](https://modelcontextprotocol.io/legacy/tools/inspector#python)
