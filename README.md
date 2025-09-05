@@ -72,6 +72,23 @@ The server can also be tested using the [MCP Inspector](https://modelcontextprot
   uv run mcp dev src/zoo_mcp/server.py
 ```
 
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request on the [GitHub repository](https://github.com/KittyCAD/zoo-mcp)
+
+PRs will need to pass tests and linting before being merged.
+
+### Ruff is used for linting and formatting. To check the code, run:
+```bash
+  uvx ruff check
+  uvx ruff format
+```
+
+### Ty is used for type checking. To check the code, run:
+```bash
+  uvx ty check src/
+```
+
 ## Testing
 
 The server includes tests located in [`tests`](`tests`). To run the tests, use the following command:
