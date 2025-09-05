@@ -42,12 +42,15 @@ async def _text_to_cad(prompt: str) -> str:
     response = result.root
 
     # check the data type of the response
-    assert isinstance(response, TextToCad)
+    if not isinstance(response, TextToCad):
+        return "Error: Text-to-CAD response is not of type TextToCad."
 
     # if Text To CAD was successful return the KCL code, otherwise return the error
     if response.status == ApiCallStatus.COMPLETED:
-        assert isinstance(response.code, str)
+        if response.code is None:
+            return "Error: Text-to-CAD response is null."
         return response.code
     else:
-        assert isinstance(response.error, str)
+        if response.error is None:
+            return "Error: Text-to-CAD response is null."
         return response.error
