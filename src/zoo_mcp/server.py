@@ -18,7 +18,7 @@ async def call_text_to_cad(prompt: str) -> str:
     Returns:
         str: The generated CAD code if Text-to-CAD is successful, otherwise the error message.
     """
-    logger.info(f"Received Text To CAD prompt: {prompt}")
+    logger.info(f"Received Text-To-CAD prompt: {prompt}")
     return await text_to_cad(prompt=prompt)
 
 
