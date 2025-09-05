@@ -78,13 +78,13 @@ Contributions are welcome! Please open an issue or submit a pull request on the 
 
 PRs will need to pass tests and linting before being merged.
 
-### Ruff is used for linting and formatting. To check the code, run:
+### [ruff](https://docs.astral.sh/ruff/) is used for linting and formatting.
 ```bash
   uvx ruff check
   uvx ruff format
 ```
 
-### Ty is used for type checking. To check the code, run:
+### [ty](https://docs.astral.sh/ty/) is used for type checking.
 ```bash
   uvx ty check src/
 ```
