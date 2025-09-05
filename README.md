@@ -35,7 +35,7 @@ uv run -m zoo_mcp
 
 The server can also be run with the [mcp package](https://github.com/modelcontextprotocol/python-sdk)
 ```bash
-  uv run mcp run src/zoo_mcp/server.py
+uv run mcp run src/zoo_mcp/server.py
 ```
 
 ## Integrations
