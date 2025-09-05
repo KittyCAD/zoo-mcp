@@ -205,3 +205,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Claude
+# Claude is an AI assistant by Anthropic integrated into some code editors.
+CLAUDE.md
