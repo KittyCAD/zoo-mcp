@@ -11,7 +11,7 @@ from kittycad.models import (
 kittycad_client = KittyCAD()
 
 
-async def text_to_cad(prompt: str) -> str:
+async def _text_to_cad(prompt: str) -> str:
     """Send a prompt to Zoo's Text To CAD endpoint
 
     Args:
