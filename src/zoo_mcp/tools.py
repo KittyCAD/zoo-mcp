@@ -4,9 +4,9 @@ from kittycad import KittyCAD
 from kittycad.models import (
     ApiCallStatus,
     FileExportFormat,
-    TextToCad,
     TextToCadCreateBody,
 )
+from kittycad.models.text_to_cad_response import OptionTextToCad
 
 kittycad_client = KittyCAD()
 
@@ -42,8 +42,8 @@ async def _text_to_cad(prompt: str) -> str:
     response = result.root
 
     # check the data type of the response
-    if not isinstance(response, TextToCad):
-        return "Error: Text-to-CAD response is not of type TextToCad."
+    if not isinstance(response, OptionTextToCad):
+        return "Error: Text-to-CAD response is not of type OptionTextToCad."
 
     # if Text To CAD was successful return the KCL code, otherwise return the error
     if response.status == ApiCallStatus.COMPLETED:
