@@ -1,6 +1,6 @@
 # Zoo Model Context Protocol (MCP) Server
 
-An MCP server housing various Zoo built utilities
+An [MCP server](https://modelcontextprotocol.io/docs/getting-started/intro) housing various Zoo built utilities
 
 ## Prerequisites
 
