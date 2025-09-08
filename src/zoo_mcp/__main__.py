@@ -10,4 +10,6 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         logger.info("Shutting down MCP server...")
-        sys.exit(0)
+    except Exception as e:
+        logger.exception("Server encountered an error: %s", e)
+        sys.exit(1)
