@@ -6,7 +6,7 @@ from zoo_mcp.server import mcp
 if __name__ == "__main__":
     try:
         logger.info("Starting MCP server...")
-        mcp.run()
+        mcp.run(transport='stdio')
 
     except KeyboardInterrupt:
         logger.info("Shutting down MCP server...")
