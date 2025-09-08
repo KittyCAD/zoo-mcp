@@ -40,4 +40,5 @@ async def text_to_cad(prompt: str) -> str:
 
 
 if __name__ == "__main__":
+    logger.info("Starting MCP server...")
     mcp.run(transport='stdio')
