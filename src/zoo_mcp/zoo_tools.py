@@ -1,6 +1,5 @@
 from pathlib import Path
 import math
-import tempfile
 
 from kittycad.models import (
     FileSurfaceArea,
@@ -69,7 +68,7 @@ _kittycad_volume_map = {
 async def _zoo_convert_code_to_step(
     code: str, export_path: Path | str | None, max_attempts: int = 3
 ) -> tuple[bool, Path | None]:
-    """Convert KCL code to stl
+    """Convert KCL code to step
 
     Args:
         code(str): KCL code
@@ -80,11 +79,18 @@ async def _zoo_convert_code_to_step(
         tuple[bool, Path | None]: True if successful along with the path to the exported model, false, None otherwise
     """
 
-    logger.info("Exporting KCL to STL")
+    logger.info("Exporting KCL to Step")
     if export_path is None:
-        export_path = Path(tempfile.TemporaryDirectory().name)
+        export_path = await aiofiles.tempfile.NamedTemporaryFile(
+            delete=False, suffix=".step"
+        )
+        export_path = Path(export_path.name)
     else:
         export_path = Path(export_path)
+
+    if export_path.suffix.lower() not in [".step", ".stp"]:
+        return False, None
+
     attempts = 0
     while attempts < max_attempts:
         attempts += 1
@@ -93,16 +99,14 @@ async def _zoo_convert_code_to_step(
                 code, kcl.FileExportFormat.Step
             )
 
-            step_path = export_path.with_suffix(".stl")
-
-            async with aiofiles.open(step_path, "wb") as out:
+            async with aiofiles.open(export_path, "wb") as out:
                 await out.write(bytes(export_response[0].contents))
 
-            logger.info("KCL exported successfully to %s", str(step_path.resolve()))
+            logger.info("KCL exported successfully to %s", str(export_path.resolve()))
 
-            return True, step_path
+            return True, export_path
         except Exception as e:
-            logger.error("Failed to export stl: %s", e)
+            logger.error("Failed to export step: %s", e)
 
             return False, None
     return False, None
@@ -111,7 +115,7 @@ async def _zoo_convert_code_to_step(
 async def _zoo_convert_file_to_step(
     proj_path: Path | str, export_path: Path | str | None, max_attempts: int = 3
 ) -> tuple[bool, Path | None]:
-    """Convert KCL file or project to stl
+    """Convert KCL file or project to step
 
     Args:
         proj_path(Path | str): path to the KCL project. If the path is a directory, it should contain a main.kcl file, otherwise the path should point to a .kcl file
@@ -122,15 +126,18 @@ async def _zoo_convert_file_to_step(
         tuple[bool, Path | None]: True if successful along with the path to the exported model, false, None otherwise
     """
 
-    logger.info("Exporting KCL project to STL")
+    logger.info("Exporting KCL project to Step")
     proj_path = Path(proj_path)
     if export_path is None:
-        if proj_path.is_dir():
-            export_path = proj_path
-        else:
-            export_path = proj_path.parent
+        export_path = await aiofiles.tempfile.NamedTemporaryFile(
+            delete=False, suffix=".step"
+        )
+        export_path = Path(export_path.name)
     else:
         export_path = Path(export_path)
+
+    if export_path.suffix.lower() not in [".step", ".stp"]:
+        return False, None
 
     attempts = 0
     while attempts < max_attempts:
@@ -140,18 +147,16 @@ async def _zoo_convert_file_to_step(
                 str(proj_path.resolve()), kcl.FileExportFormat.Step
             )
 
-            step_path = export_path.with_suffix(".stl")
-
-            async with aiofiles.open(step_path, "wb") as out:
+            async with aiofiles.open(export_path, "wb") as out:
                 await out.write(bytes(export_response[0].contents))
 
             logger.info(
-                "KCL project exported successfully to %s", str(step_path.resolve())
+                "KCL project exported successfully to %s", str(export_path.resolve())
             )
 
-            return True, step_path
+            return True, export_path
         except Exception as e:
-            logger.error("Failed to export stl: %s", e)
+            logger.error("Failed to export step: %s", e)
 
             return False, None
     return False, None
