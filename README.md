@@ -69,6 +69,11 @@ The server can be integrated with [Claude desktop](https://claude.ai/download) u
 uv run mcp install src/zoo_mcp/server.py
 ```
 
+The server can also be integrated with [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) using the following command
+```bash
+claude mcp add --scope project "Zoo-MCP" uv -- --directory "$PWD"/src/zoo_mcp run server.py
+```
+
 The server can also be tested using the [MCP Inspector](https://modelcontextprotocol.io/legacy/tools/inspector#python)
 ```bash
 uv run mcp dev src/zoo_mcp/server.py
