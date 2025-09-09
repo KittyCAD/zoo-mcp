@@ -4,11 +4,18 @@ from mcp.shared.exceptions import McpError
 
 from zoo_mcp import logger
 from zoo_mcp.ai_tools import _text_to_cad
-from zoo_mcp.zoo_tools import _zoo_get_mass, _zoo_get_surface_area, _zoo_get_volume
+from zoo_mcp.zoo_tools import (
+    _zoo_convert_code_to_step,
+    _zoo_convert_file_to_step,
+    _zoo_get_mass,
+    _zoo_get_surface_area,
+    _zoo_get_volume,
+)
 
 mcp = FastMCP(
     name="Zoo MCP Server",
 )
+
 
 def _verify_file_scheme(path: types.AnyUrl) -> str:
     if path.scheme != "file":
@@ -18,11 +25,67 @@ def _verify_file_scheme(path: types.AnyUrl) -> str:
                 message="Invalid URI scheme - only file:// URIs are supported",
             )
         )
-    return str(path).replace("file://", "")
+    new_path = str(path).replace("file://", "")
+    return new_path
 
 
 @mcp.tool()
-async def get_file_mass(path: types.AnyUrl, unit_mass: str, unit_density: str, density: float) -> str:
+async def convert_kcl_to_step(kcl_code: str, output_path: types.AnyUrl) -> str:
+    """Convert KCL code to a STEP file. KCL code is a CAD coding language developed by Zoo.
+
+    Args:
+        kcl_code (str): The KCL code to convert to a step
+        output_path (uri | None): The path to save the converted STEP file to. This should be a file:// URI. to a local filesystem path with the .step extension. If no path is provided, a temporary file will be created.
+
+    Returns:
+        str: The path to the converted STEP file, or an error message if the operation fails.
+    """
+
+    logger.info("Received convert_kcl_to_step request.")
+
+    output_path: str = _verify_file_scheme(output_path)
+
+    success, step_path = await _zoo_convert_code_to_step(
+        code=kcl_code, export_path=output_path
+    )
+    if success:
+        return f"The KCL code was successfully converted to a STEP file at: file://{step_path}"
+    else:
+        return "The KCL code could not be converted to a STEP file."
+
+
+@mcp.tool()
+async def convert_file_to_step(path: types.AnyUrl, output_path: types.AnyUrl) -> str:
+    """Convert a file or directory to a STEP file. If converting a file, the file should be written in kcl and have the .kcl extension. If converting a directory, the directory should contain a KCL project with a main.kcl file.
+
+    Args:
+        path (uri): The path to convert to a step. This should be available on the local filesystem and be a file:// URI. The path can be to a single .kcl file or to a directory containing a KCL project with a main.kcl file.
+        output_path (uri | None): The path to save the converted STEP file to. This should be a file:// URI. to a local filesystem path with the .step extension. If no path is provided, a temporary file will be created.
+
+    Returns:
+        str: The path to the converted STEP file, or an error message if the operation fails.
+    """
+
+    logger.info("Received convert_kcl_to_step request.")
+
+    project_path: str = _verify_file_scheme(path)
+    output_path: str = _verify_file_scheme(output_path)
+
+    success, step_path = await _zoo_convert_file_to_step(
+        proj_path=project_path, export_path=output_path
+    )
+    if success:
+        return (
+            f"The file was successfully converted to a STEP file at: file://{step_path}"
+        )
+    else:
+        return "The file could not be converted to a STEP file."
+
+
+@mcp.tool()
+async def get_file_mass(
+    path: types.AnyUrl, unit_mass: str, unit_density: str, density: float
+) -> str:
     """Get the mass of a file.
 
     Args:
@@ -34,11 +97,13 @@ async def get_file_mass(path: types.AnyUrl, unit_mass: str, unit_density: str, d
     Returns:
         str: The mass of the file in the specified unit of mass, or an error message if the operation fails.
     """
-    path = _verify_file_scheme(path)
+    path: str = _verify_file_scheme(path)
 
     logger.info("Received get_file_mass request for file: %s", path)
 
-    success, mass = await _zoo_get_mass(file_path=path, unit_mass=unit_mass, unit_density=unit_density, density=density)
+    success, mass = await _zoo_get_mass(
+        file_path=path, unit_mass=unit_mass, unit_density=unit_density, density=density
+    )
     if success:
         return f"The mass of the file is {mass} {unit_mass}."
     else:
@@ -56,11 +121,13 @@ async def get_file_surface_area(path: types.AnyUrl, unit_area: str) -> str:
     Returns:
         str: The surface area of the file in the specified unit of area, or an error message if the operation fails.
     """
-    path = _verify_file_scheme(path)
+    path: str = _verify_file_scheme(path)
 
     logger.info("Received get_file_surface_area request for file: %s", path)
 
-    success, surface_area = await _zoo_get_surface_area(file_path=path, unit_area=unit_area)
+    success, surface_area = await _zoo_get_surface_area(
+        file_path=path, unit_area=unit_area
+    )
     if success:
         return f"The surface area of the file is {surface_area} {unit_area}."
     else:
@@ -78,7 +145,7 @@ async def get_file_volume(path: types.AnyUrl, unit_volume: str) -> str:
     Returns:
         str: The volume of the file in the specified unit of volume, or an error message if the operation fails.
     """
-    path = _verify_file_scheme(path)
+    path: str = _verify_file_scheme(path)
 
     logger.info("Received get_file_volume request for file: %s", path)
 
