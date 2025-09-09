@@ -1,11 +1,92 @@
+import mcp.types as types
 from mcp.server.fastmcp import FastMCP
+from mcp.shared.exceptions import McpError
 
 from zoo_mcp import logger
 from zoo_mcp.ai_tools import _text_to_cad
+from zoo_mcp.zoo_tools import _zoo_get_mass, _zoo_get_surface_area, _zoo_get_volume
 
 mcp = FastMCP(
     name="Zoo MCP Server",
 )
+
+def _verify_file_scheme(path: types.AnyUrl) -> str:
+    if path.scheme != "file":
+        raise McpError(
+            types.ErrorData(
+                code=types.INVALID_PARAMS,
+                message="Invalid URI scheme - only file:// URIs are supported",
+            )
+        )
+    return str(path).replace("file://", "")
+
+
+@mcp.tool()
+async def get_file_mass(path: types.AnyUrl, unit_mass: str, unit_density: str, density: float) -> str:
+    """Get the mass of a file.
+
+    Args:
+        path (uri): The path of the file to get the mass from. This should be available on the local filesystem and be a file:// URI. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl
+        unit_mass (str): The unit of mass to return the result in. One of 'g', 'kg', 'lb'.
+        unit_density (str): The unit of density to calculate the mass. One of 'lb:ft3', 'kg:m3'.
+        density (float): The density of the material.
+
+    Returns:
+        str: The mass of the file in the specified unit of mass, or an error message if the operation fails.
+    """
+    path = _verify_file_scheme(path)
+
+    logger.info("Received get_file_mass request for file: %s", path)
+
+    success, mass = await _zoo_get_mass(file_path=path, unit_mass=unit_mass, unit_density=unit_density, density=density)
+    if success:
+        return f"The mass of the file is {mass} {unit_mass}."
+    else:
+        return "The mass of the file could not be determined."
+
+
+@mcp.tool()
+async def get_file_surface_area(path: types.AnyUrl, unit_area: str) -> str:
+    """Get the surface area of a file.
+
+    Args:
+        path (uri): The path of the file to get the surface area from. This should be available on the local filesystem and be a file:// URI. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl
+        unit_area (str): The unit of area to return the result in. One of 'cm2', 'dm2', 'ft2', 'in2', 'km2', 'm2', 'mm2', 'yd2'.
+
+    Returns:
+        str: The surface area of the file in the specified unit of area, or an error message if the operation fails.
+    """
+    path = _verify_file_scheme(path)
+
+    logger.info("Received get_file_surface_area request for file: %s", path)
+
+    success, surface_area = await _zoo_get_surface_area(file_path=path, unit_area=unit_area)
+    if success:
+        return f"The surface area of the file is {surface_area} {unit_area}."
+    else:
+        return "The surface area of the file could not be determined."
+
+
+@mcp.tool()
+async def get_file_volume(path: types.AnyUrl, unit_volume: str) -> str:
+    """Get the volume of a file.
+
+    Args:
+        path (uri): The path of the file to get the volume from. This should be available on the local filesystem and be a file:// URI. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl
+        unit_volume (str): The unit of volume to return the result in. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
+
+    Returns:
+        str: The volume of the file in the specified unit of volume, or an error message if the operation fails.
+    """
+    path = _verify_file_scheme(path)
+
+    logger.info("Received get_file_volume request for file: %s", path)
+
+    success, volume = await _zoo_get_volume(file_path=path, unit_vol=unit_volume)
+    if success:
+        return f"The volume of the file is {volume} {unit_volume}."
+    else:
+        return "The volume of the file could not be determined."
 
 
 @mcp.tool()
