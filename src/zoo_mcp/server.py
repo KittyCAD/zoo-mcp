@@ -1,7 +1,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from zoo_mcp import logger
-from zoo_mcp.tools import _text_to_cad
+from zoo_mcp.ai_tools import _text_to_cad
 
 mcp = FastMCP(
     name="Zoo MCP Server",
@@ -41,4 +41,4 @@ async def text_to_cad(prompt: str) -> str:
 
 if __name__ == "__main__":
     logger.info("Starting MCP server...")
-    mcp.run(transport='stdio')
+    mcp.run(transport="stdio")
