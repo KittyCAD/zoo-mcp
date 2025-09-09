@@ -18,6 +18,7 @@ mcp = FastMCP(
 
 
 def _verify_file_scheme(path: types.AnyUrl) -> str:
+    # first verify the path is a file:// URI otherwise raise an MCP error
     if path.scheme != "file":
         raise McpError(
             types.ErrorData(
@@ -25,6 +26,7 @@ def _verify_file_scheme(path: types.AnyUrl) -> str:
                 message="Invalid URI scheme - only file:// URIs are supported",
             )
         )
+    # format the path to remove the file:// scheme, downstream tools expect a local filesystem path
     new_path = str(path).replace("file://", "")
     return new_path
 
