@@ -51,7 +51,7 @@ Individual tools can be used in your own python code as well
 
 ```python
 from mcp.server.fastmcp import FastMCP
-from zoo_mcp.tools import _text_to_cad
+from zoo_mcp.ai_tools import _text_to_cad
 
 mcp = FastMCP(name="My Example Server")
 
