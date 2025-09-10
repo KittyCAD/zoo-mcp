@@ -52,8 +52,7 @@ async def convert_kcl_to_step(kcl_code: str, output_path: types.AnyUrl) -> str:
     )
     if success:
         return f"The KCL code was successfully converted to a STEP file at: file://{step_path}"
-    else:
-        return "The KCL code could not be converted to a STEP file."
+    return "The KCL code could not be converted to a STEP file."
 
 
 @mcp.tool()
