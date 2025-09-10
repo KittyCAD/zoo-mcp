@@ -8,57 +8,30 @@ from zoo_mcp.server import mcp
 
 
 @pytest.mark.asyncio
-async def test_convert_kcl_to_step():
-    async with aiofiles.open(
-        Path(__file__).parent / "data" / "cube.kcl", mode="r"
-    ) as f:
-        kcl_code = await f.read()
-
-    async with aiofiles.tempfile.NamedTemporaryFile(
-        suffix=".step", delete=False
-    ) as tmp:
-        output_path = f"file://{tmp.name}"
-        response = await mcp.call_tool(
-            "convert_kcl_to_step",
-            arguments={"kcl_code": kcl_code, "output_path": output_path},
-        )
-        assert isinstance(response, Sequence)
-        assert isinstance(response[1], dict)
-        result = response[1]["result"]
-        assert "successfully converted" in result
-
-        # Clean up
-        Path(tmp.name).unlink(missing_ok=True)
-
-
-@pytest.mark.asyncio
-async def test_convert_file_to_step():
-    test_file = Path(__file__).parent / "data" / "cube.kcl"
-
-    async with aiofiles.tempfile.NamedTemporaryFile(
-        suffix=".step", delete=False
-    ) as tmp:
-        path = f"file://{test_file.resolve()}"
-        output_path = f"file://{tmp.name}"
-        response = await mcp.call_tool(
-            "convert_file_to_step", arguments={"path": path, "output_path": output_path}
-        )
-        assert isinstance(response, Sequence)
-        assert isinstance(response[1], dict)
-        result = response[1]["result"]
-        assert "successfully converted" in result
-
-        # Clean up
-        Path(tmp.name).unlink(missing_ok=True)
-
-
-@pytest.mark.asyncio
-async def test_get_file_mass():
+async def test_calculate_center_of_mass():
     test_file = Path(__file__).parent / "data" / "cube.stl"
     path = f"file://{test_file.resolve()}"
 
     response = await mcp.call_tool(
-        "get_file_mass",
+        "calculate_center_of_mass",
+        arguments={
+            "path": path,
+            "unit_length": "mm",
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "center of mass of the file" in result
+
+
+@pytest.mark.asyncio
+async def test_calculate_mass():
+    test_file = Path(__file__).parent / "data" / "cube.stl"
+    path = f"file://{test_file.resolve()}"
+
+    response = await mcp.call_tool(
+        "calculate_mass",
         arguments={
             "path": path,
             "unit_mass": "kg",
@@ -73,12 +46,12 @@ async def test_get_file_mass():
 
 
 @pytest.mark.asyncio
-async def test_get_file_surface_area():
+async def test_calculate_surface_area():
     test_file = Path(__file__).parent / "data" / "cube.stl"
     path = f"file://{test_file.resolve()}"
 
     response = await mcp.call_tool(
-        "get_file_surface_area", arguments={"path": path, "unit_area": "m2"}
+        "calculate_surface_area", arguments={"path": path, "unit_area": "m2"}
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -87,17 +60,62 @@ async def test_get_file_surface_area():
 
 
 @pytest.mark.asyncio
-async def test_get_file_volume():
+async def test_calculate_volume():
     test_file = Path(__file__).parent / "data" / "cube.stl"
     path = f"file://{test_file.resolve()}"
 
     response = await mcp.call_tool(
-        "get_file_volume", arguments={"path": path, "unit_volume": "m3"}
+        "calculate_volume", arguments={"path": path, "unit_volume": "m3"}
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
     result = response[1]["result"]
     assert "volume of the file" in result
+
+
+@pytest.mark.asyncio
+async def test_convert_cad_file():
+    test_file = Path(__file__).parent / "data" / "cube.step"
+
+    async with aiofiles.tempfile.NamedTemporaryFile(
+            suffix=".obj", delete=False
+    ) as tmp:
+        path = f"file://{test_file.resolve()}"
+        output_path = f"file://{tmp.name}"
+        response = await mcp.call_tool(
+            "convert_cad_file", arguments={"input_path": path, "export_path": output_path, "export_format": "obj"}
+        )
+        assert isinstance(response, Sequence)
+        assert isinstance(response[1], dict)
+        result = response[1]["result"]
+        assert "successfully converted" in result
+
+        # Clean up
+        Path(tmp.name).unlink(missing_ok=True)
+
+
+@pytest.mark.asyncio
+async def test_export_kcl():
+    async with aiofiles.open(
+            Path(__file__).parent / "data" / "cube.kcl", mode="r"
+    ) as f:
+        kcl_code = await f.read()
+
+    async with aiofiles.tempfile.NamedTemporaryFile(
+            suffix=".step", delete=False
+    ) as tmp:
+        output_path = f"file://{tmp.name}"
+        response = await mcp.call_tool(
+            "export_kcl",
+            arguments={"kcl_code": kcl_code, "export_path": output_path, "export_format": "step"},
+        )
+        assert isinstance(response, Sequence)
+        assert isinstance(response[1], dict)
+        result = response[1]["result"]
+        assert "successfully converted" in result
+
+        # Clean up
+        Path(tmp.name).unlink(missing_ok=True)
 
 
 @pytest.mark.asyncio
