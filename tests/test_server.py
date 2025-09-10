@@ -10,7 +10,7 @@ from zoo_mcp.server import mcp
 @pytest.mark.asyncio
 async def test_calculate_center_of_mass():
     test_file = Path(__file__).parent / "data" / "cube.stl"
-    path = f"file://{test_file.resolve()}"
+    path = f"{test_file.resolve()}"
 
     response = await mcp.call_tool(
         "calculate_center_of_mass",
@@ -28,7 +28,7 @@ async def test_calculate_center_of_mass():
 @pytest.mark.asyncio
 async def test_calculate_mass():
     test_file = Path(__file__).parent / "data" / "cube.stl"
-    path = f"file://{test_file.resolve()}"
+    path = f"{test_file.resolve()}"
 
     response = await mcp.call_tool(
         "calculate_mass",
@@ -48,7 +48,7 @@ async def test_calculate_mass():
 @pytest.mark.asyncio
 async def test_calculate_surface_area():
     test_file = Path(__file__).parent / "data" / "cube.stl"
-    path = f"file://{test_file.resolve()}"
+    path = f"{test_file.resolve()}"
 
     response = await mcp.call_tool(
         "calculate_surface_area", arguments={"path": path, "unit_area": "m2"}
@@ -62,7 +62,7 @@ async def test_calculate_surface_area():
 @pytest.mark.asyncio
 async def test_calculate_volume():
     test_file = Path(__file__).parent / "data" / "cube.stl"
-    path = f"file://{test_file.resolve()}"
+    path = f"{test_file.resolve()}"
 
     response = await mcp.call_tool(
         "calculate_volume", arguments={"path": path, "unit_volume": "m3"}
@@ -78,8 +78,8 @@ async def test_convert_cad_file():
     test_file = Path(__file__).parent / "data" / "cube.step"
 
     async with aiofiles.tempfile.NamedTemporaryFile(suffix=".obj", delete=False) as tmp:
-        path = f"file://{test_file.resolve()}"
-        export_path = f"file://{tmp.name}"
+        path = f"{test_file.resolve()}"
+        export_path = f"{tmp.name}"
         response = await mcp.call_tool(
             "convert_cad_file",
             arguments={
@@ -108,7 +108,7 @@ async def test_export_kcl():
     async with aiofiles.tempfile.NamedTemporaryFile(
         suffix=".step", delete=False
     ) as tmp:
-        export_path = f"file://{tmp.name}"
+        export_path = f"{tmp.name}"
         response = await mcp.call_tool(
             "export_kcl",
             arguments={
