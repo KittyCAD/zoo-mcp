@@ -3,6 +3,7 @@ import math
 
 from kittycad.models import (
     FileCenterOfMass,
+    FileConversion,
     FileExportFormat,
     FileImportFormat,
     FileSurfaceArea,
@@ -330,6 +331,17 @@ async def _zoo_convert_cad_file(
                 output_format=FileExportFormat(export_format),
                 body=data,
             )
+
+            if not isinstance(export_response, FileConversion):
+                logger.info(
+                    "Failed to convert file, incorrect return type %s",
+                    type(export_response),
+                )
+                return False, None
+
+            if export_response.outputs is None:
+                logger.info("Failed to convert file")
+                return False, None
 
             async with aiofiles.open(export_path, "wb") as out:
                 await out.write(list(export_response.outputs.values())[0])
