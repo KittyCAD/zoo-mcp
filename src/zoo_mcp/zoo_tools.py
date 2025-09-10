@@ -22,6 +22,16 @@ from zoo_mcp import logger
 
 kittycad_client = KittyCAD()
 
+_kcl_export_format_map = {
+    "fbx": kcl.FileExportFormat.Fbx,
+    "gltf": kcl.FileExportFormat.Gltf,
+    "glb": kcl.FileExportFormat.Glb,
+    "obj": kcl.FileExportFormat.Obj,
+    "ply": kcl.FileExportFormat.Ply,
+    "step": kcl.FileExportFormat.Step,
+    "stl": kcl.FileExportFormat.Stl,
+}
+
 
 async def _zoo_calculate_center_of_mass(
     file_path: Path | str,
@@ -306,7 +316,7 @@ async def _zoo_convert_cad_file(
                 delete=False,
                 suffix=f".{export_format.value.lower()}",
             )
-            logger.info("Using provided export path: %s", str(export_path))
+            logger.info("Using provided export path: %s", str(export_path.name))
 
     attempts = 0
     while attempts < max_attempts:
@@ -340,7 +350,7 @@ async def _zoo_export_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
     export_path: Path | str | None,
-    export_format: FileExportFormat | str | None = FileExportFormat.STEP,
+    export_format: kcl.FileExportFormat | str | None = kcl.FileExportFormat.Step,
     max_attempts: int = 3,
 ) -> tuple[bool, Path | None]:
     """Export KCL code to a CAD file. Either code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
@@ -349,7 +359,7 @@ async def _zoo_export_kcl(
         kcl_code (str): KCL code
         kcl_path (Path | str): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
         export_path (Path | str | None): path to save the step file, this should be a directory or a file with the appropriate extension. If no path is provided, a temporary file will be created.
-        export_format (FileExportFormat | str | None): format to export the KCL code to. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
+        export_format (kcl.FileExportFormat | str | None): format to export the KCL code to. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
         max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
@@ -377,18 +387,18 @@ async def _zoo_export_kcl(
     # check the export format
     if not export_format:
         logger.info("No export format provided, defaulting to step")
-        export_format = FileExportFormat.STEP
+        export_format = kcl.FileExportFormat.Step
     else:
-        if export_format not in FileExportFormat:
+        if export_format not in _kcl_export_format_map.values():
             logger.info("Invalid export format provided, defaulting to step")
-            export_format = FileExportFormat.STEP
+            export_format = kcl.FileExportFormat.Step
         if isinstance(export_format, str):
-            export_format = FileExportFormat(export_format)
+            export_format = _kcl_export_format_map[export_format]
 
     if export_path is None:
         logger.info("No export path provided, creating a temporary file")
         export_path = await aiofiles.tempfile.NamedTemporaryFile(
-            delete=False, suffix=f".{export_format.value.lower()}"
+            delete=False, suffix=f".{str(export_format).split(".")[1].lower()}"
         )
         export_path = Path(export_path.name)
     else:
@@ -402,7 +412,7 @@ async def _zoo_export_kcl(
                 export_path = await aiofiles.tempfile.NamedTemporaryFile(
                     dir=export_path.parent.resolve(),
                     delete=False,
-                    suffix=f".{export_format.value.lower()}",
+                    suffix=f".{str(export_format).split(".")[1].lower()}",
                 )
             else:
                 logger.info("The provided export path is a file, overwriting")
@@ -410,9 +420,9 @@ async def _zoo_export_kcl(
             export_path = await aiofiles.tempfile.NamedTemporaryFile(
                 dir=export_path.resolve(),
                 delete=False,
-                suffix=f".{export_format.value.lower()}",
+                suffix=f".{str(export_format).split(".")[1].lower()}",
             )
-            logger.info("Using provided export path: %s", str(export_path))
+            logger.info("Using provided export path: %s", str(export_path.name))
 
     attempts = 0
     while attempts < max_attempts:
@@ -427,10 +437,10 @@ async def _zoo_export_kcl(
                     str(kcl_path.resolve()), export_format
                 )
 
-            async with aiofiles.open(export_path, "wb") as out:
+            async with aiofiles.open(export_path.name, "wb") as out:
                 await out.write(bytes(export_response[0].contents))
 
-            logger.info("KCL exported successfully to %s", str(export_path.resolve()))
+            logger.info("KCL exported successfully to %s", str(export_path.name))
 
             return True, export_path
         except Exception as e:
