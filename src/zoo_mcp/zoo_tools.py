@@ -398,7 +398,7 @@ async def _zoo_export_kcl(
     if export_path is None:
         logger.info("No export path provided, creating a temporary file")
         export_path = await aiofiles.tempfile.NamedTemporaryFile(
-            delete=False, suffix=f".{str(export_format).split(".")[1].lower()}"
+            delete=False, suffix=f".{str(export_format).split('.')[1].lower()}"
         )
         export_path = Path(export_path.name)
     else:
@@ -412,7 +412,7 @@ async def _zoo_export_kcl(
                 export_path = await aiofiles.tempfile.NamedTemporaryFile(
                     dir=export_path.parent.resolve(),
                     delete=False,
-                    suffix=f".{str(export_format).split(".")[1].lower()}",
+                    suffix=f".{str(export_format).split('.')[1].lower()}",
                 )
             else:
                 logger.info("The provided export path is a file, overwriting")
@@ -420,7 +420,7 @@ async def _zoo_export_kcl(
             export_path = await aiofiles.tempfile.NamedTemporaryFile(
                 dir=export_path.resolve(),
                 delete=False,
-                suffix=f".{str(export_format).split(".")[1].lower()}",
+                suffix=f".{str(export_format).split('.')[1].lower()}",
             )
             logger.info("Using provided export path: %s", str(export_path.name))
 
