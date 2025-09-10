@@ -396,6 +396,10 @@ async def _zoo_export_kcl(
             )
             return False, None
 
+    if not kcl_code and not kcl_path:
+        logger.info("Neither code nor kcl_path provided")
+        return False, None
+
     # check the export format
     if not export_format:
         logger.info("No export format provided, defaulting to step")
@@ -445,6 +449,7 @@ async def _zoo_export_kcl(
                     kcl_code, export_format
                 )
             else:
+                assert isinstance(kcl_path, Path)
                 export_response = await kcl.execute_and_export(
                     str(kcl_path.resolve()), export_format
                 )
