@@ -93,7 +93,7 @@ uvx ruff format
 
 ### [ty](https://docs.astral.sh/ty/) is used for type checking.
 ```bash
-uvx ty check src/
+uvx ty check
 ```
 
 ## Testing
