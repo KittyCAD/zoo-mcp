@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 import math
 
 from kittycad.models import (
@@ -338,8 +337,8 @@ async def _zoo_convert_cad_file(
 
 
 async def _zoo_export_kcl(
-    kcl_code: Optional[str],
-    kcl_path: Optional[Path | str],
+    kcl_code: str | None,
+    kcl_path: Path | str | None,
     export_path: Path | str | None,
     export_format: FileExportFormat | str | None = FileExportFormat.STEP,
     max_attempts: int = 3,

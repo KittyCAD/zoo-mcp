@@ -77,13 +77,16 @@ async def test_calculate_volume():
 async def test_convert_cad_file():
     test_file = Path(__file__).parent / "data" / "cube.step"
 
-    async with aiofiles.tempfile.NamedTemporaryFile(
-            suffix=".obj", delete=False
-    ) as tmp:
+    async with aiofiles.tempfile.NamedTemporaryFile(suffix=".obj", delete=False) as tmp:
         path = f"file://{test_file.resolve()}"
         export_path = f"file://{tmp.name}"
         response = await mcp.call_tool(
-            "convert_cad_file", arguments={"input_path": path, "export_path": export_path, "export_format": "obj"}
+            "convert_cad_file",
+            arguments={
+                "input_path": path,
+                "export_path": export_path,
+                "export_format": "obj",
+            },
         )
         assert isinstance(response, Sequence)
         assert isinstance(response[1], dict)
@@ -98,22 +101,27 @@ async def test_convert_cad_file():
 @pytest.mark.asyncio
 async def test_export_kcl():
     async with aiofiles.open(
-            Path(__file__).parent / "data" / "cube.kcl", mode="r"
+        Path(__file__).parent / "data" / "cube.kcl", mode="r"
     ) as f:
         kcl_code = await f.read()
 
     async with aiofiles.tempfile.NamedTemporaryFile(
-            suffix=".step", delete=False
+        suffix=".step", delete=False
     ) as tmp:
         export_path = f"file://{tmp.name}"
         response = await mcp.call_tool(
             "export_kcl",
-            arguments={"kcl_code": kcl_code, "export_path": export_path, "export_format": "step"},
+            arguments={
+                "kcl_code": kcl_code,
+                "kcl_path": None,
+                "export_path": export_path,
+                "export_format": "step",
+            },
         )
         assert isinstance(response, Sequence)
         assert isinstance(response[1], dict)
         result = response[1]["result"]
-        assert "successfully converted" in result
+        assert "successfully exported" in result
         assert Path(tmp.name).exists()
 
         # Clean up
