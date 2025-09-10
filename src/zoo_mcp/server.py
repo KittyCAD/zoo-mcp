@@ -188,6 +188,7 @@ async def export_kcl(
     logger.info("Received convert_kcl_to_step request.")
 
     export_path: str = _verify_file_scheme(export_path)
+    kcl_path: str = _verify_file_scheme(kcl_path)
 
     success, step_path = await _zoo_export_kcl(
         kcl_code=kcl_code,
