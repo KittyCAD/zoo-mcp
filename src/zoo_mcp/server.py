@@ -36,8 +36,8 @@ async def convert_kcl_to_step(kcl_code: str, output_path: types.AnyUrl) -> str:
     """Convert KCL code to a STEP file. KCL code is a CAD coding language developed by Zoo.
 
     Args:
-        kcl_code (str): The KCL code to convert to a step
-        output_path (uri | None): The path to save the converted STEP file to. This should be a file:// URI. to a local filesystem path with the .step extension. If no path is provided, a temporary file will be created.
+        kcl_code (str): The KCL code to export to a STEP file.
+        output_path (AnyUrl | None): The path to export the STEP file. This must be a file:// URI to a local filesystem path with the .step extension. If no path is provided, a temporary file will be created.
 
     Returns:
         str: The path to the converted STEP file, or an error message if the operation fails.
