@@ -1,6 +1,4 @@
-import mcp.types as types
 from mcp.server.fastmcp import FastMCP
-from mcp.shared.exceptions import McpError
 
 from zoo_mcp import logger
 from zoo_mcp.ai_tools import _text_to_cad
@@ -18,35 +16,17 @@ mcp = FastMCP(
 )
 
 
-def _verify_file_scheme(path: types.FileUrl | None) -> str | None:
-    # first verify the path is a file:// URI otherwise raise an MCP error
-    if path is None:
-        return None
-
-    if path.scheme != "file":
-        raise McpError(
-            types.ErrorData(
-                code=types.INVALID_PARAMS,
-                message="Invalid URI scheme - only file:// URIs are supported",
-            )
-        )
-    # format the path to remove the file:// scheme, downstream tools expect a local filesystem path
-    new_path = str(path).replace("file://", "")
-    return new_path
-
-
 @mcp.tool()
-async def calculate_center_of_mass(path: types.FileUrl, unit_length: str) -> str:
+async def calculate_center_of_mass(path: str, unit_length: str) -> str:
     """Get the center of mass of a file.
 
     Args:
-        path (types.FileUrl): The path of the file to get the mass from. This should be available on the local filesystem and be a file:// URI. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        path (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_length (str): The unit of length to return the result in. One of 'cm', 'ft', 'in', 'm', 'mm', 'yd'
 
     Returns:
         str: The center of mass of the file in the specified unit of length, or an error message if the operation fails.
     """
-    path = _verify_file_scheme(path)
 
     logger.info("Received calculate_center_of_mass request for file: %s", path)
 
@@ -61,12 +41,12 @@ async def calculate_center_of_mass(path: types.FileUrl, unit_length: str) -> str
 
 @mcp.tool()
 async def calculate_mass(
-    path: types.FileUrl, unit_mass: str, unit_density: str, density: float
+    path: str, unit_mass: str, unit_density: str, density: float
 ) -> str:
     """Get the mass of a file.
 
     Args:
-        path (types.FileUrl): The path of the file to get the mass from. This should be available on the local filesystem and be a file:// URI. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        path (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_mass (str): The unit of mass to return the result in. One of 'g', 'kg', 'lb'.
         unit_density (str): The unit of density to calculate the mass. One of 'lb:ft3', 'kg:m3'.
         density (float): The density of the material.
@@ -74,7 +54,6 @@ async def calculate_mass(
     Returns:
         str: The mass of the file in the specified unit of mass, or an error message if the operation fails.
     """
-    path: str = _verify_file_scheme(path)
 
     logger.info("Received calculate_mass request for file: %s", path)
 
@@ -88,17 +67,16 @@ async def calculate_mass(
 
 
 @mcp.tool()
-async def calculate_surface_area(path: types.FileUrl, unit_area: str) -> str:
+async def calculate_surface_area(path: str, unit_area: str) -> str:
     """Get the surface area of a file.
 
     Args:
-        path (types.FileUrl): The path of the file to get the surface area from. This should be available on the local filesystem and be a file:// URI. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        path (str): The path of the file to get the surface area from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_area (str): The unit of area to return the result in. One of 'cm2', 'dm2', 'ft2', 'in2', 'km2', 'm2', 'mm2', 'yd2'.
 
     Returns:
         str: The surface area of the file in the specified unit of area, or an error message if the operation fails.
     """
-    path: str = _verify_file_scheme(path)
 
     logger.info("Received calculate_surface_area request for file: %s", path)
 
@@ -112,17 +90,16 @@ async def calculate_surface_area(path: types.FileUrl, unit_area: str) -> str:
 
 
 @mcp.tool()
-async def calculate_volume(path: types.FileUrl, unit_volume: str) -> str:
+async def calculate_volume(path: str, unit_volume: str) -> str:
     """Get the volume of a file.
 
     Args:
-        path (types.FileUrl): The path of the file to get the volume from. This should be available on the local filesystem and be a file:// URI. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        path (str): The path of the file to get the volume from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_volume (str): The unit of volume to return the result in. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
 
     Returns:
         str: The volume of the file in the specified unit of volume, or an error message if the operation fails.
     """
-    path: str = _verify_file_scheme(path)
 
     logger.info("Received calculate_volume request for file: %s", path)
 
@@ -135,15 +112,15 @@ async def calculate_volume(path: types.FileUrl, unit_volume: str) -> str:
 
 @mcp.tool()
 async def convert_cad_file(
-    input_path: types.FileUrl,
-    export_path: types.FileUrl | None,
+    input_path: str,
+    export_path: str | None,
     export_format: str | None,
 ) -> str:
     """Convert a CAD file from one format to another CAD file format.
 
     Args:
-        input_path (types.FileUrl): The input cad file to convert. This should be available on the local filesystem and be a file:// URI. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
-        export_path (types.FileUrl | None): The path to save the converted CAD file to. This should be a file:// URI. If no path is provided, a temporary file will be created. If the path is a directory, a temporary file will be created in the directory. If the path is a file, it will be overwritten if the extension is valid.
+        input_path (str): The input cad file to convert. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        export_path (str | None): The path to save the converted CAD file to. If the path is a directory, a temporary file will be created in the directory. If the path is a file, it will be overwritten if the extension is valid.
         export_format (str): The format of the exported CAD file. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
 
     Returns:
@@ -152,11 +129,8 @@ async def convert_cad_file(
 
     logger.info("Received convert_cad_file request.")
 
-    project_path: str = _verify_file_scheme(input_path)
-    export_path: str = _verify_file_scheme(export_path)
-
     success, step_path = await _zoo_convert_cad_file(
-        input_path=project_path, export_path=export_path, export_format=export_format
+        input_path=input_path, export_path=export_path, export_format=export_format
     )
     if success:
         return (
@@ -169,16 +143,16 @@ async def convert_cad_file(
 @mcp.tool()
 async def export_kcl(
     kcl_code: str | None,
-    kcl_path: types.FileUrl | None,
-    export_path: types.FileUrl | None,
+    kcl_path: str | None,
+    export_path: str | None,
     export_format: str,
 ) -> str:
     """Export KCL code to a CAD file. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
         kcl_code (str): The KCL code to export to a CAD file.
-        kcl_path (types.FileUrl | None): The path to a KCL file to export to a CAD file. This should be available on the local filesystem and be a file:// URI. The path should point to a .kcl file or a directory containing a main.kcl file.
-        export_path (types.FileUrl | None): The path to export the CAD file. This must be a file:// URI to a local filesystem path with the .step extension. If no path is provided, a temporary file will be created.
+        kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
+        export_path (str | None): The path to export the CAD file. If no path is provided, a temporary file will be created.
         export_format (str): The format to export the file as. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
 
     Returns:
@@ -186,9 +160,6 @@ async def export_kcl(
     """
 
     logger.info("Received convert_kcl_to_step request.")
-
-    export_path: str = _verify_file_scheme(export_path)
-    kcl_path: str = _verify_file_scheme(kcl_path)
 
     success, step_path = await _zoo_export_kcl(
         kcl_code=kcl_code,
