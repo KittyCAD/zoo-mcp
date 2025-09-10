@@ -33,7 +33,7 @@ def _verify_file_scheme(path: types.AnyUrl) -> str:
 
 @mcp.tool()
 async def convert_kcl_to_step(kcl_code: str, output_path: types.AnyUrl) -> str:
-    """Convert KCL code to a STEP file. KCL code is a CAD coding language developed by Zoo.
+    """Export KCL code to a STEP file.
 
     Args:
         kcl_code (str): The KCL code to export to a STEP file.
