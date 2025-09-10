@@ -1,17 +1,21 @@
 from pathlib import Path
+from typing import Optional
 import math
 
 from kittycad.models import (
+    FileCenterOfMass,
+    FileExportFormat,
+    FileImportFormat,
     FileSurfaceArea,
     FileVolume,
     FileMass,
     UnitArea,
     UnitDensity,
+    UnitLength,
     UnitMass,
     UnitVolume,
 )
 from kittycad import KittyCAD
-from kittycad.models.file_import_format import FileImportFormat
 import aiofiles
 import kcl
 
@@ -19,150 +23,65 @@ from zoo_mcp import logger
 
 kittycad_client = KittyCAD()
 
-_kittycad_area_map = {
-    "cm2": UnitArea.CM2,
-    "dm2": UnitArea.DM2,
-    "ft2": UnitArea.FT2,
-    "in2": UnitArea.IN2,
-    "km2": UnitArea.KM2,
-    "m2": UnitArea.M2,
-    "mm2": UnitArea.MM2,
-    "yd2": UnitArea.YD2,
-}
 
-_kittycad_density_map = {
-    "lb:ft3": UnitDensity.LB_FT3,
-    "kg:m3": UnitDensity.KG_M3,
-}
-
-_kittycad_format_map = {
-    ".fbx": FileImportFormat.FBX,
-    ".gltf": FileImportFormat.GLTF,
-    ".obj": FileImportFormat.OBJ,
-    ".ply": FileImportFormat.PLY,
-    ".sldprt": FileImportFormat.SLDPRT,
-    ".step": FileImportFormat.STEP,
-    ".stp": FileImportFormat.STEP,
-    ".stl": FileImportFormat.STL,
-}
-
-_kittycad_mass_map = {
-    "g": UnitMass.G,
-    "kg": UnitMass.KG,
-    "lb": UnitMass.LB,
-}
-
-_kittycad_volume_map = {
-    "cm3": UnitVolume.CM3,
-    "ft3": UnitVolume.FT3,
-    "in3": UnitVolume.IN3,
-    "m3": UnitVolume.M3,
-    "yd3": UnitVolume.YD3,
-    "usfloz": UnitVolume.USFLOZ,
-    "usgal": UnitVolume.USGAL,
-    "l": UnitVolume.L,
-    "ml": UnitVolume.ML,
-}
-
-
-async def _zoo_convert_code_to_step(
-    code: str, export_path: Path | str | None, max_attempts: int = 3
-) -> tuple[bool, Path | None]:
-    """Convert KCL code to step
+async def _zoo_calculate_center_of_mass(
+    file_path: Path | str,
+    unit_length: str,
+    max_attempts: int = 3,
+) -> tuple[bool, dict[str, float] | None]:
+    """Get the center of mass of the file
 
     Args:
-        code(str): KCL code
-        export_path(Path | str): path to save the step file
-        max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
+        file_path(Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        unit_length(str): The unit length to return. This should be one of 'cm', 'ft', 'in', 'm', 'mm', 'yd'
+        max_attempts(int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        tuple[bool, Path | None]: True if successful along with the path to the exported model, false, None otherwise
+        tuple[bool, dict[str] | None]: If the center of mass can be calculated return True and the center of mass as a dictionary with x, y, and z keys, otherwise return False and None
     """
+    file_path = Path(file_path)
 
-    logger.info("Exporting KCL to Step")
-    if export_path is None:
-        export_path = await aiofiles.tempfile.NamedTemporaryFile(
-            delete=False, suffix=".step"
-        )
-        export_path = Path(export_path.name)
-    else:
-        export_path = Path(export_path)
-
-    if export_path.suffix.lower() not in [".step", ".stp"]:
-        return False, None
+    logger.info("Getting center of mass for %s", str(file_path.resolve()))
 
     attempts = 0
     while attempts < max_attempts:
         attempts += 1
         try:
-            export_response = await kcl.execute_code_and_export(
-                code, kcl.FileExportFormat.Step
+            async with aiofiles.open(file_path, "rb") as inp:
+                data = await inp.read()
+
+            src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
+
+            result = kittycad_client.file.create_file_center_of_mass(
+                src_format=src_format,
+                body=data,
+                output_unit=UnitLength(unit_length),
             )
 
-            async with aiofiles.open(export_path, "wb") as out:
-                await out.write(bytes(export_response[0].contents))
+            if not isinstance(result, FileCenterOfMass):
+                logger.info(
+                    "Failed to get center of mass, incorrect return type %s",
+                    type(result),
+                )
+                return False, None
 
-            logger.info("KCL exported successfully to %s", str(export_path.resolve()))
+            com = (
+                result.center_of_mass.to_dict()
+                if result.center_of_mass is not None
+                else None
+            )
 
-            return True, export_path
+            return True, com
+
         except Exception as e:
-            logger.error("Failed to export step: %s", e)
-
+            logger.info("Failed to get mass: %s", e)
             return False, None
+
+    logger.info("Failed to get mass after %s attempts", max_attempts)
     return False, None
 
 
-async def _zoo_convert_file_to_step(
-    proj_path: Path | str, export_path: Path | str | None, max_attempts: int = 3
-) -> tuple[bool, Path | None]:
-    """Convert KCL file or project to step
-
-    Args:
-        proj_path(Path | str): path to the KCL project. If the path is a directory, it should contain a main.kcl file, otherwise the path should point to a .kcl file
-        export_path(Path | str): path to save the step file
-        max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
-
-    Returns:
-        tuple[bool, Path | None]: True if successful along with the path to the exported model, false, None otherwise
-    """
-
-    logger.info("Exporting KCL project to Step")
-    proj_path = Path(proj_path)
-    if export_path is None:
-        export_path = await aiofiles.tempfile.NamedTemporaryFile(
-            delete=False, suffix=".step"
-        )
-        export_path = Path(export_path.name)
-    else:
-        export_path = Path(export_path)
-
-    if export_path.suffix.lower() not in [".step", ".stp"]:
-        return False, None
-
-    attempts = 0
-    while attempts < max_attempts:
-        attempts += 1
-        try:
-            export_response = await kcl.execute_and_export(
-                str(proj_path.resolve()), kcl.FileExportFormat.Step
-            )
-
-            async with aiofiles.open(export_path, "wb") as out:
-                await out.write(bytes(export_response[0].contents))
-
-            logger.info(
-                "KCL project exported successfully to %s", str(export_path.resolve())
-            )
-
-            return True, export_path
-        except Exception as e:
-            logger.error("Failed to export step: %s", e)
-
-            return False, None
-    return False, None
-
-
-async def _zoo_get_mass(
+async def _zoo_calculate_mass(
     file_path: Path | str,
     unit_mass: str,
     unit_density: str,
@@ -172,11 +91,11 @@ async def _zoo_get_mass(
     """Get the mass of the file in the requested unit
 
     Args:
-        file_path (Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl
-        unit_mass (str): The unit mass to return. This should be one of 'g', 'kg', 'lb'.
-        unit_density (str): The unit density of the material. This should be one of 'lb:ft3', 'kg:m3'.
-        density (float): The density of the material.
-        max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
+        file_path(Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        unit_mass(str): The unit mass to return. This should be one of 'g', 'kg', 'lb'.
+        unit_density(str): The unit density of the material. This should be one of 'lb:ft3', 'kg:m3'.
+        density(float): The density of the material.
+        max_attempts(int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
         tuple[bool, str]: If the mass of the file can be calculated, return true and the mass in the requested unit, otherwise return false and math.nan
@@ -193,13 +112,13 @@ async def _zoo_get_mass(
             async with aiofiles.open(file_path, "rb") as inp:
                 data = await inp.read()
 
-            src_format = _kittycad_format_map[file_path.suffix.lower()]
+            src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
 
             result = kittycad_client.file.create_file_mass(
-                output_unit=_kittycad_mass_map[unit_mass],
+                output_unit=UnitMass(unit_mass),
                 src_format=src_format,
                 body=data,
-                material_density_unit=_kittycad_density_map[unit_density],
+                material_density_unit=UnitDensity(unit_density),
                 material_density=density,
             )
 
@@ -221,13 +140,13 @@ async def _zoo_get_mass(
     return False, math.nan
 
 
-async def _zoo_get_surface_area(
+async def _zoo_calculate_surface_area(
     file_path: Path | str, unit_area: str, max_attempts: int = 3
 ) -> tuple[bool, float]:
     """Get the surface area of the file in the requested unit
 
     Args:
-        file_path (Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl
+        file_path (Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_area (str): The unit area to return. This should be one of 'cm2', 'dm2', 'ft2', 'in2', 'km2', 'm2', 'mm2', 'yd2'.
         max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
@@ -246,10 +165,10 @@ async def _zoo_get_surface_area(
             async with aiofiles.open(file_path, "rb") as inp:
                 data = await inp.read()
 
-            src_format = _kittycad_format_map[file_path.suffix.lower()]
+            src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
 
             result = kittycad_client.file.create_file_surface_area(
-                output_unit=_kittycad_area_map[unit_area],
+                output_unit=UnitArea(unit_area),
                 src_format=src_format,
                 body=data,
             )
@@ -274,13 +193,13 @@ async def _zoo_get_surface_area(
     return False, math.nan
 
 
-async def _zoo_get_volume(
+async def _zoo_calculate_volume(
     file_path: Path | str, unit_vol: str, max_attempts: int = 3
 ) -> tuple[bool, float]:
     """Get the volume of the file in the requested unit
 
     Args:
-        file_path (Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl
+        file_path (Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_vol (str): The unit volume to return. This should be one of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
         max_attempts(int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
@@ -299,10 +218,10 @@ async def _zoo_get_volume(
             async with aiofiles.open(file_path, "rb") as inp:
                 data = await inp.read()
 
-            src_format = _kittycad_format_map[file_path.suffix.lower()]
+            src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
 
             result = kittycad_client.file.create_file_volume(
-                output_unit=_kittycad_volume_map[unit_vol],
+                output_unit=UnitVolume(unit_vol),
                 src_format=src_format,
                 body=data,
             )
@@ -323,3 +242,200 @@ async def _zoo_get_volume(
 
     logger.info("Failed to get volume after %s attempts", max_attempts)
     return False, math.nan
+
+
+async def _zoo_convert_cad_file(
+    input_path: Path | str,
+    export_path: Path | str | None,
+    export_format: FileExportFormat | str | None = FileExportFormat.STEP,
+    max_attempts: int = 3,
+) -> tuple[bool, Path | None]:
+    """Convert a cad file to another cad file
+
+    Args:
+        input_path (Path | str): path to the CAD file to convert. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        export_path (Path | str): The path to save the cad file. If no path is provided, a temporary file will be created. If the path is a directory, a temporary file will be created in the directory. If the path is a file, it will be overwritten if the extension is valid.
+        export_format (FileExportFormat | str | None): format to export the KCL code to. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
+        max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
+
+    Returns:
+        tuple[bool, Path | None]: True if successful along with the path to the exported model, false, None otherwise
+    """
+
+    input_path = Path(input_path)
+    input_ext = input_path.suffix.split(".")[1]
+    if input_ext not in [i.value for i in FileImportFormat]:
+        logger.info("The provided input path does not have a valid extension")
+        return False, None
+    logger.info("Exporting the cad file %s", str(input_path.resolve()))
+
+    # check the export format
+    if not export_format:
+        logger.info("No export format provided, defaulting to step")
+        export_format = FileExportFormat.STEP
+    else:
+        if export_format not in FileExportFormat:
+            logger.info("Invalid export format provided, defaulting to step")
+            export_format = FileExportFormat.STEP
+        if isinstance(export_format, str):
+            export_format = FileExportFormat(export_format)
+
+    if export_path is None:
+        logger.info("No export path provided, creating a temporary file")
+        export_path = await aiofiles.tempfile.NamedTemporaryFile(
+            delete=False, suffix=f".{export_format.value.lower()}"
+        )
+        export_path = Path(export_path.name)
+    else:
+        export_path = Path(export_path)
+        if export_path.is_file():
+            ext = export_path.suffix.split(".")[1]
+            if ext not in [i.value for i in FileExportFormat]:
+                logger.info(
+                    "The provided export path does not have a valid extension, using a temporary file instead"
+                )
+                export_path = await aiofiles.tempfile.NamedTemporaryFile(
+                    dir=export_path.parent.resolve(),
+                    delete=False,
+                    suffix=f".{export_format.value.lower()}",
+                )
+            else:
+                logger.info("The provided export path is a file, overwriting")
+        else:
+            export_path = await aiofiles.tempfile.NamedTemporaryFile(
+                dir=export_path.resolve(),
+                delete=False,
+                suffix=f".{export_format.value.lower()}",
+            )
+            logger.info("Using provided export path: %s", str(export_path))
+
+    attempts = 0
+    while attempts < max_attempts:
+        attempts += 1
+        try:
+            async with aiofiles.open(input_path, "rb") as inp:
+                data = await inp.read()
+
+            export_response = kittycad_client.file.create_file_conversion(
+                src_format=FileImportFormat(input_ext),
+                output_format=FileExportFormat(export_format),
+                body=data,
+            )
+
+            async with aiofiles.open(export_path, "wb") as out:
+                await out.write(bytes(export_response[0].contents))
+
+            logger.info(
+                "KCL project exported successfully to %s", str(export_path.resolve())
+            )
+
+            return True, export_path
+        except Exception as e:
+            logger.error("Failed to export step: %s", e)
+
+            return False, None
+    return False, None
+
+
+async def _zoo_export_kcl(
+    kcl_code: Optional[str],
+    kcl_path: Optional[Path | str],
+    export_path: Path | str | None,
+    export_format: FileExportFormat | str | None = FileExportFormat.STEP,
+    max_attempts: int = 3,
+) -> tuple[bool, Path | None]:
+    """Export KCL code to a CAD file. Either code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str): KCL code
+        kcl_path (Path | str): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+        export_path (Path | str | None): path to save the step file, this should be a directory or a file with the appropriate extension. If no path is provided, a temporary file will be created.
+        export_format (FileExportFormat | str | None): format to export the KCL code to. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
+        max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
+
+    Returns:
+        tuple[bool, Path | None]: True if successful along with the path to the exported model, false, None otherwise
+    """
+
+    logger.info("Exporting KCL to Step")
+
+    # default to using the code if both are provided
+    if kcl_code and kcl_path:
+        logger.info("Both code and kcl_path provided, using code")
+        kcl_path = None
+
+    if kcl_path:
+        kcl_path = Path(kcl_path)
+        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
+            logger.info("The provided kcl_path is not a .kcl file")
+            return False, None
+        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
+            logger.info(
+                "The provided kcl_path directory does not contain a main.kcl file"
+            )
+            return False, None
+
+    # check the export format
+    if not export_format:
+        logger.info("No export format provided, defaulting to step")
+        export_format = FileExportFormat.STEP
+    else:
+        if export_format not in FileExportFormat:
+            logger.info("Invalid export format provided, defaulting to step")
+            export_format = FileExportFormat.STEP
+        if isinstance(export_format, str):
+            export_format = FileExportFormat(export_format)
+
+    if export_path is None:
+        logger.info("No export path provided, creating a temporary file")
+        export_path = await aiofiles.tempfile.NamedTemporaryFile(
+            delete=False, suffix=f".{export_format.value.lower()}"
+        )
+        export_path = Path(export_path.name)
+    else:
+        export_path = Path(export_path)
+        if export_path.is_file():
+            ext = export_path.suffix.split(".")[1]
+            if ext not in [i.value for i in FileExportFormat]:
+                logger.info(
+                    "The provided export path does not have a valid extension, using a temporary file instead"
+                )
+                export_path = await aiofiles.tempfile.NamedTemporaryFile(
+                    dir=export_path.parent.resolve(),
+                    delete=False,
+                    suffix=f".{export_format.value.lower()}",
+                )
+            else:
+                logger.info("The provided export path is a file, overwriting")
+        else:
+            export_path = await aiofiles.tempfile.NamedTemporaryFile(
+                dir=export_path.resolve(),
+                delete=False,
+                suffix=f".{export_format.value.lower()}",
+            )
+            logger.info("Using provided export path: %s", str(export_path))
+
+    attempts = 0
+    while attempts < max_attempts:
+        attempts += 1
+        try:
+            if kcl_code:
+                export_response = await kcl.execute_code_and_export(
+                    kcl_code, export_format
+                )
+            else:
+                export_response = await kcl.execute_and_export(
+                    str(kcl_path.resolve()), export_format
+                )
+
+            async with aiofiles.open(export_path, "wb") as out:
+                await out.write(bytes(export_response[0].contents))
+
+            logger.info("KCL exported successfully to %s", str(export_path.resolve()))
+
+            return True, export_path
+        except Exception as e:
+            logger.error("Failed to export step: %s", e)
+
+            return False, None
+    return False, None
