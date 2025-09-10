@@ -81,14 +81,15 @@ async def test_convert_cad_file():
             suffix=".obj", delete=False
     ) as tmp:
         path = f"file://{test_file.resolve()}"
-        output_path = f"file://{tmp.name}"
+        export_path = f"file://{tmp.name}"
         response = await mcp.call_tool(
-            "convert_cad_file", arguments={"input_path": path, "export_path": output_path, "export_format": "obj"}
+            "convert_cad_file", arguments={"input_path": path, "export_path": export_path, "export_format": "obj"}
         )
         assert isinstance(response, Sequence)
         assert isinstance(response[1], dict)
         result = response[1]["result"]
         assert "successfully converted" in result
+        assert Path(tmp.name).exists()
 
         # Clean up
         Path(tmp.name).unlink(missing_ok=True)
@@ -104,15 +105,16 @@ async def test_export_kcl():
     async with aiofiles.tempfile.NamedTemporaryFile(
             suffix=".step", delete=False
     ) as tmp:
-        output_path = f"file://{tmp.name}"
+        export_path = f"file://{tmp.name}"
         response = await mcp.call_tool(
             "export_kcl",
-            arguments={"kcl_code": kcl_code, "export_path": output_path, "export_format": "step"},
+            arguments={"kcl_code": kcl_code, "export_path": export_path, "export_format": "step"},
         )
         assert isinstance(response, Sequence)
         assert isinstance(response[1], dict)
         result = response[1]["result"]
         assert "successfully converted" in result
+        assert Path(tmp.name).exists()
 
         # Clean up
         Path(tmp.name).unlink(missing_ok=True)

@@ -288,7 +288,7 @@ async def _zoo_convert_cad_file(
         export_path = Path(export_path.name)
     else:
         export_path = Path(export_path)
-        if export_path.is_file():
+        if export_path.suffix:
             ext = export_path.suffix.split(".")[1]
             if ext not in [i.value for i in FileExportFormat]:
                 logger.info(
@@ -323,7 +323,7 @@ async def _zoo_convert_cad_file(
             )
 
             async with aiofiles.open(export_path, "wb") as out:
-                await out.write(bytes(export_response[0].contents))
+                await out.write(list(export_response.outputs.values())[0])
 
             logger.info(
                 "KCL project exported successfully to %s", str(export_path.resolve())
@@ -394,7 +394,7 @@ async def _zoo_export_kcl(
         export_path = Path(export_path.name)
     else:
         export_path = Path(export_path)
-        if export_path.is_file():
+        if export_path.suffix:
             ext = export_path.suffix.split(".")[1]
             if ext not in [i.value for i in FileExportFormat]:
                 logger.info(
