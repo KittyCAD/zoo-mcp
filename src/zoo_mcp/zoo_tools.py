@@ -53,9 +53,9 @@ _kcl_export_format_map = {
 
 
 async def zoo_calculate_center_of_mass(
-    file_path: Path | str,
-    unit_length: str,
-    max_attempts: int = 3,
+        file_path: Path | str,
+        unit_length: str,
+        max_attempts: int = 3,
 ) -> dict[str, float] | None:
     """Calculate the center of mass of the file
 
@@ -110,11 +110,11 @@ async def zoo_calculate_center_of_mass(
 
 
 async def zoo_calculate_mass(
-    file_path: Path | str,
-    unit_mass: str,
-    unit_density: str,
-    density: float,
-    max_attempts: int = 3,
+        file_path: Path | str,
+        unit_mass: str,
+        unit_density: str,
+        density: float,
+        max_attempts: int = 3,
 ) -> float | None:
     """Calculate the mass of the file in the requested unit
 
@@ -169,7 +169,7 @@ async def zoo_calculate_mass(
 
 
 async def zoo_calculate_surface_area(
-    file_path: Path | str, unit_area: str, max_attempts: int = 3
+        file_path: Path | str, unit_area: str, max_attempts: int = 3
 ) -> float | None:
     """Calculate the surface area of the file in the requested unit
 
@@ -222,7 +222,7 @@ async def zoo_calculate_surface_area(
 
 
 async def zoo_calculate_volume(
-    file_path: Path | str, unit_vol: str, max_attempts: int = 3
+        file_path: Path | str, unit_vol: str, max_attempts: int = 3
 ) -> float | None:
     """Calculate the volume of the file in the requested unit
 
@@ -273,10 +273,10 @@ async def zoo_calculate_volume(
 
 
 async def zoo_convert_cad_file(
-    input_path: Path | str,
-    export_path: Path | str | None,
-    export_format: FileExportFormat | str | None = FileExportFormat.STEP,
-    max_attempts: int = 3,
+        input_path: Path | str,
+        export_path: Path | str | None,
+        export_format: FileExportFormat | str | None = FileExportFormat.STEP,
+        max_attempts: int = 3,
 ) -> Path | None:
     """Convert a cad file to another cad file
 
@@ -378,11 +378,11 @@ async def zoo_convert_cad_file(
 
 
 async def zoo_export_kcl(
-    kcl_code: str | None,
-    kcl_path: Path | str | None,
-    export_path: Path | str | None,
-    export_format: kcl.FileExportFormat | str | None = kcl.FileExportFormat.Step,
-    max_attempts: int = 3,
+        kcl_code: str | None,
+        kcl_path: Path | str | None,
+        export_path: Path | str | None,
+        export_format: kcl.FileExportFormat | str | None = kcl.FileExportFormat.Step,
+        max_attempts: int = 3,
 ) -> Path | None:
     """Export KCL code to a CAD file. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -488,96 +488,9 @@ async def zoo_export_kcl(
     return None
 
 
-async def zoo_multiview_snapshot_of_kcl(
-    kcl_code: str | None,
-    kcl_path: Path | str | None,
-    padding: float = 0.2,
-) -> bytes | None:
-    """Execute the KCL code and save a multiview snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
-
-    Args:
-        kcl_code (str): KCL code
-        kcl_path (Path | str): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
-        padding (float): The padding to apply to the snapshot. Default is 0.2.
-
-    Returns:
-        bytes or None: The JPEG image contents if successful, or None if there was an error.
-    """
-
-    logger.info("Taking a multiview snapshot of KCL")
-
-    # default to using the code if both are provided
-    if kcl_code and kcl_path:
-        logger.warning("Both code and kcl_path provided, using code")
-        kcl_path = None
-
-    if kcl_path:
-        kcl_path = Path(kcl_path)
-        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
-            logger.error("The provided kcl_path is not a .kcl file")
-            return None
-        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
-            logger.error(
-                "The provided kcl_path directory does not contain a main.kcl file"
-            )
-            return None
-
-    if not kcl_code and not kcl_path:
-        logger.error("Neither code nor kcl_path provided")
-        return None
-
-    try:
-        # None in the camera list means isometric view
-        # https://github.com/KittyCAD/modeling-app/blob/main/rust/kcl-python-bindings/tests/tests.py#L192
-        camera_list = [
-            kcl.CameraLookAt(
-                up=kcl.Point3d(x=0, y=0, z=1),
-                vantage=kcl.Point3d(x=0, y=-1, z=0),
-                center=kcl.Point3d(x=0, y=0, z=0),
-            ),
-            kcl.CameraLookAt(
-                up=kcl.Point3d(x=0, y=0, z=1),
-                vantage=kcl.Point3d(x=1, y=0, z=0),
-                center=kcl.Point3d(x=0, y=0, z=0),
-            ),
-            kcl.CameraLookAt(
-                up=kcl.Point3d(x=0, y=1, z=0),
-                vantage=kcl.Point3d(x=0, y=0, z=1),
-                center=kcl.Point3d(x=0, y=0, z=0),
-            ),
-            None,
-        ]
-
-        views = [
-            kcl.SnapshotOptions(camera=camera, padding=padding)
-            for camera in camera_list
-        ]
-
-        if kcl_code:
-            jpeg_contents_list = await kcl.execute_code_and_snapshot_views(
-                kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=views
-            )
-        else:
-            assert isinstance(kcl_path, Path)
-            jpeg_contents_list = await kcl.execute_and_snapshot_views(
-                str(kcl_path), kcl.ImageFormat.Jpeg, snapshot_options=views
-            )
-
-        assert isinstance(jpeg_contents_list, list)
-        for byte_obj in jpeg_contents_list:
-            assert isinstance(byte_obj, bytes)
-        collage = create_image_collage(jpeg_contents_list)
-
-        return collage
-
-    except Exception as e:
-        logger.error("Failed to take multiview snapshot: %s", e)
-        return None
-
-
 def zoo_multiview_snapshot_of_cad(
-    input_path: Path | str,
-    padding: float = 0.2,
+        input_path: Path | str,
+        padding: float = 0.2,
 ) -> bytes | None:
     """Save a multiview snapshot of a CAD file.
 
@@ -731,25 +644,23 @@ def zoo_multiview_snapshot_of_cad(
         return collage
 
 
-async def zoo_snapshot_of_kcl(
-    kcl_code: str | None,
-    kcl_path: Path | str | None,
-    camera: kcl.CameraLookAt | None = None,
-    padding: float = 0.2,
+async def zoo_multiview_snapshot_of_kcl(
+        kcl_code: str | None,
+        kcl_path: Path | str | None,
+        padding: float = 0.2,
 ) -> bytes | None:
-    """Execute the KCL code and save a single view snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+    """Execute the KCL code and save a multiview snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
         kcl_code (str): KCL code
         kcl_path (Path | str): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
-        camera (kcl.CameraLookAt | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
     Returns:
         bytes or None: The JPEG image contents if successful, or None if there was an error.
     """
 
-    logger.info("Taking a snapshot of KCL")
+    logger.info("Taking a multiview snapshot of KCL")
 
     # default to using the code if both are provided
     if kcl_code and kcl_path:
@@ -772,31 +683,58 @@ async def zoo_snapshot_of_kcl(
         return None
 
     try:
-        view = kcl.SnapshotOptions(camera=camera, padding=padding)
+        # None in the camera list means isometric view
+        # https://github.com/KittyCAD/modeling-app/blob/main/rust/kcl-python-bindings/tests/tests.py#L192
+        camera_list = [
+            kcl.CameraLookAt(
+                up=kcl.Point3d(x=0, y=0, z=1),
+                vantage=kcl.Point3d(x=0, y=-1, z=0),
+                center=kcl.Point3d(x=0, y=0, z=0),
+            ),
+            kcl.CameraLookAt(
+                up=kcl.Point3d(x=0, y=0, z=1),
+                vantage=kcl.Point3d(x=1, y=0, z=0),
+                center=kcl.Point3d(x=0, y=0, z=0),
+            ),
+            kcl.CameraLookAt(
+                up=kcl.Point3d(x=0, y=1, z=0),
+                vantage=kcl.Point3d(x=0, y=0, z=1),
+                center=kcl.Point3d(x=0, y=0, z=0),
+            ),
+            None,
+        ]
+
+        views = [
+            kcl.SnapshotOptions(camera=camera, padding=padding)
+            for camera in camera_list
+        ]
 
         if kcl_code:
             jpeg_contents_list = await kcl.execute_code_and_snapshot_views(
-                kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=[view]
+                kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=views
             )
         else:
             assert isinstance(kcl_path, Path)
             jpeg_contents_list = await kcl.execute_and_snapshot_views(
-                str(kcl_path), kcl.ImageFormat.Jpeg, snapshot_options=[view]
+                str(kcl_path), kcl.ImageFormat.Jpeg, snapshot_options=views
             )
 
         assert isinstance(jpeg_contents_list, list)
         for byte_obj in jpeg_contents_list:
             assert isinstance(byte_obj, bytes)
+        collage = create_image_collage(jpeg_contents_list)
+
+        return collage
 
     except Exception as e:
-        logger.error("Failed to take snapshot: %s", e)
+        logger.error("Failed to take multiview snapshot: %s", e)
         return None
 
 
 def zoo_snapshot_of_cad(
-    input_path: Path | str,
-    camera: OptionDefaultCameraLookAt | OptionViewIsometric | None = None,
-    padding: float = 0.2,
+        input_path: Path | str,
+        camera: OptionDefaultCameraLookAt | OptionViewIsometric | None = None,
+        padding: float = 0.2,
 ) -> bytes | None:
     """Save a single view snapshot of a CAD file.
 
@@ -919,3 +857,65 @@ def zoo_snapshot_of_cad(
         jpeg_contents = message["resp"]["data"]["modeling_response"]["data"]["contents"]
 
         return jpeg_contents
+
+
+async def zoo_snapshot_of_kcl(
+        kcl_code: str | None,
+        kcl_path: Path | str | None,
+        camera: kcl.CameraLookAt | None = None,
+        padding: float = 0.2,
+) -> bytes | None:
+    """Execute the KCL code and save a single view snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str): KCL code
+        kcl_path (Path | str): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+        camera (kcl.CameraLookAt | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
+        padding (float): The padding to apply to the snapshot. Default is 0.2.
+
+    Returns:
+        bytes or None: The JPEG image contents if successful, or None if there was an error.
+    """
+
+    logger.info("Taking a snapshot of KCL")
+
+    # default to using the code if both are provided
+    if kcl_code and kcl_path:
+        logger.warning("Both code and kcl_path provided, using code")
+        kcl_path = None
+
+    if kcl_path:
+        kcl_path = Path(kcl_path)
+        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
+            logger.error("The provided kcl_path is not a .kcl file")
+            return None
+        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
+            logger.error(
+                "The provided kcl_path directory does not contain a main.kcl file"
+            )
+            return None
+
+    if not kcl_code and not kcl_path:
+        logger.error("Neither code nor kcl_path provided")
+        return None
+
+    try:
+        view = kcl.SnapshotOptions(camera=camera, padding=padding)
+
+        if kcl_code:
+            jpeg_contents_list = await kcl.execute_code_and_snapshot_views(
+                kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=[view]
+            )
+        else:
+            assert isinstance(kcl_path, Path)
+            jpeg_contents_list = await kcl.execute_and_snapshot_views(
+                str(kcl_path), kcl.ImageFormat.Jpeg, snapshot_options=[view]
+            )
+
+        assert isinstance(jpeg_contents_list, list)
+        for byte_obj in jpeg_contents_list:
+            assert isinstance(byte_obj, bytes)
+
+    except Exception as e:
+        logger.error("Failed to take snapshot: %s", e)
+        return None
