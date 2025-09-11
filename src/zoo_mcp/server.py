@@ -28,7 +28,7 @@ async def calculate_center_of_mass(path: str, unit_length: str) -> str:
         str: The center of mass of the file in the specified unit of length, or an error message if the operation fails.
     """
 
-    logger.info("Received calculate_center_of_mass request for file: %s", path)
+    logger.info("calculate_center_of_mass called for file: %s", path)
 
     com = await _zoo_calculate_center_of_mass(file_path=path, unit_length=unit_length)
     if com:
@@ -53,7 +53,7 @@ async def calculate_mass(
         str: The mass of the file in the specified unit of mass, or an error message if the operation fails.
     """
 
-    logger.info("Received calculate_mass request for file: %s", path)
+    logger.info("calculate_mass called for file: %s", path)
 
     mass = await _zoo_calculate_mass(
         file_path=path, unit_mass=unit_mass, unit_density=unit_density, density=density
@@ -76,7 +76,7 @@ async def calculate_surface_area(path: str, unit_area: str) -> str:
         str: The surface area of the file in the specified unit of area, or an error message if the operation fails.
     """
 
-    logger.info("Received calculate_surface_area request for file: %s", path)
+    logger.info("calculate_surface_area called for file: %s", path)
 
     surface_area = await _zoo_calculate_surface_area(
         file_path=path, unit_area=unit_area
@@ -99,7 +99,7 @@ async def calculate_volume(path: str, unit_volume: str) -> str:
         str: The volume of the file in the specified unit of volume, or an error message if the operation fails.
     """
 
-    logger.info("Received calculate_volume request for file: %s", path)
+    logger.info("calculate_volume called for file: %s", path)
 
     volume = await _zoo_calculate_volume(file_path=path, unit_vol=unit_volume)
     if volume:
@@ -125,7 +125,7 @@ async def convert_cad_file(
         str: The path to the converted CAD file, or an error message if the operation fails.
     """
 
-    logger.info("Received convert_cad_file request.")
+    logger.info("convert_cad_file called")
 
     step_path = await _zoo_convert_cad_file(
         input_path=input_path, export_path=export_path, export_format=export_format
@@ -155,7 +155,7 @@ async def export_kcl(
         str: The path to the converted CAD file, or an error message if the operation fails.
     """
 
-    logger.info("Received convert_kcl_to_step request.")
+    logger.info("convert_kcl_to_step called")
 
     cad_path = await _zoo_export_kcl(
         kcl_code=kcl_code,
@@ -195,7 +195,7 @@ async def text_to_cad(prompt: str) -> str:
     Returns:
         str: The generated KCL code if Text-to-CAD is successful, otherwise the error message.
     """
-    logger.info("Received Text-To-CAD prompt: %s", prompt)
+    logger.info("Text-To-CAD called with prompt: %s", prompt)
     return await _text_to_cad(prompt=prompt)
 
 
