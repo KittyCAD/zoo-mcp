@@ -15,7 +15,7 @@ async def test_calculate_center_of_mass():
     response = await mcp.call_tool(
         "calculate_center_of_mass",
         arguments={
-            "path": path,
+            "input_path": path,
             "unit_length": "mm",
         },
     )
@@ -33,7 +33,7 @@ async def test_calculate_mass():
     response = await mcp.call_tool(
         "calculate_mass",
         arguments={
-            "path": path,
+            "input_path": path,
             "unit_mass": "kg",
             "unit_density": "kg:m3",
             "density": 1000.0,
@@ -51,7 +51,7 @@ async def test_calculate_surface_area():
     path = f"{test_file.resolve()}"
 
     response = await mcp.call_tool(
-        "calculate_surface_area", arguments={"path": path, "unit_area": "m2"}
+        "calculate_surface_area", arguments={"input_path": path, "unit_area": "m2"}
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -65,7 +65,7 @@ async def test_calculate_volume():
     path = f"{test_file.resolve()}"
 
     response = await mcp.call_tool(
-        "calculate_volume", arguments={"path": path, "unit_volume": "m3"}
+        "calculate_volume", arguments={"input_path": path, "unit_volume": "m3"}
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
