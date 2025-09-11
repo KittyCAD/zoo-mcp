@@ -30,7 +30,9 @@ async def calculate_center_of_mass(input_file: str, unit_length: str) -> str:
 
     logger.info("calculate_center_of_mass called for file: %s", input_file)
 
-    com = await zoo_calculate_center_of_mass(file_path=input_file, unit_length=unit_length)
+    com = await zoo_calculate_center_of_mass(
+        file_path=input_file, unit_length=unit_length
+    )
     if com:
         return f"The center of mass of the file is {com} with units of length of {unit_length}."
     else:
@@ -56,7 +58,10 @@ async def calculate_mass(
     logger.info("calculate_mass called for file: %s", input_file)
 
     mass = await zoo_calculate_mass(
-        file_path=input_file, unit_mass=unit_mass, unit_density=unit_density, density=density
+        file_path=input_file,
+        unit_mass=unit_mass,
+        unit_density=unit_density,
+        density=density,
     )
     if mass:
         return f"The mass of the file is {mass} {unit_mass}."
