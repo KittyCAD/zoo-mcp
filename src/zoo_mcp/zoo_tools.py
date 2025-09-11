@@ -70,7 +70,7 @@ async def zoo_calculate_center_of_mass(
 
             if not isinstance(result, FileCenterOfMass):
                 logger.info(
-                    "Failed to get center of mass, incorrect return type %s",
+                    "Failed to calculate center of mass, incorrect return type %s",
                     type(result),
                 )
                 return None
@@ -84,10 +84,10 @@ async def zoo_calculate_center_of_mass(
             return com
 
         except Exception as e:
-            logger.info("Failed to get mass: %s", e)
+            logger.error("Failed to calculate center of mass: %s", e)
             return None
 
-    logger.info("Failed to get mass after %s attempts", max_attempts)
+    logger.critical("Failed to calculate center mass after %s attempts", max_attempts)
     return None
 
 
@@ -134,7 +134,7 @@ async def zoo_calculate_mass(
 
             if not isinstance(result, FileMass):
                 logger.info(
-                    "Failed to get mass, incorrect return type %s", type(result)
+                    "Failed to calculate mass, incorrect return type %s", type(result)
                 )
                 return None
 
@@ -143,10 +143,10 @@ async def zoo_calculate_mass(
             return mass
 
         except Exception as e:
-            logger.info("Failed to get mass: %s", e)
+            logger.error("Failed to calculate mass: %s", e)
             return None
 
-    logger.info("Failed to get mass after %s attempts", max_attempts)
+    logger.critical("Failed to calculate mass after %s attempts", max_attempts)
     return None
 
 
@@ -185,7 +185,7 @@ async def zoo_calculate_surface_area(
 
             if not isinstance(result, FileSurfaceArea):
                 logger.info(
-                    "Failed to get surface area, incorrect return type %s", type(result)
+                    "Failed to calculate surface area, incorrect return type %s", type(result)
                 )
                 return None
 
@@ -196,10 +196,10 @@ async def zoo_calculate_surface_area(
             return surface_area
 
         except Exception as e:
-            logger.info("Failed to get surface area: %s", e)
+            logger.error("Failed to calculate surface area: %s", e)
             return None
 
-    logger.info("Failed to get surface area after %s attempts", max_attempts)
+    logger.critical("Failed to calculate surface area after %s attempts", max_attempts)
     return None
 
 
@@ -238,7 +238,7 @@ async def zoo_calculate_volume(
 
             if not isinstance(result, FileVolume):
                 logger.info(
-                    "Failed to get volume, incorrect return type %s", type(result)
+                    "Failed to calculate volume, incorrect return type %s", type(result)
                 )
                 return None
 
@@ -247,10 +247,10 @@ async def zoo_calculate_volume(
             return volume
 
         except Exception as e:
-            logger.info("Failed to get volume: %s", e)
+            logger.error("Failed to calculate volume: %s", e)
             return None
 
-    logger.info("Failed to get volume after %s attempts", max_attempts)
+    logger.critical("Failed to calculate volume after %s attempts", max_attempts)
     return None
 
 
@@ -275,23 +275,23 @@ async def zoo_convert_cad_file(
     input_path = Path(input_path)
     input_ext = input_path.suffix.split(".")[1]
     if input_ext not in [i.value for i in FileImportFormat]:
-        logger.info("The provided input path does not have a valid extension")
+        logger.error("The provided input path does not have a valid extension")
         return None
     logger.info("Converting the cad file %s", str(input_path.resolve()))
 
     # check the export format
     if not export_format:
-        logger.info("No export format provided, defaulting to step")
+        logger.warning("No export format provided, defaulting to step")
         export_format = FileExportFormat.STEP
     else:
         if export_format not in FileExportFormat:
-            logger.info("Invalid export format provided, defaulting to step")
+            logger.warning("Invalid export format provided, defaulting to step")
             export_format = FileExportFormat.STEP
         if isinstance(export_format, str):
             export_format = FileExportFormat(export_format)
 
     if export_path is None:
-        logger.info("No export path provided, creating a temporary file")
+        logger.warning("No export path provided, creating a temporary file")
         export_path = await aiofiles.tempfile.NamedTemporaryFile(
             delete=False, suffix=f".{export_format.value.lower()}"
         )
@@ -301,7 +301,7 @@ async def zoo_convert_cad_file(
         if export_path.suffix:
             ext = export_path.suffix.split(".")[1]
             if ext not in [i.value for i in FileExportFormat]:
-                logger.info(
+                logger.warning(
                     "The provided export path does not have a valid extension, using a temporary file instead"
                 )
                 export_path = await aiofiles.tempfile.NamedTemporaryFile(
@@ -310,7 +310,7 @@ async def zoo_convert_cad_file(
                     suffix=f".{export_format.value.lower()}",
                 )
             else:
-                logger.info("The provided export path is a file, overwriting")
+                logger.warning("The provided export path is a file, overwriting")
         else:
             export_path = await aiofiles.tempfile.NamedTemporaryFile(
                 dir=export_path.resolve(),
@@ -333,14 +333,14 @@ async def zoo_convert_cad_file(
             )
 
             if not isinstance(export_response, FileConversion):
-                logger.info(
+                logger.error(
                     "Failed to convert file, incorrect return type %s",
                     type(export_response),
                 )
                 return None
 
             if export_response.outputs is None:
-                logger.info("Failed to convert file")
+                logger.error("Failed to convert file")
                 return None
 
             async with aiofiles.open(export_path, "wb") as out:
@@ -355,6 +355,7 @@ async def zoo_convert_cad_file(
             logger.error("Failed to export step: %s", e)
 
             return None
+    logger.critical("Failed to convert CAD file after %s attempts", max_attempts)
     return None
 
 
@@ -382,37 +383,37 @@ async def zoo_export_kcl(
 
     # default to using the code if both are provided
     if kcl_code and kcl_path:
-        logger.info("Both code and kcl_path provided, using code")
+        logger.warning("Both code and kcl_path provided, using code")
         kcl_path = None
 
     if kcl_path:
         kcl_path = Path(kcl_path)
         if kcl_path.is_file() and kcl_path.suffix != ".kcl":
-            logger.info("The provided kcl_path is not a .kcl file")
+            logger.error("The provided kcl_path is not a .kcl file")
             return None
         if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
-            logger.info(
+            logger.error(
                 "The provided kcl_path directory does not contain a main.kcl file"
             )
             return None
 
     if not kcl_code and not kcl_path:
-        logger.info("Neither code nor kcl_path provided")
+        logger.error("Neither code nor kcl_path provided")
         return None
 
     # check the export format
     if not export_format:
-        logger.info("No export format provided, defaulting to step")
+        logger.warning("No export format provided, defaulting to step")
         export_format = kcl.FileExportFormat.Step
     else:
         if export_format not in _kcl_export_format_map.values():
-            logger.info("Invalid export format provided, defaulting to step")
+            logger.warning("Invalid export format provided, defaulting to step")
             export_format = kcl.FileExportFormat.Step
         if isinstance(export_format, str):
             export_format = _kcl_export_format_map[export_format]
 
     if export_path is None:
-        logger.info("No export path provided, creating a temporary file")
+        logger.warning("No export path provided, creating a temporary file")
         export_path = await aiofiles.tempfile.NamedTemporaryFile(
             delete=False, suffix=f".{str(export_format).split('.')[1].lower()}"
         )
@@ -422,7 +423,7 @@ async def zoo_export_kcl(
         if export_path.suffix:
             ext = export_path.suffix.split(".")[1]
             if ext not in [i.value for i in FileExportFormat]:
-                logger.info(
+                logger.warning(
                     "The provided export path does not have a valid extension, using a temporary file instead"
                 )
                 export_path = await aiofiles.tempfile.NamedTemporaryFile(
@@ -431,7 +432,7 @@ async def zoo_export_kcl(
                     suffix=f".{str(export_format).split('.')[1].lower()}",
                 )
             else:
-                logger.info("The provided export path is a file, overwriting")
+                logger.warning("The provided export path is a file, overwriting")
         else:
             export_path = await aiofiles.tempfile.NamedTemporaryFile(
                 dir=export_path.resolve(),
@@ -464,4 +465,6 @@ async def zoo_export_kcl(
             logger.error("Failed to export step: %s", e)
 
             return None
+
+    logger.critical("Failed to export KCL after %s attempts", max_attempts)
     return None
