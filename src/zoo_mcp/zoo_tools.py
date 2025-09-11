@@ -39,7 +39,7 @@ async def zoo_calculate_center_of_mass(
     unit_length: str,
     max_attempts: int = 3,
 ) -> dict[str, float] | None:
-    """Get the center of mass of the file
+    """Calculate the center of mass of the file
 
     Args:
         file_path(Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
@@ -51,7 +51,7 @@ async def zoo_calculate_center_of_mass(
     """
     file_path = Path(file_path)
 
-    logger.info("Getting center of mass for %s", str(file_path.resolve()))
+    logger.info("Calculating center of mass for %s", str(file_path.resolve()))
 
     attempts = 0
     while attempts < max_attempts:
@@ -98,7 +98,7 @@ async def zoo_calculate_mass(
     density: float,
     max_attempts: int = 3,
 ) -> float | None:
-    """Get the mass of the file in the requested unit
+    """Calculate the mass of the file in the requested unit
 
     Args:
         file_path(Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
@@ -113,7 +113,7 @@ async def zoo_calculate_mass(
 
     file_path = Path(file_path)
 
-    logger.info("Getting mass for %s", str(file_path.resolve()))
+    logger.info("Calculating mass for %s", str(file_path.resolve()))
 
     attempts = 0
     while attempts < max_attempts:
@@ -153,7 +153,7 @@ async def zoo_calculate_mass(
 async def zoo_calculate_surface_area(
     file_path: Path | str, unit_area: str, max_attempts: int = 3
 ) -> float | None:
-    """Get the surface area of the file in the requested unit
+    """Calculate the surface area of the file in the requested unit
 
     Args:
         file_path (Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
@@ -166,7 +166,7 @@ async def zoo_calculate_surface_area(
 
     file_path = Path(file_path)
 
-    logger.info("Getting surface area for %s", str(file_path.resolve()))
+    logger.info("Calculating surface area for %s", str(file_path.resolve()))
 
     attempts = 0
     while attempts < max_attempts:
@@ -206,7 +206,7 @@ async def zoo_calculate_surface_area(
 async def zoo_calculate_volume(
     file_path: Path | str, unit_vol: str, max_attempts: int = 3
 ) -> float | None:
-    """Get the volume of the file in the requested unit
+    """Calculate the volume of the file in the requested unit
 
     Args:
         file_path (Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
@@ -219,7 +219,7 @@ async def zoo_calculate_volume(
 
     file_path = Path(file_path)
 
-    logger.info("Getting volume for %s", str(file_path.resolve()))
+    logger.info("Calculating volume for %s", str(file_path.resolve()))
 
     attempts = 0
     while attempts < max_attempts:
@@ -277,7 +277,7 @@ async def zoo_convert_cad_file(
     if input_ext not in [i.value for i in FileImportFormat]:
         logger.info("The provided input path does not have a valid extension")
         return None
-    logger.info("Exporting the cad file %s", str(input_path.resolve()))
+    logger.info("Converting the cad file %s", str(input_path.resolve()))
 
     # check the export format
     if not export_format:

@@ -17,20 +17,20 @@ mcp = FastMCP(
 
 
 @mcp.tool()
-async def calculate_center_of_mass(path: str, unit_length: str) -> str:
-    """Get the center of mass of a file.
+async def calculate_center_of_mass(input_file: str, unit_length: str) -> str:
+    """Calculate the center of mass of a 3d object represented by the input file.
 
     Args:
-        path (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_length (str): The unit of length to return the result in. One of 'cm', 'ft', 'in', 'm', 'mm', 'yd'
 
     Returns:
         str: The center of mass of the file in the specified unit of length, or an error message if the operation fails.
     """
 
-    logger.info("calculate_center_of_mass called for file: %s", path)
+    logger.info("calculate_center_of_mass called for file: %s", input_file)
 
-    com = await zoo_calculate_center_of_mass(file_path=path, unit_length=unit_length)
+    com = await zoo_calculate_center_of_mass(file_path=input_file, unit_length=unit_length)
     if com:
         return f"The center of mass of the file is {com} with units of length of {unit_length}."
     else:
@@ -39,12 +39,12 @@ async def calculate_center_of_mass(path: str, unit_length: str) -> str:
 
 @mcp.tool()
 async def calculate_mass(
-    path: str, unit_mass: str, unit_density: str, density: float
+    input_file: str, unit_mass: str, unit_density: str, density: float
 ) -> str:
-    """Get the mass of a file.
+    """Calculate the mass of a 3d object represented by the input file.
 
     Args:
-        path (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_mass (str): The unit of mass to return the result in. One of 'g', 'kg', 'lb'.
         unit_density (str): The unit of density to calculate the mass. One of 'lb:ft3', 'kg:m3'.
         density (float): The density of the material.
@@ -53,10 +53,10 @@ async def calculate_mass(
         str: The mass of the file in the specified unit of mass, or an error message if the operation fails.
     """
 
-    logger.info("calculate_mass called for file: %s", path)
+    logger.info("calculate_mass called for file: %s", input_file)
 
     mass = await zoo_calculate_mass(
-        file_path=path, unit_mass=unit_mass, unit_density=unit_density, density=density
+        file_path=input_file, unit_mass=unit_mass, unit_density=unit_density, density=density
     )
     if mass:
         return f"The mass of the file is {mass} {unit_mass}."
@@ -65,21 +65,21 @@ async def calculate_mass(
 
 
 @mcp.tool()
-async def calculate_surface_area(path: str, unit_area: str) -> str:
-    """Get the surface area of a file.
+async def calculate_surface_area(input_file: str, unit_area: str) -> str:
+    """Calculate the surface area of a 3d object represented by the input file.
 
     Args:
-        path (str): The path of the file to get the surface area from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_file (str): The path of the file to get the surface area from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_area (str): The unit of area to return the result in. One of 'cm2', 'dm2', 'ft2', 'in2', 'km2', 'm2', 'mm2', 'yd2'.
 
     Returns:
         str: The surface area of the file in the specified unit of area, or an error message if the operation fails.
     """
 
-    logger.info("calculate_surface_area called for file: %s", path)
+    logger.info("calculate_surface_area called for file: %s", input_file)
 
     surface_area = await zoo_calculate_surface_area(
-        file_path=path, unit_area=unit_area
+        file_path=input_file, unit_area=unit_area
     )
     if surface_area:
         return f"The surface area of the file is {surface_area} {unit_area}."
@@ -88,20 +88,20 @@ async def calculate_surface_area(path: str, unit_area: str) -> str:
 
 
 @mcp.tool()
-async def calculate_volume(path: str, unit_volume: str) -> str:
-    """Get the volume of a file.
+async def calculate_volume(input_file: str, unit_volume: str) -> str:
+    """Calculate the volume of a 3d object represented by the input file.
 
     Args:
-        path (str): The path of the file to get the volume from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_file (str): The path of the file to get the volume from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_volume (str): The unit of volume to return the result in. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
 
     Returns:
         str: The volume of the file in the specified unit of volume, or an error message if the operation fails.
     """
 
-    logger.info("calculate_volume called for file: %s", path)
+    logger.info("calculate_volume called for file: %s", input_file)
 
-    volume = await zoo_calculate_volume(file_path=path, unit_vol=unit_volume)
+    volume = await zoo_calculate_volume(file_path=input_file, unit_vol=unit_volume)
     if volume:
         return f"The volume of the file is {volume} {unit_volume}."
     else:
