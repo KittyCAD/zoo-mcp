@@ -3,12 +3,12 @@ from mcp.server.fastmcp import FastMCP
 from zoo_mcp import logger
 from zoo_mcp.ai_tools import _text_to_cad
 from zoo_mcp.zoo_tools import (
-    _zoo_export_kcl,
-    _zoo_convert_cad_file,
-    _zoo_calculate_center_of_mass,
-    _zoo_calculate_mass,
-    _zoo_calculate_surface_area,
-    _zoo_calculate_volume,
+    zoo_export_kcl,
+    zoo_convert_cad_file,
+    zoo_calculate_center_of_mass,
+    zoo_calculate_mass,
+    zoo_calculate_surface_area,
+    zoo_calculate_volume,
 )
 
 mcp = FastMCP(
@@ -30,7 +30,7 @@ async def calculate_center_of_mass(path: str, unit_length: str) -> str:
 
     logger.info("calculate_center_of_mass called for file: %s", path)
 
-    com = await _zoo_calculate_center_of_mass(file_path=path, unit_length=unit_length)
+    com = await zoo_calculate_center_of_mass(file_path=path, unit_length=unit_length)
     if com:
         return f"The center of mass of the file is {com} with units of length of {unit_length}."
     else:
@@ -55,7 +55,7 @@ async def calculate_mass(
 
     logger.info("calculate_mass called for file: %s", path)
 
-    mass = await _zoo_calculate_mass(
+    mass = await zoo_calculate_mass(
         file_path=path, unit_mass=unit_mass, unit_density=unit_density, density=density
     )
     if mass:
@@ -78,7 +78,7 @@ async def calculate_surface_area(path: str, unit_area: str) -> str:
 
     logger.info("calculate_surface_area called for file: %s", path)
 
-    surface_area = await _zoo_calculate_surface_area(
+    surface_area = await zoo_calculate_surface_area(
         file_path=path, unit_area=unit_area
     )
     if surface_area:
@@ -101,7 +101,7 @@ async def calculate_volume(path: str, unit_volume: str) -> str:
 
     logger.info("calculate_volume called for file: %s", path)
 
-    volume = await _zoo_calculate_volume(file_path=path, unit_vol=unit_volume)
+    volume = await zoo_calculate_volume(file_path=path, unit_vol=unit_volume)
     if volume:
         return f"The volume of the file is {volume} {unit_volume}."
     else:
@@ -127,7 +127,7 @@ async def convert_cad_file(
 
     logger.info("convert_cad_file called")
 
-    step_path = await _zoo_convert_cad_file(
+    step_path = await zoo_convert_cad_file(
         input_path=input_path, export_path=export_path, export_format=export_format
     )
     if step_path:
@@ -157,7 +157,7 @@ async def export_kcl(
 
     logger.info("convert_kcl_to_step called")
 
-    cad_path = await _zoo_export_kcl(
+    cad_path = await zoo_export_kcl(
         kcl_code=kcl_code,
         kcl_path=kcl_path,
         export_path=export_path,

@@ -34,7 +34,7 @@ _kcl_export_format_map = {
 }
 
 
-async def _zoo_calculate_center_of_mass(
+async def zoo_calculate_center_of_mass(
     file_path: Path | str,
     unit_length: str,
     max_attempts: int = 3,
@@ -91,7 +91,7 @@ async def _zoo_calculate_center_of_mass(
     return None
 
 
-async def _zoo_calculate_mass(
+async def zoo_calculate_mass(
     file_path: Path | str,
     unit_mass: str,
     unit_density: str,
@@ -150,7 +150,7 @@ async def _zoo_calculate_mass(
     return None
 
 
-async def _zoo_calculate_surface_area(
+async def zoo_calculate_surface_area(
     file_path: Path | str, unit_area: str, max_attempts: int = 3
 ) -> float | None:
     """Get the surface area of the file in the requested unit
@@ -203,7 +203,7 @@ async def _zoo_calculate_surface_area(
     return None
 
 
-async def _zoo_calculate_volume(
+async def zoo_calculate_volume(
     file_path: Path | str, unit_vol: str, max_attempts: int = 3
 ) -> float | None:
     """Get the volume of the file in the requested unit
@@ -254,7 +254,7 @@ async def _zoo_calculate_volume(
     return None
 
 
-async def _zoo_convert_cad_file(
+async def zoo_convert_cad_file(
     input_path: Path | str,
     export_path: Path | str | None,
     export_format: FileExportFormat | str | None = FileExportFormat.STEP,
@@ -358,7 +358,7 @@ async def _zoo_convert_cad_file(
     return None
 
 
-async def _zoo_export_kcl(
+async def zoo_export_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
     export_path: Path | str | None,
