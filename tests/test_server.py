@@ -105,16 +105,13 @@ async def test_export_kcl():
     ) as f:
         kcl_code = await f.read()
 
-    async with aiofiles.tempfile.NamedTemporaryFile(
-        suffix=".step", delete=False
-    ) as tmp:
-        export_path = f"{tmp.name}"
+    async with aiofiles.tempfile.TemporaryDirectory() as tmp:
         response = await mcp.call_tool(
             "export_kcl",
             arguments={
                 "kcl_code": kcl_code,
                 "kcl_path": None,
-                "export_path": export_path,
+                "export_path": tmp,
                 "export_format": "step",
             },
         )
@@ -122,10 +119,7 @@ async def test_export_kcl():
         assert isinstance(response[1], dict)
         result = response[1]["result"]
         assert "successfully exported" in result
-        assert Path(tmp.name).exists()
-
-        # Clean up
-        Path(tmp.name).unlink(missing_ok=True)
+        assert Path(tmp).exists()
 
 
 @pytest.mark.asyncio

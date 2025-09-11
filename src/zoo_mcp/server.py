@@ -30,10 +30,8 @@ async def calculate_center_of_mass(path: str, unit_length: str) -> str:
 
     logger.info("Received calculate_center_of_mass request for file: %s", path)
 
-    success, com = await _zoo_calculate_center_of_mass(
-        file_path=path, unit_length=unit_length
-    )
-    if success:
+    com = await _zoo_calculate_center_of_mass(file_path=path, unit_length=unit_length)
+    if com:
         return f"The center of mass of the file is {com} with units of length of {unit_length}."
     else:
         return "The center of mass of the file could not be determined."
@@ -57,10 +55,10 @@ async def calculate_mass(
 
     logger.info("Received calculate_mass request for file: %s", path)
 
-    success, mass = await _zoo_calculate_mass(
+    mass = await _zoo_calculate_mass(
         file_path=path, unit_mass=unit_mass, unit_density=unit_density, density=density
     )
-    if success:
+    if mass:
         return f"The mass of the file is {mass} {unit_mass}."
     else:
         return "The mass of the file could not be determined."
@@ -80,10 +78,10 @@ async def calculate_surface_area(path: str, unit_area: str) -> str:
 
     logger.info("Received calculate_surface_area request for file: %s", path)
 
-    success, surface_area = await _zoo_calculate_surface_area(
+    surface_area = await _zoo_calculate_surface_area(
         file_path=path, unit_area=unit_area
     )
-    if success:
+    if surface_area:
         return f"The surface area of the file is {surface_area} {unit_area}."
     else:
         return "The surface area of the file could not be determined."
@@ -103,8 +101,8 @@ async def calculate_volume(path: str, unit_volume: str) -> str:
 
     logger.info("Received calculate_volume request for file: %s", path)
 
-    success, volume = await _zoo_calculate_volume(file_path=path, unit_vol=unit_volume)
-    if success:
+    volume = await _zoo_calculate_volume(file_path=path, unit_vol=unit_volume)
+    if volume:
         return f"The volume of the file is {volume} {unit_volume}."
     else:
         return "The volume of the file could not be determined."
@@ -129,13 +127,11 @@ async def convert_cad_file(
 
     logger.info("Received convert_cad_file request.")
 
-    success, step_path = await _zoo_convert_cad_file(
+    step_path = await _zoo_convert_cad_file(
         input_path=input_path, export_path=export_path, export_format=export_format
     )
-    if success:
-        return (
-            f"The file was successfully converted to a CAD file at: file://{step_path}"
-        )
+    if step_path:
+        return f"The file was successfully converted to a CAD file at: {step_path}"
     else:
         return "The file could not be converted to a CAD file."
 
@@ -161,14 +157,14 @@ async def export_kcl(
 
     logger.info("Received convert_kcl_to_step request.")
 
-    success, step_path = await _zoo_export_kcl(
+    cad_path = await _zoo_export_kcl(
         kcl_code=kcl_code,
         kcl_path=kcl_path,
         export_path=export_path,
         export_format=export_format,
     )
-    if success:
-        return f"The KCL code was successfully exported to a CAD file at: file://{step_path}"
+    if cad_path:
+        return f"The KCL code was successfully exported to a CAD file at: {cad_path}"
     return "The KCL code could not be exported to a CAD file."
 
 

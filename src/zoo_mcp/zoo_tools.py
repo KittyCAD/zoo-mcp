@@ -38,7 +38,7 @@ async def _zoo_calculate_center_of_mass(
     file_path: Path | str,
     unit_length: str,
     max_attempts: int = 3,
-) -> tuple[bool, dict[str, float] | None]:
+) -> dict[str, float] | None:
     """Get the center of mass of the file
 
     Args:
@@ -47,7 +47,7 @@ async def _zoo_calculate_center_of_mass(
         max_attempts(int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        tuple[bool, dict[str] | None]: If the center of mass can be calculated return True and the center of mass as a dictionary with x, y, and z keys, otherwise return False and None
+        dict[str] | None: If the center of mass can be calculated return the center of mass as a dictionary with x, y, and z keys, otherwise return None
     """
     file_path = Path(file_path)
 
@@ -73,7 +73,7 @@ async def _zoo_calculate_center_of_mass(
                     "Failed to get center of mass, incorrect return type %s",
                     type(result),
                 )
-                return False, None
+                return None
 
             com = (
                 result.center_of_mass.to_dict()
@@ -81,14 +81,14 @@ async def _zoo_calculate_center_of_mass(
                 else None
             )
 
-            return True, com
+            return com
 
         except Exception as e:
             logger.info("Failed to get mass: %s", e)
-            return False, None
+            return None
 
     logger.info("Failed to get mass after %s attempts", max_attempts)
-    return False, None
+    return None
 
 
 async def _zoo_calculate_mass(
@@ -97,7 +97,7 @@ async def _zoo_calculate_mass(
     unit_density: str,
     density: float,
     max_attempts: int = 3,
-) -> tuple[bool, float]:
+) -> float | None:
     """Get the mass of the file in the requested unit
 
     Args:
@@ -108,7 +108,7 @@ async def _zoo_calculate_mass(
         max_attempts(int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        tuple[bool, str]: If the mass of the file can be calculated, return true and the mass in the requested unit, otherwise return false and math.nan
+        float | None: If the mass of the file can be calculated, return the mass in the requested unit, otherwise return None
     """
 
     file_path = Path(file_path)
@@ -136,23 +136,23 @@ async def _zoo_calculate_mass(
                 logger.info(
                     "Failed to get mass, incorrect return type %s", type(result)
                 )
-                return False, math.nan
+                return None
 
             mass = result.mass if result.mass is not None else math.nan
 
-            return True, mass
+            return mass
 
         except Exception as e:
             logger.info("Failed to get mass: %s", e)
-            return False, math.nan
+            return None
 
     logger.info("Failed to get mass after %s attempts", max_attempts)
-    return False, math.nan
+    return None
 
 
 async def _zoo_calculate_surface_area(
     file_path: Path | str, unit_area: str, max_attempts: int = 3
-) -> tuple[bool, float]:
+) -> float | None:
     """Get the surface area of the file in the requested unit
 
     Args:
@@ -161,7 +161,7 @@ async def _zoo_calculate_surface_area(
         max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        tuple[bool, str]: If the surface area can be calculated return True and the surface area, otherwise return False and math.nan
+        float | None: If the surface area can be calculated return the surface area, otherwise return None
     """
 
     file_path = Path(file_path)
@@ -187,25 +187,25 @@ async def _zoo_calculate_surface_area(
                 logger.info(
                     "Failed to get surface area, incorrect return type %s", type(result)
                 )
-                return False, math.nan
+                return None
 
             surface_area = (
                 result.surface_area if result.surface_area is not None else math.nan
             )
 
-            return True, surface_area
+            return surface_area
 
         except Exception as e:
             logger.info("Failed to get surface area: %s", e)
-            return False, math.nan
+            return None
 
     logger.info("Failed to get surface area after %s attempts", max_attempts)
-    return False, math.nan
+    return None
 
 
 async def _zoo_calculate_volume(
     file_path: Path | str, unit_vol: str, max_attempts: int = 3
-) -> tuple[bool, float]:
+) -> float | None:
     """Get the volume of the file in the requested unit
 
     Args:
@@ -214,7 +214,7 @@ async def _zoo_calculate_volume(
         max_attempts(int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        tuple[bool, str]: If the volume of the file can be calculated, return true and the volume in the requested unit, otherwise return false and math.nan
+        float | None: If the volume of the file can be calculated, return the volume in the requested unit, otherwise return None
     """
 
     file_path = Path(file_path)
@@ -240,18 +240,18 @@ async def _zoo_calculate_volume(
                 logger.info(
                     "Failed to get volume, incorrect return type %s", type(result)
                 )
-                return False, math.nan
+                return None
 
             volume = result.volume if result.volume is not None else math.nan
 
-            return True, volume
+            return volume
 
         except Exception as e:
             logger.info("Failed to get volume: %s", e)
-            return False, math.nan
+            return None
 
     logger.info("Failed to get volume after %s attempts", max_attempts)
-    return False, math.nan
+    return None
 
 
 async def _zoo_convert_cad_file(
@@ -259,7 +259,7 @@ async def _zoo_convert_cad_file(
     export_path: Path | str | None,
     export_format: FileExportFormat | str | None = FileExportFormat.STEP,
     max_attempts: int = 3,
-) -> tuple[bool, Path | None]:
+) -> Path | None:
     """Convert a cad file to another cad file
 
     Args:
@@ -269,14 +269,14 @@ async def _zoo_convert_cad_file(
         max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        tuple[bool, Path | None]: True if successful along with the path to the exported model, false, None otherwise
+        Path | None: Return the path to the exported model if successful, otherwise return None
     """
 
     input_path = Path(input_path)
     input_ext = input_path.suffix.split(".")[1]
     if input_ext not in [i.value for i in FileImportFormat]:
         logger.info("The provided input path does not have a valid extension")
-        return False, None
+        return None
     logger.info("Exporting the cad file %s", str(input_path.resolve()))
 
     # check the export format
@@ -337,11 +337,11 @@ async def _zoo_convert_cad_file(
                     "Failed to convert file, incorrect return type %s",
                     type(export_response),
                 )
-                return False, None
+                return None
 
             if export_response.outputs is None:
                 logger.info("Failed to convert file")
-                return False, None
+                return None
 
             async with aiofiles.open(export_path, "wb") as out:
                 await out.write(list(export_response.outputs.values())[0])
@@ -350,12 +350,12 @@ async def _zoo_convert_cad_file(
                 "KCL project exported successfully to %s", str(export_path.resolve())
             )
 
-            return True, export_path
+            return export_path
         except Exception as e:
             logger.error("Failed to export step: %s", e)
 
-            return False, None
-    return False, None
+            return None
+    return None
 
 
 async def _zoo_export_kcl(
@@ -364,7 +364,7 @@ async def _zoo_export_kcl(
     export_path: Path | str | None,
     export_format: kcl.FileExportFormat | str | None = kcl.FileExportFormat.Step,
     max_attempts: int = 3,
-) -> tuple[bool, Path | None]:
+) -> Path | None:
     """Export KCL code to a CAD file. Either code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
@@ -375,7 +375,7 @@ async def _zoo_export_kcl(
         max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        tuple[bool, Path | None]: True if successful along with the path to the exported model, false, None otherwise
+        Path | None: Return the path to the exported model if successful, otherwise return None
     """
 
     logger.info("Exporting KCL to Step")
@@ -389,16 +389,16 @@ async def _zoo_export_kcl(
         kcl_path = Path(kcl_path)
         if kcl_path.is_file() and kcl_path.suffix != ".kcl":
             logger.info("The provided kcl_path is not a .kcl file")
-            return False, None
+            return None
         if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
             logger.info(
                 "The provided kcl_path directory does not contain a main.kcl file"
             )
-            return False, None
+            return None
 
     if not kcl_code and not kcl_path:
         logger.info("Neither code nor kcl_path provided")
-        return False, None
+        return None
 
     # check the export format
     if not export_format:
@@ -459,9 +459,9 @@ async def _zoo_export_kcl(
 
             logger.info("KCL exported successfully to %s", str(export_path.name))
 
-            return True, export_path
+            return export_path
         except Exception as e:
             logger.error("Failed to export step: %s", e)
 
-            return False, None
-    return False, None
+            return None
+    return None
