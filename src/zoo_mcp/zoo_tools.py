@@ -52,12 +52,12 @@ _kcl_export_format_map = {
 }
 
 
-async def _zoo_calculate_center_of_mass(
+async def zoo_calculate_center_of_mass(
     file_path: Path | str,
     unit_length: str,
     max_attempts: int = 3,
 ) -> dict[str, float] | None:
-    """Get the center of mass of the file
+    """Calculate the center of mass of the file
 
     Args:
         file_path(Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
@@ -69,7 +69,7 @@ async def _zoo_calculate_center_of_mass(
     """
     file_path = Path(file_path)
 
-    logger.info("Getting center of mass for %s", str(file_path.resolve()))
+    logger.info("Calculating center of mass for %s", str(file_path.resolve()))
 
     attempts = 0
     while attempts < max_attempts:
@@ -109,14 +109,14 @@ async def _zoo_calculate_center_of_mass(
     return None
 
 
-async def _zoo_calculate_mass(
+async def zoo_calculate_mass(
     file_path: Path | str,
     unit_mass: str,
     unit_density: str,
     density: float,
     max_attempts: int = 3,
 ) -> float | None:
-    """Get the mass of the file in the requested unit
+    """Calculate the mass of the file in the requested unit
 
     Args:
         file_path(Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
@@ -131,7 +131,7 @@ async def _zoo_calculate_mass(
 
     file_path = Path(file_path)
 
-    logger.info("Getting mass for %s", str(file_path.resolve()))
+    logger.info("Calculating mass for %s", str(file_path.resolve()))
 
     attempts = 0
     while attempts < max_attempts:
@@ -168,10 +168,10 @@ async def _zoo_calculate_mass(
     return None
 
 
-async def _zoo_calculate_surface_area(
+async def zoo_calculate_surface_area(
     file_path: Path | str, unit_area: str, max_attempts: int = 3
 ) -> float | None:
-    """Get the surface area of the file in the requested unit
+    """Calculate the surface area of the file in the requested unit
 
     Args:
         file_path (Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
@@ -184,7 +184,7 @@ async def _zoo_calculate_surface_area(
 
     file_path = Path(file_path)
 
-    logger.info("Getting surface area for %s", str(file_path.resolve()))
+    logger.info("Calculating surface area for %s", str(file_path.resolve()))
 
     attempts = 0
     while attempts < max_attempts:
@@ -221,10 +221,10 @@ async def _zoo_calculate_surface_area(
     return None
 
 
-async def _zoo_calculate_volume(
+async def zoo_calculate_volume(
     file_path: Path | str, unit_vol: str, max_attempts: int = 3
 ) -> float | None:
-    """Get the volume of the file in the requested unit
+    """Calculate the volume of the file in the requested unit
 
     Args:
         file_path (Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
@@ -237,7 +237,7 @@ async def _zoo_calculate_volume(
 
     file_path = Path(file_path)
 
-    logger.info("Getting volume for %s", str(file_path.resolve()))
+    logger.info("Calculating volume for %s", str(file_path.resolve()))
 
     attempts = 0
     while attempts < max_attempts:
@@ -272,7 +272,7 @@ async def _zoo_calculate_volume(
     return None
 
 
-async def _zoo_convert_cad_file(
+async def zoo_convert_cad_file(
     input_path: Path | str,
     export_path: Path | str | None,
     export_format: FileExportFormat | str | None = FileExportFormat.STEP,
@@ -295,7 +295,7 @@ async def _zoo_convert_cad_file(
     if input_ext not in [i.value for i in FileImportFormat]:
         logger.info("The provided input path does not have a valid extension")
         return None
-    logger.info("Exporting the cad file %s", str(input_path.resolve()))
+    logger.info("Converting the cad file %s", str(input_path.resolve()))
 
     # check the export format
     if not export_format:
@@ -376,7 +376,7 @@ async def _zoo_convert_cad_file(
     return None
 
 
-async def _zoo_export_kcl(
+async def zoo_export_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
     export_path: Path | str | None,
