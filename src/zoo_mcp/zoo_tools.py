@@ -508,22 +508,22 @@ async def zoo_multiview_snapshot_of_kcl(
 
     # default to using the code if both are provided
     if kcl_code and kcl_path:
-        logger.info("Both code and kcl_path provided, using code")
+        logger.warning("Both code and kcl_path provided, using code")
         kcl_path = None
 
     if kcl_path:
         kcl_path = Path(kcl_path)
         if kcl_path.is_file() and kcl_path.suffix != ".kcl":
-            logger.info("The provided kcl_path is not a .kcl file")
+            logger.error("The provided kcl_path is not a .kcl file")
             return None
         if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
-            logger.info(
+            logger.error(
                 "The provided kcl_path directory does not contain a main.kcl file"
             )
             return None
 
     if not kcl_code and not kcl_path:
-        logger.info("Neither code nor kcl_path provided")
+        logger.error("Neither code nor kcl_path provided")
         return None
 
     try:
@@ -609,7 +609,7 @@ def zoo_multiview_snapshot_of_cad(
 
         input_ext = input_path.suffix.split(".")[1]
         if input_ext not in [i.value for i in FileImportFormat]:
-            logger.info("The provided input path does not have a valid extension")
+            logger.error("The provided input path does not have a valid extension")
             return None
 
         ws.send_binary(
@@ -632,6 +632,7 @@ def zoo_multiview_snapshot_of_cad(
             if message["request_id"] == import_id:
                 break
         if message["success"] is not True:
+            logger.error("Failed to import CAD file")
             return None
         object_id = message["resp"]["data"]["modeling_response"]["data"]["object_id"]
 
@@ -697,6 +698,7 @@ def zoo_multiview_snapshot_of_cad(
                 if message["request_id"] == focus_id:
                     break
             if message["success"] is not True:
+                logger.error("Failed to move camera to fit object")
                 return None
 
             # Take a snapshot as a JPEG.
@@ -716,6 +718,7 @@ def zoo_multiview_snapshot_of_cad(
                 if message["request_id"] == snapshot_id:
                     break
             if message["success"] is not True:
+                logger.error("Failed to capture snapshot")
                 return None
             jpeg_contents = message["resp"]["data"]["modeling_response"]["data"][
                 "contents"
@@ -750,22 +753,22 @@ async def zoo_snapshot_of_kcl(
 
     # default to using the code if both are provided
     if kcl_code and kcl_path:
-        logger.info("Both code and kcl_path provided, using code")
+        logger.warning("Both code and kcl_path provided, using code")
         kcl_path = None
 
     if kcl_path:
         kcl_path = Path(kcl_path)
         if kcl_path.is_file() and kcl_path.suffix != ".kcl":
-            logger.info("The provided kcl_path is not a .kcl file")
+            logger.error("The provided kcl_path is not a .kcl file")
             return None
         if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
-            logger.info(
+            logger.error(
                 "The provided kcl_path directory does not contain a main.kcl file"
             )
             return None
 
     if not kcl_code and not kcl_path:
-        logger.info("Neither code nor kcl_path provided")
+        logger.error("Neither code nor kcl_path provided")
         return None
 
     try:
@@ -826,7 +829,7 @@ def zoo_snapshot_of_cad(
 
         input_ext = input_path.suffix.split(".")[1]
         if input_ext not in [i.value for i in FileImportFormat]:
-            logger.info("The provided input path does not have a valid extension")
+            logger.error("The provided input path does not have a valid extension")
             return None
 
         ws.send_binary(
