@@ -9,6 +9,7 @@ from zoo_mcp.zoo_tools import (
     zoo_calculate_mass,
     zoo_calculate_surface_area,
     zoo_calculate_volume,
+    zoo_multiview_snapshot_of_kcl,
 )
 
 mcp = FastMCP(
@@ -193,7 +194,7 @@ async def multiview_snapshot_of_kcl(
 
     logger.info("multiview_snapshot_of_kcl called")
 
-    image = await _zoo_multiview_snapshot_of_kcl(
+    image = await zoo_multiview_snapshot_of_kcl(
         kcl_code=kcl_code,
         kcl_path=kcl_path,
         padding=padding,

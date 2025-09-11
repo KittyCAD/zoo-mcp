@@ -485,7 +485,7 @@ async def zoo_export_kcl(
     return None
 
 
-async def _zoo_multiview_snapshot_of_kcl(
+async def zoo_multiview_snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
     padding: float = 0.2,
@@ -572,7 +572,7 @@ async def _zoo_multiview_snapshot_of_kcl(
         return None
 
 
-def _zoo_multiview_snapshot_of_cad(
+def zoo_multiview_snapshot_of_cad(
     input_path: Path | str,
     padding: float = 0.2,
 ) -> bytes | None:
@@ -725,7 +725,7 @@ def _zoo_multiview_snapshot_of_cad(
         return collage
 
 
-async def _zoo_snapshot_of_kcl(
+async def zoo_snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
     camera: kcl.CameraLookAt | None = None,
@@ -787,7 +787,7 @@ async def _zoo_snapshot_of_kcl(
         return None
 
 
-def _zoo_snapshot_of_cad(
+def zoo_snapshot_of_cad(
     input_path: Path | str,
     camera: OptionDefaultCameraLookAt | OptionViewIsometric | None = None,
     padding: float = 0.2,
