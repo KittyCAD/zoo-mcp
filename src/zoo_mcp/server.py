@@ -271,10 +271,14 @@ async def snapshot_of_cad(
 
     if camera is not None:
         camera = OptionDefaultCameraLookAt(
-                up=Point3d(x=camera["up"][0], y=camera["up"][1], z=camera["up"][2]),
-                vantage=Point3d(x=camera["vantage"][0], y=-camera["vantage"][1], z=camera["vantage"][2]),
-                center=Point3d(x=camera["center"][0], y=camera["center"][1], z=camera["center"][2]),
-            )
+            up=Point3d(x=camera["up"][0], y=camera["up"][1], z=camera["up"][2]),
+            vantage=Point3d(
+                x=camera["vantage"][0], y=-camera["vantage"][1], z=camera["vantage"][2]
+            ),
+            center=Point3d(
+                x=camera["center"][0], y=camera["center"][1], z=camera["center"][2]
+            ),
+        )
 
     image = zoo_snapshot_of_cad(
         input_path=input_file,
@@ -312,10 +316,14 @@ async def snapshot_of_kcl(
 
     if camera is not None:
         camera = kcl.CameraLookAt(
-                up=kcl.Point3d(x=camera["up"][0], y=camera["up"][1], z=camera["up"][2]),
-                vantage=kcl.Point3d(x=camera["vantage"][0], y=-camera["vantage"][1], z=camera["vantage"][2]),
-                center=kcl.Point3d(x=camera["center"][0], y=camera["center"][1], z=camera["center"][2]),
-            )
+            up=kcl.Point3d(x=camera["up"][0], y=camera["up"][1], z=camera["up"][2]),
+            vantage=kcl.Point3d(
+                x=camera["vantage"][0], y=-camera["vantage"][1], z=camera["vantage"][2]
+            ),
+            center=kcl.Point3d(
+                x=camera["center"][0], y=camera["center"][1], z=camera["center"][2]
+            ),
+        )
 
     image = await zoo_snapshot_of_kcl(
         kcl_code=kcl_code,

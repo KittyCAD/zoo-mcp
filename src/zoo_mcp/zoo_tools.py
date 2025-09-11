@@ -53,9 +53,9 @@ _kcl_export_format_map = {
 
 
 async def zoo_calculate_center_of_mass(
-        file_path: Path | str,
-        unit_length: str,
-        max_attempts: int = 3,
+    file_path: Path | str,
+    unit_length: str,
+    max_attempts: int = 3,
 ) -> dict[str, float] | None:
     """Calculate the center of mass of the file
 
@@ -110,11 +110,11 @@ async def zoo_calculate_center_of_mass(
 
 
 async def zoo_calculate_mass(
-        file_path: Path | str,
-        unit_mass: str,
-        unit_density: str,
-        density: float,
-        max_attempts: int = 3,
+    file_path: Path | str,
+    unit_mass: str,
+    unit_density: str,
+    density: float,
+    max_attempts: int = 3,
 ) -> float | None:
     """Calculate the mass of the file in the requested unit
 
@@ -169,7 +169,7 @@ async def zoo_calculate_mass(
 
 
 async def zoo_calculate_surface_area(
-        file_path: Path | str, unit_area: str, max_attempts: int = 3
+    file_path: Path | str, unit_area: str, max_attempts: int = 3
 ) -> float | None:
     """Calculate the surface area of the file in the requested unit
 
@@ -203,7 +203,8 @@ async def zoo_calculate_surface_area(
 
             if not isinstance(result, FileSurfaceArea):
                 logger.info(
-                    "Failed to calculate surface area, incorrect return type %s", type(result)
+                    "Failed to calculate surface area, incorrect return type %s",
+                    type(result),
                 )
                 return None
 
@@ -222,7 +223,7 @@ async def zoo_calculate_surface_area(
 
 
 async def zoo_calculate_volume(
-        file_path: Path | str, unit_vol: str, max_attempts: int = 3
+    file_path: Path | str, unit_vol: str, max_attempts: int = 3
 ) -> float | None:
     """Calculate the volume of the file in the requested unit
 
@@ -273,10 +274,10 @@ async def zoo_calculate_volume(
 
 
 async def zoo_convert_cad_file(
-        input_path: Path | str,
-        export_path: Path | str | None,
-        export_format: FileExportFormat | str | None = FileExportFormat.STEP,
-        max_attempts: int = 3,
+    input_path: Path | str,
+    export_path: Path | str | None,
+    export_format: FileExportFormat | str | None = FileExportFormat.STEP,
+    max_attempts: int = 3,
 ) -> Path | None:
     """Convert a cad file to another cad file
 
@@ -378,11 +379,11 @@ async def zoo_convert_cad_file(
 
 
 async def zoo_export_kcl(
-        kcl_code: str | None,
-        kcl_path: Path | str | None,
-        export_path: Path | str | None,
-        export_format: kcl.FileExportFormat | str | None = kcl.FileExportFormat.Step,
-        max_attempts: int = 3,
+    kcl_code: str | None,
+    kcl_path: Path | str | None,
+    export_path: Path | str | None,
+    export_format: kcl.FileExportFormat | str | None = kcl.FileExportFormat.Step,
+    max_attempts: int = 3,
 ) -> Path | None:
     """Export KCL code to a CAD file. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -489,8 +490,8 @@ async def zoo_export_kcl(
 
 
 def zoo_multiview_snapshot_of_cad(
-        input_path: Path | str,
-        padding: float = 0.2,
+    input_path: Path | str,
+    padding: float = 0.2,
 ) -> bytes | None:
     """Save a multiview snapshot of a CAD file.
 
@@ -645,9 +646,9 @@ def zoo_multiview_snapshot_of_cad(
 
 
 async def zoo_multiview_snapshot_of_kcl(
-        kcl_code: str | None,
-        kcl_path: Path | str | None,
-        padding: float = 0.2,
+    kcl_code: str | None,
+    kcl_path: Path | str | None,
+    padding: float = 0.2,
 ) -> bytes | None:
     """Execute the KCL code and save a multiview snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -732,9 +733,9 @@ async def zoo_multiview_snapshot_of_kcl(
 
 
 def zoo_snapshot_of_cad(
-        input_path: Path | str,
-        camera: OptionDefaultCameraLookAt | OptionViewIsometric | None = None,
-        padding: float = 0.2,
+    input_path: Path | str,
+    camera: OptionDefaultCameraLookAt | OptionViewIsometric | None = None,
+    padding: float = 0.2,
 ) -> bytes | None:
     """Save a single view snapshot of a CAD file.
 
@@ -860,10 +861,10 @@ def zoo_snapshot_of_cad(
 
 
 async def zoo_snapshot_of_kcl(
-        kcl_code: str | None,
-        kcl_path: Path | str | None,
-        camera: kcl.CameraLookAt | None = None,
-        padding: float = 0.2,
+    kcl_code: str | None,
+    kcl_path: Path | str | None,
+    camera: kcl.CameraLookAt | None = None,
+    padding: float = 0.2,
 ) -> bytes | None:
     """Execute the KCL code and save a single view snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
