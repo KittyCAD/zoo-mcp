@@ -1,4 +1,4 @@
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP, Image
 
 from zoo_mcp import logger
 from zoo_mcp.ai_tools import _text_to_cad
@@ -9,6 +9,7 @@ from zoo_mcp.zoo_tools import (
     _zoo_calculate_mass,
     _zoo_calculate_surface_area,
     _zoo_calculate_volume,
+    _zoo_multiview_snapshot_of_kcl,
 )
 
 mcp = FastMCP(
@@ -166,6 +167,41 @@ async def export_kcl(
     if cad_path:
         return f"The KCL code was successfully exported to a CAD file at: {cad_path}"
     return "The KCL code could not be exported to a CAD file."
+
+
+@mcp.tool()
+async def multiview_snapshot_of_kcl(
+    kcl_code: str | None,
+    kcl_path: str | None,
+    padding: float = 0.2,
+) -> Image | str:
+    """Save a multiview snapshot of KCL code. Each quadrant of the image. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    This multiview image shows the render of the model from 4 different views:
+        The top left images is a front view.
+        The top right image is a right side view.
+        The bottom left image is a top view.
+        The bottom right image is an isometric view
+
+    Args:
+        kcl_code (str): The KCL code to export to a CAD file.
+        kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
+        padding:
+
+    Returns:
+        Image: The multiview snapshot of the KCL code as an image, or an error message if the operation fails.
+    """
+
+    logger.info("multiview_snapshot_of_kcl called")
+
+    image = await _zoo_multiview_snapshot_of_kcl(
+        kcl_code=kcl_code,
+        kcl_path=kcl_path,
+        padding=padding,
+    )
+    if image:
+        return image
+    return "The multiview snapshot could not be created."
 
 
 @mcp.tool()
