@@ -185,7 +185,8 @@ async def zoo_calculate_surface_area(
 
             if not isinstance(result, FileSurfaceArea):
                 logger.info(
-                    "Failed to calculate surface area, incorrect return type %s", type(result)
+                    "Failed to calculate surface area, incorrect return type %s",
+                    type(result),
                 )
                 return None
 
