@@ -1,7 +1,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from zoo_mcp import logger
-from zoo_mcp.ai_tools import _text_to_cad
+from zoo_mcp.ai_tools import text_to_cad as _text_to_cad
 from zoo_mcp.zoo_tools import (
     zoo_export_kcl,
     zoo_convert_cad_file,
