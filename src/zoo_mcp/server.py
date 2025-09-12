@@ -18,7 +18,7 @@ mcp = FastMCP(
 
 
 @mcp.tool()
-async def calculate_center_of_mass(input_file: str, unit_length: str) -> str:
+async def calculate_center_of_mass(input_file: str, unit_length: str) -> dict | str:
     """Calculate the center of mass of a 3d object represented by the input file.
 
     Args:
@@ -35,7 +35,7 @@ async def calculate_center_of_mass(input_file: str, unit_length: str) -> str:
         com = await zoo_calculate_center_of_mass(
             file_path=input_file, unit_length=unit_length
         )
-        return f"The center of mass of the file is {com} with units of length of {unit_length}."
+        return com
     except Exception as e:
         return f"There was an error calculating the center of mass of the file: {e}"
 
@@ -43,7 +43,7 @@ async def calculate_center_of_mass(input_file: str, unit_length: str) -> str:
 @mcp.tool()
 async def calculate_mass(
     input_file: str, unit_mass: str, unit_density: str, density: float
-) -> str:
+) -> float | str:
     """Calculate the mass of a 3d object represented by the input file.
 
     Args:
@@ -65,13 +65,13 @@ async def calculate_mass(
             unit_density=unit_density,
             density=density,
         )
-        return f"The mass of the file is {mass} {unit_mass}."
+        return mass
     except Exception as e:
         return f"There was an error calculating the mass of the file: {e}"
 
 
 @mcp.tool()
-async def calculate_surface_area(input_file: str, unit_area: str) -> str:
+async def calculate_surface_area(input_file: str, unit_area: str) -> float | str:
     """Calculate the surface area of a 3d object represented by the input file.
 
     Args:
@@ -88,13 +88,13 @@ async def calculate_surface_area(input_file: str, unit_area: str) -> str:
         surface_area = await zoo_calculate_surface_area(
             file_path=input_file, unit_area=unit_area
         )
-        return f"The surface area of the file is {surface_area} {unit_area}."
+        return surface_area
     except Exception as e:
         return f"There was an error calculating the surface area of the file: {e}"
 
 
 @mcp.tool()
-async def calculate_volume(input_file: str, unit_volume: str) -> str:
+async def calculate_volume(input_file: str, unit_volume: str) -> float | str:
     """Calculate the volume of a 3d object represented by the input file.
 
     Args:
@@ -109,7 +109,7 @@ async def calculate_volume(input_file: str, unit_volume: str) -> str:
 
     try:
         volume = await zoo_calculate_volume(file_path=input_file, unit_vol=unit_volume)
-        return f"The volume of the file is {volume} {unit_volume}."
+        return volume
     except Exception as e:
         return f"There was an error calculating the volume of the file: {e}"
 
@@ -137,7 +137,7 @@ async def convert_cad_file(
         step_path = await zoo_convert_cad_file(
             input_path=input_path, export_path=export_path, export_format=export_format
         )
-        return f"The file was successfully converted to a CAD file at: {step_path}"
+        return str(step_path)
     except Exception as e:
         return f"There was an error converting the CAD file: {e}"
 
@@ -170,7 +170,7 @@ async def export_kcl(
             export_path=export_path,
             export_format=export_format,
         )
-        return f"The KCL code was successfully exported to a CAD file at: {cad_path}"
+        return str(cad_path)
     except Exception as e:
         return f"There was an error exporting the CAD file: {e}"
 
