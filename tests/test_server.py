@@ -34,7 +34,7 @@ async def test_calculate_center_of_mass_error():
         arguments={
             "input_file": path,
             "unit_length": "asdf",
-        }
+        },
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -74,7 +74,7 @@ async def test_calculate_mass_error():
             "unit_mass": "asdf",
             "unit_density": "kg:m3",
             "density": 1000.0,
-        }
+        },
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -88,11 +88,7 @@ async def test_calculate_surface_area():
     path = f"{test_file.resolve()}"
 
     response = await mcp.call_tool(
-        "calculate_surface_area",
-        arguments={
-            "input_file": path,
-            "unit_area": "m2"
-        }
+        "calculate_surface_area", arguments={"input_file": path, "unit_area": "m2"}
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -110,7 +106,7 @@ async def test_calculate_surface_area_error():
         arguments={
             "input_file": path,
             "unit_area": "asdf",
-        }
+        },
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -124,11 +120,7 @@ async def test_calculate_volume():
     path = f"{test_file.resolve()}"
 
     response = await mcp.call_tool(
-        "calculate_volume",
-        arguments={
-            "input_file": path,
-            "unit_volume": "m3"
-        }
+        "calculate_volume", arguments={"input_file": path, "unit_volume": "m3"}
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -142,11 +134,7 @@ async def test_calculate_volume_error():
     path = f"{test_file.resolve()}"
 
     response = await mcp.call_tool(
-        "calculate_volume",
-        arguments={
-            "input_file": path,
-            "unit_volume": "asdf"
-        }
+        "calculate_volume", arguments={"input_file": path, "unit_volume": "asdf"}
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -183,7 +171,9 @@ async def test_convert_cad_file():
 async def test_convert_cad_file_error():
     test_file = Path(__file__).parent / "data" / "cube.step"
 
-    async with aiofiles.tempfile.NamedTemporaryFile(suffix=".asdf", delete=False) as tmp:
+    async with aiofiles.tempfile.NamedTemporaryFile(
+        suffix=".asdf", delete=False
+    ) as tmp:
         path = f"{test_file.resolve()}"
         export_path = f"{tmp.name}"
         response = await mcp.call_tool(
@@ -244,6 +234,7 @@ async def test_export_kcl_error():
         assert isinstance(response[1], dict)
         result = response[1]["result"]
         assert "error exporting the CAD" in result
+
 
 @pytest.mark.asyncio
 async def test_text_to_cad_success():
