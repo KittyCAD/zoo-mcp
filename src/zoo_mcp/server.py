@@ -204,13 +204,14 @@ async def multiview_snapshot_of_cad(
 
     logger.info("multiview_snapshot_of_cad called for file: %s", input_file)
 
-    image = zoo_multiview_snapshot_of_cad(
-        input_path=input_file,
-        padding=padding,
-    )
-    if image:
+    try:
+        image = zoo_multiview_snapshot_of_cad(
+            input_path=input_file,
+            padding=padding,
+        )
         return Image(data=image, format="jpeg")
-    return "The multiview snapshot could not be created."
+    except Exception as e:
+        return f"There was an error creating the multiview snapshot: {e}"
 
 
 @mcp.tool()
@@ -238,14 +239,15 @@ async def multiview_snapshot_of_kcl(
 
     logger.info("multiview_snapshot_of_kcl called")
 
-    image = await zoo_multiview_snapshot_of_kcl(
-        kcl_code=kcl_code,
-        kcl_path=kcl_path,
-        padding=padding,
-    )
-    if image:
+    try:
+        image = await zoo_multiview_snapshot_of_kcl(
+            kcl_code=kcl_code,
+            kcl_path=kcl_path,
+            padding=padding,
+        )
         return Image(data=image, format="jpeg")
-    return "The multiview snapshot could not be created."
+    except Exception as e:
+        return f"There was an error creating the multiview snapshot: {e}"
 
 
 @mcp.tool()
@@ -270,25 +272,26 @@ async def snapshot_of_cad(
 
     logger.info("snapshot_of_cad called for file: %s", input_file)
 
-    if camera is not None:
-        camera = OptionDefaultCameraLookAt(
-            up=Point3d(x=camera["up"][0], y=camera["up"][1], z=camera["up"][2]),
-            vantage=Point3d(
-                x=camera["vantage"][0], y=-camera["vantage"][1], z=camera["vantage"][2]
-            ),
-            center=Point3d(
-                x=camera["center"][0], y=camera["center"][1], z=camera["center"][2]
-            ),
-        )
+    try:
+        if camera is not None:
+            camera = OptionDefaultCameraLookAt(
+                up=Point3d(x=camera["up"][0], y=camera["up"][1], z=camera["up"][2]),
+                vantage=Point3d(
+                    x=camera["vantage"][0], y=-camera["vantage"][1], z=camera["vantage"][2]
+                ),
+                center=Point3d(
+                    x=camera["center"][0], y=camera["center"][1], z=camera["center"][2]
+                ),
+            )
 
-    image = zoo_snapshot_of_cad(
-        input_path=input_file,
-        camera=camera,
-        padding=padding,
-    )
-    if image:
+        image = zoo_snapshot_of_cad(
+            input_path=input_file,
+            camera=camera,
+            padding=padding,
+        )
         return Image(data=image, format="jpeg")
-    return "The snapshot could not be created."
+    except Exception as e:
+        return f"There was an error creating the snapshot: {e}"
 
 
 @mcp.tool()
@@ -315,26 +318,27 @@ async def snapshot_of_kcl(
 
     logger.info("snapshot_of_kcl called for file")
 
-    if camera is not None:
-        camera = kcl.CameraLookAt(
-            up=kcl.Point3d(x=camera["up"][0], y=camera["up"][1], z=camera["up"][2]),
-            vantage=kcl.Point3d(
-                x=camera["vantage"][0], y=-camera["vantage"][1], z=camera["vantage"][2]
-            ),
-            center=kcl.Point3d(
-                x=camera["center"][0], y=camera["center"][1], z=camera["center"][2]
-            ),
-        )
+    try:
+        if camera is not None:
+            camera = kcl.CameraLookAt(
+                up=kcl.Point3d(x=camera["up"][0], y=camera["up"][1], z=camera["up"][2]),
+                vantage=kcl.Point3d(
+                    x=camera["vantage"][0], y=-camera["vantage"][1], z=camera["vantage"][2]
+                ),
+                center=kcl.Point3d(
+                    x=camera["center"][0], y=camera["center"][1], z=camera["center"][2]
+                ),
+            )
 
-    image = await zoo_snapshot_of_kcl(
-        kcl_code=kcl_code,
-        kcl_path=kcl_path,
-        camera=camera,
-        padding=padding,
-    )
-    if image:
+        image = await zoo_snapshot_of_kcl(
+            kcl_code=kcl_code,
+            kcl_path=kcl_path,
+            camera=camera,
+            padding=padding,
+        )
         return Image(data=image, format="jpeg")
-    return "The snapshot could not be created."
+    except Exception as e:
+        return f"There was an error creating the snapshot: {e}"
 
 
 @mcp.tool()
