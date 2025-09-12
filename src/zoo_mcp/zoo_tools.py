@@ -1,4 +1,3 @@
-import math
 from pathlib import Path
 from uuid import uuid4
 
@@ -494,7 +493,7 @@ async def zoo_export_kcl(
 def zoo_multiview_snapshot_of_cad(
     input_path: Path | str,
     padding: float = 0.2,
-) -> bytes | None:
+) -> bytes:
     """Save a multiview snapshot of a CAD file.
 
     Args:
@@ -502,7 +501,7 @@ def zoo_multiview_snapshot_of_cad(
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
     Returns:
-        bytes or None: The JPEG image contents if successful, or None if there was an error.
+        bytes or None: The JPEG image contents if successful
     """
 
     input_path = Path(input_path)
@@ -526,7 +525,7 @@ def zoo_multiview_snapshot_of_cad(
         input_ext = input_path.suffix.split(".")[1]
         if input_ext not in [i.value for i in FileImportFormat]:
             logger.error("The provided input path does not have a valid extension")
-            return None
+            raise ZooMCPException("The provided input path does not have a valid extension")
 
         ws.send_binary(
             WebSocketRequest(
@@ -549,7 +548,7 @@ def zoo_multiview_snapshot_of_cad(
                 break
         if message["success"] is not True:
             logger.error("Failed to import CAD file")
-            return None
+            raise ZooMCPException("Failed to import CAD file")
         object_id = message["resp"]["data"]["modeling_response"]["data"]["object_id"]
 
         # set camera to ortho
@@ -615,7 +614,7 @@ def zoo_multiview_snapshot_of_cad(
                     break
             if message["success"] is not True:
                 logger.error("Failed to move camera to fit object")
-                return None
+                raise ZooMCPException("Failed to move camera to fit object")
 
             # Take a snapshot as a JPEG.
             snapshot_id = ModelingCmdId(uuid4())
@@ -635,7 +634,7 @@ def zoo_multiview_snapshot_of_cad(
                     break
             if message["success"] is not True:
                 logger.error("Failed to capture snapshot")
-                return None
+                raise ZooMCPException("Failed to capture snapshot")
             jpeg_contents = message["resp"]["data"]["modeling_response"]["data"][
                 "contents"
             ]
@@ -651,7 +650,7 @@ async def zoo_multiview_snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
     padding: float = 0.2,
-) -> bytes | None:
+) -> bytes:
     """Execute the KCL code and save a multiview snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
@@ -660,7 +659,7 @@ async def zoo_multiview_snapshot_of_kcl(
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
     Returns:
-        bytes or None: The JPEG image contents if successful, or None if there was an error.
+        bytes or None: The JPEG image contents if successful
     """
 
     logger.info("Taking a multiview snapshot of KCL")
@@ -674,16 +673,16 @@ async def zoo_multiview_snapshot_of_kcl(
         kcl_path = Path(kcl_path)
         if kcl_path.is_file() and kcl_path.suffix != ".kcl":
             logger.error("The provided kcl_path is not a .kcl file")
-            return None
+            raise ZooMCPException("The provided kcl_path is not a .kcl file")
         if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
             logger.error(
                 "The provided kcl_path directory does not contain a main.kcl file"
             )
-            return None
+            raise ZooMCPException("The provided kcl_path does not contain a main.kcl file")
 
     if not kcl_code and not kcl_path:
         logger.error("Neither code nor kcl_path provided")
-        return None
+        raise ZooMCPException("Neither code nor kcl_path provided")
 
     try:
         # None in the camera list means isometric view
@@ -731,14 +730,14 @@ async def zoo_multiview_snapshot_of_kcl(
 
     except Exception as e:
         logger.error("Failed to take multiview snapshot: %s", e)
-        return None
+        raise ZooMCPException(f"Failed to take multiview snapshot: {e}")
 
 
 def zoo_snapshot_of_cad(
     input_path: Path | str,
     camera: OptionDefaultCameraLookAt | OptionViewIsometric | None = None,
     padding: float = 0.2,
-) -> bytes | None:
+) -> bytes:
     """Save a single view snapshot of a CAD file.
 
     Args:
@@ -747,7 +746,7 @@ def zoo_snapshot_of_cad(
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
     Returns:
-        bytes or None: The JPEG image contents if successful, or None if there was an error.
+        bytes or None: The JPEG image contents if successful
     """
 
     input_path = Path(input_path)
@@ -771,7 +770,7 @@ def zoo_snapshot_of_cad(
         input_ext = input_path.suffix.split(".")[1]
         if input_ext not in [i.value for i in FileImportFormat]:
             logger.error("The provided input path does not have a valid extension")
-            return None
+            raise ZooMCPException("The provided input path does not have a valid extension")
 
         ws.send_binary(
             WebSocketRequest(
@@ -793,7 +792,7 @@ def zoo_snapshot_of_cad(
             if message["request_id"] == import_id:
                 break
         if message["success"] is not True:
-            return None
+            raise ZooMCPException("Failed to import CAD file")
         object_id = message["resp"]["data"]["modeling_response"]["data"]["object_id"]
 
         # set camera to ortho
@@ -837,7 +836,7 @@ def zoo_snapshot_of_cad(
             if message["request_id"] == focus_id:
                 break
         if message["success"] is not True:
-            return None
+            raise ZooMCPException("Failed to zoom to fit on CAD file")
 
         # Take a snapshot as a JPEG.
         snapshot_id = ModelingCmdId(uuid4())
@@ -856,7 +855,7 @@ def zoo_snapshot_of_cad(
             if message["request_id"] == snapshot_id:
                 break
         if message["success"] is not True:
-            return None
+            raise ZooMCPException("Failed to take snapshot of CAD file")
         jpeg_contents = message["resp"]["data"]["modeling_response"]["data"]["contents"]
 
         return jpeg_contents
@@ -867,7 +866,7 @@ async def zoo_snapshot_of_kcl(
     kcl_path: Path | str | None,
     camera: kcl.CameraLookAt | None = None,
     padding: float = 0.2,
-) -> bytes | None:
+) -> bytes:
     """Execute the KCL code and save a single view snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
@@ -877,7 +876,7 @@ async def zoo_snapshot_of_kcl(
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
     Returns:
-        bytes or None: The JPEG image contents if successful, or None if there was an error.
+        bytes or None: The JPEG image contents if successful
     """
 
     logger.info("Taking a snapshot of KCL")
@@ -891,34 +890,29 @@ async def zoo_snapshot_of_kcl(
         kcl_path = Path(kcl_path)
         if kcl_path.is_file() and kcl_path.suffix != ".kcl":
             logger.error("The provided kcl_path is not a .kcl file")
-            return None
+            raise ZooMCPException("The provided kcl_path is not a .kcl file")
         if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
             logger.error(
                 "The provided kcl_path directory does not contain a main.kcl file"
             )
-            return None
+            raise ZooMCPException("The provided kcl_path does not contain a main.kcl file")
 
     if not kcl_code and not kcl_path:
         logger.error("Neither code nor kcl_path provided")
-        return None
+        raise ZooMCPException("Neither code nor kcl_path provided")
 
-    try:
-        view = kcl.SnapshotOptions(camera=camera, padding=padding)
+    view = kcl.SnapshotOptions(camera=camera, padding=padding)
 
-        if kcl_code:
-            jpeg_contents_list = await kcl.execute_code_and_snapshot_views(
-                kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=[view]
-            )
-        else:
-            assert isinstance(kcl_path, Path)
-            jpeg_contents_list = await kcl.execute_and_snapshot_views(
-                str(kcl_path), kcl.ImageFormat.Jpeg, snapshot_options=[view]
-            )
+    if kcl_code:
+        jpeg_contents_list = await kcl.execute_code_and_snapshot_views(
+            kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=[view]
+        )
+    else:
+        assert isinstance(kcl_path, Path)
+        jpeg_contents_list = await kcl.execute_and_snapshot_views(
+            str(kcl_path), kcl.ImageFormat.Jpeg, snapshot_options=[view]
+        )
 
-        assert isinstance(jpeg_contents_list, list)
-        for byte_obj in jpeg_contents_list:
-            assert isinstance(byte_obj, bytes)
-
-    except Exception as e:
-        logger.error("Failed to take snapshot: %s", e)
-        return None
+    assert isinstance(jpeg_contents_list, list)
+    for byte_obj in jpeg_contents_list:
+        assert isinstance(byte_obj, bytes)
