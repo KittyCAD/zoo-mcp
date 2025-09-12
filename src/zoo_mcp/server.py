@@ -1,6 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 
-from zoo_mcp import logger
+from zoo_mcp import logger, ZooMCPException
 from zoo_mcp.ai_tools import _text_to_cad
 from zoo_mcp.zoo_tools import (
     zoo_export_kcl,
@@ -31,13 +31,13 @@ async def calculate_center_of_mass(input_file: str, unit_length: str) -> str:
 
     logger.info("calculate_center_of_mass called for file: %s", input_file)
 
-    com = await zoo_calculate_center_of_mass(
-        file_path=input_file, unit_length=unit_length
-    )
-    if com:
+    try:
+        com = await zoo_calculate_center_of_mass(
+            file_path=input_file, unit_length=unit_length
+        )
         return f"The center of mass of the file is {com} with units of length of {unit_length}."
-    else:
-        return "The center of mass of the file could not be determined."
+    except ZooMCPException as e:
+        return f"There was an error calculating the center of mass of the file: {e}"
 
 
 @mcp.tool()
@@ -58,16 +58,16 @@ async def calculate_mass(
 
     logger.info("calculate_mass called for file: %s", input_file)
 
-    mass = await zoo_calculate_mass(
-        file_path=input_file,
-        unit_mass=unit_mass,
-        unit_density=unit_density,
-        density=density,
-    )
-    if mass:
+    try:
+        mass = await zoo_calculate_mass(
+            file_path=input_file,
+            unit_mass=unit_mass,
+            unit_density=unit_density,
+            density=density,
+        )
         return f"The mass of the file is {mass} {unit_mass}."
-    else:
-        return "The mass of the file could not be determined."
+    except ZooMCPException as e:
+        return f"There was an error calculating the mass of the file: {e}"
 
 
 @mcp.tool()
@@ -84,13 +84,13 @@ async def calculate_surface_area(input_file: str, unit_area: str) -> str:
 
     logger.info("calculate_surface_area called for file: %s", input_file)
 
-    surface_area = await zoo_calculate_surface_area(
-        file_path=input_file, unit_area=unit_area
-    )
-    if surface_area:
+    try:
+        surface_area = await zoo_calculate_surface_area(
+            file_path=input_file, unit_area=unit_area
+        )
         return f"The surface area of the file is {surface_area} {unit_area}."
-    else:
-        return "The surface area of the file could not be determined."
+    except ZooMCPException as e:
+        return f"There was an error calculating the surface area of the file: {e}"
 
 
 @mcp.tool()
@@ -107,11 +107,11 @@ async def calculate_volume(input_file: str, unit_volume: str) -> str:
 
     logger.info("calculate_volume called for file: %s", input_file)
 
-    volume = await zoo_calculate_volume(file_path=input_file, unit_vol=unit_volume)
-    if volume:
+    try:
+        volume = await zoo_calculate_volume(file_path=input_file, unit_vol=unit_volume)
         return f"The volume of the file is {volume} {unit_volume}."
-    else:
-        return "The volume of the file could not be determined."
+    except ZooMCPException as e:
+        return f"There was an error calculating the volume of the file: {e}"
 
 
 @mcp.tool()
@@ -133,13 +133,13 @@ async def convert_cad_file(
 
     logger.info("convert_cad_file called")
 
-    step_path = await zoo_convert_cad_file(
-        input_path=input_path, export_path=export_path, export_format=export_format
-    )
-    if step_path:
+    try:
+        step_path = await zoo_convert_cad_file(
+            input_path=input_path, export_path=export_path, export_format=export_format
+        )
         return f"The file was successfully converted to a CAD file at: {step_path}"
-    else:
-        return "The file could not be converted to a CAD file."
+    except ZooMCPException as e:
+        return f"There was an error converting the CAD file: {e}"
 
 
 @mcp.tool()
@@ -163,15 +163,16 @@ async def export_kcl(
 
     logger.info("convert_kcl_to_step called")
 
-    cad_path = await zoo_export_kcl(
-        kcl_code=kcl_code,
-        kcl_path=kcl_path,
-        export_path=export_path,
-        export_format=export_format,
-    )
-    if cad_path:
+    try:
+        cad_path = await zoo_export_kcl(
+            kcl_code=kcl_code,
+            kcl_path=kcl_path,
+            export_path=export_path,
+            export_format=export_format,
+        )
         return f"The KCL code was successfully exported to a CAD file at: {cad_path}"
-    return "The KCL code could not be exported to a CAD file."
+    except ZooMCPException as e:
+        return f"There was an error exporting the CAD file: {e}"
 
 
 @mcp.tool()
