@@ -36,7 +36,7 @@ from kittycad import KittyCAD
 import aiofiles
 import kcl
 
-from zoo_mcp import logger
+from zoo_mcp import logger, ZooMCPException
 from zoo_mcp.utils.image_utils import create_image_collage
 
 kittycad_client = KittyCAD()
@@ -56,7 +56,7 @@ async def zoo_calculate_center_of_mass(
     file_path: Path | str,
     unit_length: str,
     max_attempts: int = 3,
-) -> dict[str, float] | None:
+) -> dict[str, float]:
     """Calculate the center of mass of the file
 
     Args:
@@ -65,7 +65,7 @@ async def zoo_calculate_center_of_mass(
         max_attempts(int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        dict[str] | None: If the center of mass can be calculated return the center of mass as a dictionary with x, y, and z keys, otherwise return None
+        dict[str]: If the center of mass can be calculated return the center of mass as a dictionary with x, y, and z keys
     """
     file_path = Path(file_path)
 
@@ -74,39 +74,44 @@ async def zoo_calculate_center_of_mass(
     attempts = 0
     while attempts < max_attempts:
         attempts += 1
-        try:
-            async with aiofiles.open(file_path, "rb") as inp:
-                data = await inp.read()
+        async with aiofiles.open(file_path, "rb") as inp:
+            data = await inp.read()
 
-            src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
+        src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
 
-            result = kittycad_client.file.create_file_center_of_mass(
-                src_format=src_format,
-                body=data,
-                output_unit=UnitLength(unit_length),
+        result = kittycad_client.file.create_file_center_of_mass(
+            src_format=src_format,
+            body=data,
+            output_unit=UnitLength(unit_length),
+        )
+
+        if not isinstance(result, FileCenterOfMass):
+            logger.info(
+                "Failed to calculate center of mass, incorrect return type %s",
+                type(result),
+            )
+            raise ZooMCPException(
+                "Failed to calculate center of mass, incorrect return type %s",
+                type(result),
             )
 
-            if not isinstance(result, FileCenterOfMass):
-                logger.info(
-                    "Failed to calculate center of mass, incorrect return type %s",
-                    type(result),
-                )
-                return None
+        com = (
+            result.center_of_mass.to_dict()
+            if result.center_of_mass is not None
+            else None
+        )
 
-            com = (
-                result.center_of_mass.to_dict()
-                if result.center_of_mass is not None
-                else None
+        if com is None:
+            raise ZooMCPException(
+                "Failed to calculate center of mass, no center of mass returned"
             )
 
-            return com
-
-        except Exception as e:
-            logger.error("Failed to calculate center of mass: %s", e)
-            return None
+        return com
 
     logger.critical("Failed to calculate center mass after %s attempts", max_attempts)
-    return None
+    raise ZooMCPException(
+        "Failed to calculate center of mass after %s attempts", max_attempts
+    )
 
 
 async def zoo_calculate_mass(
@@ -115,7 +120,7 @@ async def zoo_calculate_mass(
     unit_density: str,
     density: float,
     max_attempts: int = 3,
-) -> float | None:
+) -> float:
     """Calculate the mass of the file in the requested unit
 
     Args:
@@ -126,7 +131,7 @@ async def zoo_calculate_mass(
         max_attempts(int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        float | None: If the mass of the file can be calculated, return the mass in the requested unit, otherwise return None
+        float | None: If the mass of the file can be calculated, return the mass in the requested unit
     """
 
     file_path = Path(file_path)
@@ -136,41 +141,41 @@ async def zoo_calculate_mass(
     attempts = 0
     while attempts < max_attempts:
         attempts += 1
-        try:
-            async with aiofiles.open(file_path, "rb") as inp:
-                data = await inp.read()
+        async with aiofiles.open(file_path, "rb") as inp:
+            data = await inp.read()
 
-            src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
+        src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
 
-            result = kittycad_client.file.create_file_mass(
-                output_unit=UnitMass(unit_mass),
-                src_format=src_format,
-                body=data,
-                material_density_unit=UnitDensity(unit_density),
-                material_density=density,
+        result = kittycad_client.file.create_file_mass(
+            output_unit=UnitMass(unit_mass),
+            src_format=src_format,
+            body=data,
+            material_density_unit=UnitDensity(unit_density),
+            material_density=density,
+        )
+
+        if not isinstance(result, FileMass):
+            logger.info(
+                "Failed to calculate mass, incorrect return type %s", type(result)
+            )
+            raise ZooMCPException(
+                "Failed to calculate mass, incorrect return type %s", type(result)
             )
 
-            if not isinstance(result, FileMass):
-                logger.info(
-                    "Failed to calculate mass, incorrect return type %s", type(result)
-                )
-                return None
+        mass = result.mass
 
-            mass = result.mass if result.mass is not None else math.nan
+        if mass is None:
+            raise ZooMCPException("Failed to calculate mass, no mass returned")
 
-            return mass
-
-        except Exception as e:
-            logger.error("Failed to calculate mass: %s", e)
-            return None
+        return mass
 
     logger.critical("Failed to calculate mass after %s attempts", max_attempts)
-    return None
+    raise ZooMCPException("Failed to calculate mass after %s attempts", max_attempts)
 
 
 async def zoo_calculate_surface_area(
     file_path: Path | str, unit_area: str, max_attempts: int = 3
-) -> float | None:
+) -> float:
     """Calculate the surface area of the file in the requested unit
 
     Args:
@@ -179,7 +184,7 @@ async def zoo_calculate_surface_area(
         max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        float | None: If the surface area can be calculated return the surface area, otherwise return None
+        float: If the surface area can be calculated return the surface area
     """
 
     file_path = Path(file_path)
@@ -189,42 +194,44 @@ async def zoo_calculate_surface_area(
     attempts = 0
     while attempts < max_attempts:
         attempts += 1
-        try:
-            async with aiofiles.open(file_path, "rb") as inp:
-                data = await inp.read()
+        async with aiofiles.open(file_path, "rb") as inp:
+            data = await inp.read()
 
-            src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
+        src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
 
-            result = kittycad_client.file.create_file_surface_area(
-                output_unit=UnitArea(unit_area),
-                src_format=src_format,
-                body=data,
+        result = kittycad_client.file.create_file_surface_area(
+            output_unit=UnitArea(unit_area),
+            src_format=src_format,
+            body=data,
+        )
+
+        if not isinstance(result, FileSurfaceArea):
+            logger.info(
+                "Failed to calculate surface area, incorrect return type %s",
+                type(result),
+            )
+            raise ZooMCPException(
+                "Failed to calculate surface area, incorrect return type %s",
             )
 
-            if not isinstance(result, FileSurfaceArea):
-                logger.info(
-                    "Failed to calculate surface area, incorrect return type %s",
-                    type(result),
-                )
-                return None
+        surface_area = result.surface_area
 
-            surface_area = (
-                result.surface_area if result.surface_area is not None else math.nan
+        if surface_area is None:
+            raise ZooMCPException(
+                "Failed to calculate surface area, no surface area returned"
             )
 
-            return surface_area
-
-        except Exception as e:
-            logger.error("Failed to calculate surface area: %s", e)
-            return None
+        return surface_area
 
     logger.critical("Failed to calculate surface area after %s attempts", max_attempts)
-    return None
+    raise ZooMCPException(
+        "Failed to calculate surface area after %s attempts", max_attempts
+    )
 
 
 async def zoo_calculate_volume(
     file_path: Path | str, unit_vol: str, max_attempts: int = 3
-) -> float | None:
+) -> float:
     """Calculate the volume of the file in the requested unit
 
     Args:
@@ -233,7 +240,7 @@ async def zoo_calculate_volume(
         max_attempts(int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        float | None: If the volume of the file can be calculated, return the volume in the requested unit, otherwise return None
+        float: If the volume of the file can be calculated, return the volume in the requested unit
     """
 
     file_path = Path(file_path)
@@ -243,34 +250,34 @@ async def zoo_calculate_volume(
     attempts = 0
     while attempts < max_attempts:
         attempts += 1
-        try:
-            async with aiofiles.open(file_path, "rb") as inp:
-                data = await inp.read()
+        async with aiofiles.open(file_path, "rb") as inp:
+            data = await inp.read()
 
-            src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
+        src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
 
-            result = kittycad_client.file.create_file_volume(
-                output_unit=UnitVolume(unit_vol),
-                src_format=src_format,
-                body=data,
+        result = kittycad_client.file.create_file_volume(
+            output_unit=UnitVolume(unit_vol),
+            src_format=src_format,
+            body=data,
+        )
+
+        if not isinstance(result, FileVolume):
+            logger.info(
+                "Failed to calculate volume, incorrect return type %s", type(result)
+            )
+            raise ZooMCPException(
+                "Failed to calculate volume, incorrect return type %s", type(result)
             )
 
-            if not isinstance(result, FileVolume):
-                logger.info(
-                    "Failed to calculate volume, incorrect return type %s", type(result)
-                )
-                return None
+        volume = result.volume
 
-            volume = result.volume if result.volume is not None else math.nan
+        if volume is None:
+            raise ZooMCPException("Failed to calculate volume, no volume returned")
 
-            return volume
-
-        except Exception as e:
-            logger.error("Failed to calculate volume: %s", e)
-            return None
+        return volume
 
     logger.critical("Failed to calculate volume after %s attempts", max_attempts)
-    return None
+    raise ZooMCPException("Failed to calculate volume after %s attempts", max_attempts)
 
 
 async def zoo_convert_cad_file(
@@ -278,7 +285,7 @@ async def zoo_convert_cad_file(
     export_path: Path | str | None,
     export_format: FileExportFormat | str | None = FileExportFormat.STEP,
     max_attempts: int = 3,
-) -> Path | None:
+) -> Path:
     """Convert a cad file to another cad file
 
     Args:
@@ -288,14 +295,14 @@ async def zoo_convert_cad_file(
         max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        Path | None: Return the path to the exported model if successful, otherwise return None
+        Path: Return the path to the exported model if successful
     """
 
     input_path = Path(input_path)
     input_ext = input_path.suffix.split(".")[1]
     if input_ext not in [i.value for i in FileImportFormat]:
         logger.error("The provided input path does not have a valid extension")
-        return None
+        raise ZooMCPException("The provided input path does not have a valid extension")
     logger.info("Converting the cad file %s", str(input_path.resolve()))
 
     # check the export format
@@ -341,41 +348,39 @@ async def zoo_convert_cad_file(
     attempts = 0
     while attempts < max_attempts:
         attempts += 1
-        try:
-            async with aiofiles.open(input_path, "rb") as inp:
-                data = await inp.read()
+        async with aiofiles.open(input_path, "rb") as inp:
+            data = await inp.read()
 
-            export_response = kittycad_client.file.create_file_conversion(
-                src_format=FileImportFormat(input_ext),
-                output_format=FileExportFormat(export_format),
-                body=data,
+        export_response = kittycad_client.file.create_file_conversion(
+            src_format=FileImportFormat(input_ext),
+            output_format=FileExportFormat(export_format),
+            body=data,
+        )
+
+        if not isinstance(export_response, FileConversion):
+            logger.error(
+                "Failed to convert file, incorrect return type %s",
+                type(export_response),
+            )
+            raise ZooMCPException(
+                "Failed to convert file, incorrect return type %s",
             )
 
-            if not isinstance(export_response, FileConversion):
-                logger.error(
-                    "Failed to convert file, incorrect return type %s",
-                    type(export_response),
-                )
-                return None
+        if export_response.outputs is None:
+            logger.error("Failed to convert file")
+            raise ZooMCPException("Failed to convert file no output response")
 
-            if export_response.outputs is None:
-                logger.error("Failed to convert file")
-                return None
+        async with aiofiles.open(export_path, "wb") as out:
+            await out.write(list(export_response.outputs.values())[0])
 
-            async with aiofiles.open(export_path, "wb") as out:
-                await out.write(list(export_response.outputs.values())[0])
+        logger.info(
+            "KCL project exported successfully to %s", str(export_path.resolve())
+        )
 
-            logger.info(
-                "KCL project exported successfully to %s", str(export_path.resolve())
-            )
+        return export_path
 
-            return export_path
-        except Exception as e:
-            logger.error("Failed to export step: %s", e)
-
-            return None
     logger.critical("Failed to convert CAD file after %s attempts", max_attempts)
-    return None
+    raise ZooMCPException("Failed to convert CAD file after %s attempts", max_attempts)
 
 
 async def zoo_export_kcl(
@@ -384,8 +389,8 @@ async def zoo_export_kcl(
     export_path: Path | str | None,
     export_format: kcl.FileExportFormat | str | None = kcl.FileExportFormat.Step,
     max_attempts: int = 3,
-) -> Path | None:
-    """Export KCL code to a CAD file. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+) -> Path:
+    """Export KCL code to a CAD file. Either code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
         kcl_code (str): KCL code
@@ -395,7 +400,7 @@ async def zoo_export_kcl(
         max_attempts (int): number of attempts to convert code, default is 3. Sometimes engines may not be available so we retry.
 
     Returns:
-        Path | None: Return the path to the exported model if successful, otherwise return None
+        Path: Return the path to the exported model if successful
     """
 
     logger.info("Exporting KCL to Step")
@@ -409,16 +414,18 @@ async def zoo_export_kcl(
         kcl_path = Path(kcl_path)
         if kcl_path.is_file() and kcl_path.suffix != ".kcl":
             logger.error("The provided kcl_path is not a .kcl file")
-            return None
+            raise ZooMCPException("The provided kcl_path is not a .kcl file")
         if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
             logger.error(
                 "The provided kcl_path directory does not contain a main.kcl file"
             )
-            return None
+            raise ZooMCPException(
+                "The provided kcl_path does not contain a main.kcl file"
+            )
 
     if not kcl_code and not kcl_path:
         logger.error("Neither code nor kcl_path provided")
-        return None
+        raise ZooMCPException("Neither code nor kcl_path provided")
 
     # check the export format
     if not export_format:
@@ -463,30 +470,25 @@ async def zoo_export_kcl(
     attempts = 0
     while attempts < max_attempts:
         attempts += 1
-        try:
-            if kcl_code:
-                export_response = await kcl.execute_code_and_export(
-                    kcl_code, export_format
-                )
-            else:
-                assert isinstance(kcl_path, Path)
-                export_response = await kcl.execute_and_export(
-                    str(kcl_path.resolve()), export_format
-                )
+        if kcl_code:
+            logger.info("Exporting KCL code to %s", str(kcl_code))
+            export_response = await kcl.execute_code_and_export(kcl_code, export_format)
+        else:
+            logger.info("Exporting KCL project to %s", str(kcl_path))
+            assert isinstance(kcl_path, Path)
+            export_response = await kcl.execute_and_export(
+                str(kcl_path.resolve()), export_format
+            )
 
-            async with aiofiles.open(export_path.name, "wb") as out:
-                await out.write(bytes(export_response[0].contents))
+        async with aiofiles.open(export_path.name, "wb") as out:
+            await out.write(bytes(export_response[0].contents))
 
-            logger.info("KCL exported successfully to %s", str(export_path.name))
+        logger.info("KCL exported successfully to %s", str(export_path.name))
 
-            return export_path
-        except Exception as e:
-            logger.error("Failed to export step: %s", e)
-
-            return None
+        return export_path
 
     logger.critical("Failed to export KCL after %s attempts", max_attempts)
-    return None
+    raise ZooMCPException("Failed to export KCL after %s attempts", max_attempts)
 
 
 def zoo_multiview_snapshot_of_cad(

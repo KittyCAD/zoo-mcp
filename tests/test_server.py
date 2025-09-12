@@ -26,6 +26,23 @@ async def test_calculate_center_of_mass():
 
 
 @pytest.mark.asyncio
+async def test_calculate_center_of_mass_error():
+    test_file = Path(__file__).parent / "data" / "cube.stl"
+    path = f"{test_file.resolve()}"
+    response = await mcp.call_tool(
+        "calculate_center_of_mass",
+        arguments={
+            "input_file": path,
+            "unit_length": "asdf",
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "not a valid UnitLength" in result
+
+
+@pytest.mark.asyncio
 async def test_calculate_mass():
     test_file = Path(__file__).parent / "data" / "cube.stl"
     path = f"{test_file.resolve()}"
@@ -46,6 +63,26 @@ async def test_calculate_mass():
 
 
 @pytest.mark.asyncio
+async def test_calculate_mass_error():
+    test_file = Path(__file__).parent / "data" / "cube.stl"
+    path = f"{test_file.resolve()}"
+
+    response = await mcp.call_tool(
+        "calculate_mass",
+        arguments={
+            "input_file": path,
+            "unit_mass": "asdf",
+            "unit_density": "kg:m3",
+            "density": 1000.0,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "not a valid UnitMass" in result
+
+
+@pytest.mark.asyncio
 async def test_calculate_surface_area():
     test_file = Path(__file__).parent / "data" / "cube.stl"
     path = f"{test_file.resolve()}"
@@ -60,6 +97,24 @@ async def test_calculate_surface_area():
 
 
 @pytest.mark.asyncio
+async def test_calculate_surface_area_error():
+    test_file = Path(__file__).parent / "data" / "cube.stl"
+    path = f"{test_file.resolve()}"
+
+    response = await mcp.call_tool(
+        "calculate_surface_area",
+        arguments={
+            "input_file": path,
+            "unit_area": "asdf",
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "not a valid UnitArea" in result
+
+
+@pytest.mark.asyncio
 async def test_calculate_volume():
     test_file = Path(__file__).parent / "data" / "cube.stl"
     path = f"{test_file.resolve()}"
@@ -71,6 +126,20 @@ async def test_calculate_volume():
     assert isinstance(response[1], dict)
     result = response[1]["result"]
     assert "volume of the file" in result
+
+
+@pytest.mark.asyncio
+async def test_calculate_volume_error():
+    test_file = Path(__file__).parent / "data" / "cube.stl"
+    path = f"{test_file.resolve()}"
+
+    response = await mcp.call_tool(
+        "calculate_volume", arguments={"input_file": path, "unit_volume": "asdf"}
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "not a valid UnitVolume" in result
 
 
 @pytest.mark.asyncio
@@ -99,6 +168,33 @@ async def test_convert_cad_file():
 
 
 @pytest.mark.asyncio
+async def test_convert_cad_file_error():
+    test_file = Path(__file__).parent / "data" / "cube.step"
+
+    async with aiofiles.tempfile.NamedTemporaryFile(
+        suffix=".asdf", delete=False
+    ) as tmp:
+        path = f"{test_file.resolve()}"
+        export_path = f"{tmp.name}"
+        response = await mcp.call_tool(
+            "convert_cad_file",
+            arguments={
+                "input_path": path,
+                "export_path": export_path,
+                "export_format": "asdf",
+            },
+        )
+        assert isinstance(response, Sequence)
+        assert isinstance(response[1], dict)
+        result = response[1]["result"]
+        assert "error converting the CAD" in result
+        assert Path(tmp.name).exists()
+
+        # Clean up
+        Path(tmp.name).unlink(missing_ok=True)
+
+
+@pytest.mark.asyncio
 async def test_export_kcl():
     async with aiofiles.open(
         Path(__file__).parent / "data" / "cube.kcl", mode="r"
@@ -120,6 +216,24 @@ async def test_export_kcl():
         result = response[1]["result"]
         assert "successfully exported" in result
         assert Path(tmp).exists()
+
+
+@pytest.mark.asyncio
+async def test_export_kcl_error():
+    async with aiofiles.tempfile.TemporaryDirectory() as tmp:
+        response = await mcp.call_tool(
+            "export_kcl",
+            arguments={
+                "kcl_code": "asdf",
+                "kcl_path": None,
+                "export_path": tmp,
+                "export_format": "step",
+            },
+        )
+        assert isinstance(response, Sequence)
+        assert isinstance(response[1], dict)
+        result = response[1]["result"]
+        assert "error exporting the CAD" in result
 
 
 @pytest.mark.asyncio

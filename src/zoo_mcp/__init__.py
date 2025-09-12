@@ -19,3 +19,9 @@ logging.basicConfig(
     level=logging.INFO, format=FORMAT, handlers=[logging.StreamHandler(sys.stderr)]
 )
 logger = logging.getLogger("zoo_mcp")
+
+
+class ZooMCPException(Exception):
+    """Custom exception for Zoo MCP Server."""
+
+    pass
