@@ -1,7 +1,6 @@
 from collections.abc import Sequence
 from pathlib import Path
 
-import aiofiles
 import pytest
 
 from zoo_mcp.server import mcp
@@ -152,94 +151,78 @@ async def test_calculate_volume_error():
 @pytest.mark.asyncio
 async def test_convert_cad_file():
     test_file = Path(__file__).parent / "data" / "cube.step"
+    path = f"{test_file.resolve()}"
 
-    async with aiofiles.tempfile.NamedTemporaryFile(suffix=".obj", delete=False) as tmp:
-        path = f"{test_file.resolve()}"
-        export_path = f"{tmp.name}"
-        response = await mcp.call_tool(
-            "convert_cad_file",
-            arguments={
-                "input_path": path,
-                "export_path": export_path,
-                "export_format": "obj",
-            },
-        )
-        assert isinstance(response, Sequence)
-        assert isinstance(response[1], dict)
-        result = response[1]["result"]
-        assert Path(result).exists()
-        assert Path(result).stat().st_size != 0
-
-        # Clean up
-        Path(tmp.name).unlink(missing_ok=True)
+    response = await mcp.call_tool(
+        "convert_cad_file",
+        arguments={
+            "input_path": path,
+            "export_path": None,
+            "export_format": "obj",
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert Path(result).exists()
+    assert Path(result).stat().st_size != 0
 
 
 @pytest.mark.asyncio
 async def test_convert_cad_file_error():
     test_file = Path(__file__).parent / "data" / "cube.step"
+    path = f"{test_file.resolve()}"
 
-    async with aiofiles.tempfile.NamedTemporaryFile(
-        suffix=".asdf", delete=False
-    ) as tmp:
-        path = f"{test_file.resolve()}"
-        export_path = f"{tmp.name}"
-        response = await mcp.call_tool(
-            "convert_cad_file",
-            arguments={
-                "input_path": path,
-                "export_path": export_path,
-                "export_format": "asdf",
-            },
-        )
-        assert isinstance(response, Sequence)
-        assert isinstance(response[1], dict)
-        result = response[1]["result"]
-        assert "error converting the CAD" in result
-
-        # Clean up
-        Path(tmp.name).unlink(missing_ok=True)
+    response = await mcp.call_tool(
+        "convert_cad_file",
+        arguments={
+            "input_path": path,
+            "export_path": None,
+            "export_format": "asdf",
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "error converting the CAD" in result
 
 
 @pytest.mark.asyncio
 async def test_export_kcl():
-    async with aiofiles.open(
-        Path(__file__).parent / "data" / "cube.kcl", mode="r"
-    ) as f:
-        kcl_code = await f.read()
+    test_file = Path(__file__).parent / "data" / "cube.kcl"
+    path = f"{test_file.resolve()}"
 
-    async with aiofiles.tempfile.TemporaryDirectory() as tmp:
-        response = await mcp.call_tool(
-            "export_kcl",
-            arguments={
-                "kcl_code": kcl_code,
-                "kcl_path": None,
-                "export_path": tmp,
-                "export_format": "step",
-            },
-        )
-        assert isinstance(response, Sequence)
-        assert isinstance(response[1], dict)
-        result = response[1]["result"]
-        assert Path(result).exists()
-        assert Path(result).stat().st_size != 0
+    response = await mcp.call_tool(
+        "export_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": path,
+            "export_path": None,
+            "export_format": "step",
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert Path(result).exists()
+    assert Path(result).stat().st_size != 0
 
 
 @pytest.mark.asyncio
 async def test_export_kcl_error():
-    async with aiofiles.tempfile.TemporaryDirectory() as tmp:
-        response = await mcp.call_tool(
-            "export_kcl",
-            arguments={
-                "kcl_code": "asdf",
-                "kcl_path": None,
-                "export_path": tmp,
-                "export_format": "step",
-            },
-        )
-        assert isinstance(response, Sequence)
-        assert isinstance(response[1], dict)
-        result = response[1]["result"]
-        assert "error exporting the CAD" in result
+    response = await mcp.call_tool(
+        "export_kcl",
+        arguments={
+            "kcl_code": "asdf",
+            "kcl_path": None,
+            "export_path": None,
+            "export_format": "step",
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "error exporting the CAD" in result
 
 
 @pytest.mark.asyncio
