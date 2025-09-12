@@ -279,7 +279,9 @@ async def snapshot_of_cad(
             camera = OptionDefaultCameraLookAt(
                 up=Point3d(x=camera["up"][0], y=camera["up"][1], z=camera["up"][2]),
                 vantage=Point3d(
-                    x=camera["vantage"][0], y=-camera["vantage"][1], z=camera["vantage"][2]
+                    x=camera["vantage"][0],
+                    y=-camera["vantage"][1],
+                    z=camera["vantage"][2],
                 ),
                 center=Point3d(
                     x=camera["center"][0], y=camera["center"][1], z=camera["center"][2]
@@ -325,7 +327,9 @@ async def snapshot_of_kcl(
             camera = kcl.CameraLookAt(
                 up=kcl.Point3d(x=camera["up"][0], y=camera["up"][1], z=camera["up"][2]),
                 vantage=kcl.Point3d(
-                    x=camera["vantage"][0], y=-camera["vantage"][1], z=camera["vantage"][2]
+                    x=camera["vantage"][0],
+                    y=-camera["vantage"][1],
+                    z=camera["vantage"][2],
                 ),
                 center=kcl.Point3d(
                     x=camera["center"][0], y=camera["center"][1], z=camera["center"][2]

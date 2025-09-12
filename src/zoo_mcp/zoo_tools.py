@@ -89,11 +89,7 @@ async def zoo_calculate_center_of_mass(
             type(result),
         )
 
-    com = (
-        result.center_of_mass.to_dict()
-        if result.center_of_mass is not None
-        else None
-    )
+    com = result.center_of_mass.to_dict() if result.center_of_mass is not None else None
 
     if com is None:
         raise ZooMCPException(
@@ -139,9 +135,7 @@ async def zoo_calculate_mass(
     )
 
     if not isinstance(result, FileMass):
-        logger.info(
-            "Failed to calculate mass, incorrect return type %s", type(result)
-        )
+        logger.info("Failed to calculate mass, incorrect return type %s", type(result))
         raise ZooMCPException(
             "Failed to calculate mass, incorrect return type %s", type(result)
         )
@@ -154,9 +148,7 @@ async def zoo_calculate_mass(
     return mass
 
 
-async def zoo_calculate_surface_area(
-    file_path: Path | str, unit_area: str
-) -> float:
+async def zoo_calculate_surface_area(file_path: Path | str, unit_area: str) -> float:
     """Calculate the surface area of the file in the requested unit
 
     Args:
@@ -201,9 +193,7 @@ async def zoo_calculate_surface_area(
     return surface_area
 
 
-async def zoo_calculate_volume(
-    file_path: Path | str, unit_vol: str
-) -> float:
+async def zoo_calculate_volume(file_path: Path | str, unit_vol: str) -> float:
     """Calculate the volume of the file in the requested unit
 
     Args:
@@ -248,7 +238,7 @@ async def zoo_calculate_volume(
 async def zoo_convert_cad_file(
     input_path: Path | str,
     export_path: Path | str | None = None,
-    export_format: FileExportFormat | str | None = FileExportFormat.STEP
+    export_format: FileExportFormat | str | None = FileExportFormat.STEP,
 ) -> Path:
     """Convert a cad file to another cad file
 
@@ -274,7 +264,9 @@ async def zoo_convert_cad_file(
         export_format = FileExportFormat.STEP
     else:
         if export_format not in FileExportFormat:
-            logger.warning("Invalid export format %s provided, defaulting to step", export_format)
+            logger.warning(
+                "Invalid export format %s provided, defaulting to step", export_format
+            )
             export_format = FileExportFormat.STEP
         else:
             export_format = FileExportFormat(export_format)
@@ -333,9 +325,7 @@ async def zoo_convert_cad_file(
     async with aiofiles.open(export_path, "wb") as out:
         await out.write(list(export_response.outputs.values())[0])
 
-    logger.info(
-        "KCL project exported successfully to %s", str(export_path.resolve())
-    )
+    logger.info("KCL project exported successfully to %s", str(export_path.resolve()))
 
     return export_path
 
@@ -388,7 +378,9 @@ async def zoo_export_kcl(
         export_format = kcl.FileExportFormat.Step
     else:
         if export_format not in _kcl_export_format_map.keys():
-            logger.warning("Invalid export format %s provided, defaulting to step", export_format)
+            logger.warning(
+                "Invalid export format %s provided, defaulting to step", export_format
+            )
             export_format = kcl.FileExportFormat.Step
         else:
             export_format = _kcl_export_format_map[export_format]
@@ -473,7 +465,9 @@ def zoo_multiview_snapshot_of_cad(
         input_ext = input_path.suffix.split(".")[1]
         if input_ext not in [i.value for i in FileImportFormat]:
             logger.error("The provided input path does not have a valid extension")
-            raise ZooMCPException("The provided input path does not have a valid extension")
+            raise ZooMCPException(
+                "The provided input path does not have a valid extension"
+            )
 
         ws.send_binary(
             WebSocketRequest(
@@ -626,7 +620,9 @@ async def zoo_multiview_snapshot_of_kcl(
             logger.error(
                 "The provided kcl_path directory does not contain a main.kcl file"
             )
-            raise ZooMCPException("The provided kcl_path does not contain a main.kcl file")
+            raise ZooMCPException(
+                "The provided kcl_path does not contain a main.kcl file"
+            )
 
     if not kcl_code and not kcl_path:
         logger.error("Neither code nor kcl_path provided")
@@ -718,7 +714,9 @@ def zoo_snapshot_of_cad(
         input_ext = input_path.suffix.split(".")[1]
         if input_ext not in [i.value for i in FileImportFormat]:
             logger.error("The provided input path does not have a valid extension")
-            raise ZooMCPException("The provided input path does not have a valid extension")
+            raise ZooMCPException(
+                "The provided input path does not have a valid extension"
+            )
 
         ws.send_binary(
             WebSocketRequest(
@@ -843,7 +841,9 @@ async def zoo_snapshot_of_kcl(
             logger.error(
                 "The provided kcl_path directory does not contain a main.kcl file"
             )
-            raise ZooMCPException("The provided kcl_path does not contain a main.kcl file")
+            raise ZooMCPException(
+                "The provided kcl_path does not contain a main.kcl file"
+            )
 
     if not kcl_code and not kcl_path:
         logger.error("Neither code nor kcl_path provided")
