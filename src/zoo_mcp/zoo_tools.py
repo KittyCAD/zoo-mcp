@@ -229,7 +229,7 @@ async def zoo_calculate_volume(
 
 async def zoo_convert_cad_file(
     input_path: Path | str,
-    export_path: Path | str | None,
+    export_path: Path | str | None = None,
     export_format: FileExportFormat | str | None = FileExportFormat.STEP
 ) -> Path:
     """Convert a cad file to another cad file
@@ -323,9 +323,9 @@ async def zoo_convert_cad_file(
 
 
 async def zoo_export_kcl(
-    kcl_code: str | None,
-    kcl_path: Path | str | None,
-    export_path: Path | str | None,
+    kcl_code: str | None = None,
+    kcl_path: Path | str | None = None,
+    export_path: Path | str | None = None,
     export_format: kcl.FileExportFormat | str | None = kcl.FileExportFormat.Step,
 ) -> Path:
     """Export KCL code to a CAD file. Either code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
@@ -404,19 +404,17 @@ async def zoo_export_kcl(
             )
             logger.info("Using provided export path: %s", str(export_path.name))
 
-    if kcl_code:
-        logger.info("Exporting KCL code to %s", str(kcl_code))
-        export_response = await kcl.execute_code_and_export(kcl_code, export_format)
-    else:
-        logger.info("Exporting KCL project to %s", str(kcl_path))
-        assert isinstance(kcl_path, Path)
-        export_response = await kcl.execute_and_export(
-            str(kcl_path.resolve()), export_format
-        )
-
-    async with aiofiles.open(export_path.name, "wb") as out:
+    async with aiofiles.open(export_path, "wb") as out:
+        if kcl_code:
+            logger.info("Exporting KCL code to %s", str(kcl_code))
+            export_response = await kcl.execute_code_and_export(kcl_code, export_format)
+        else:
+            logger.info("Exporting KCL project to %s", str(kcl_path))
+            assert isinstance(kcl_path, Path)
+            export_response = await kcl.execute_and_export(
+                str(kcl_path.resolve()), export_format
+            )
         await out.write(bytes(export_response[0].contents))
 
-    logger.info("KCL exported successfully to %s", str(export_path.name))
-
+    logger.info("KCL exported successfully to %s", str(export_path))
     return Path(export_path)
