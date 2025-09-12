@@ -1,9 +1,11 @@
 import kcl
 from kittycad.models.modeling_cmd import OptionDefaultCameraLookAt, Point3d
-from mcp.server.fastmcp import FastMCP, Image
+from mcp.server.fastmcp import FastMCP
+from mcp.types import ImageContent
 
 from zoo_mcp import logger
 from zoo_mcp.ai_tools import text_to_cad as _text_to_cad
+from zoo_mcp.utils.image_utils import encode_image
 from zoo_mcp.zoo_tools import (
     zoo_export_kcl,
     zoo_convert_cad_file,
@@ -185,7 +187,7 @@ async def export_kcl(
 async def multiview_snapshot_of_cad(
     input_file: str,
     padding: float = 0.2,
-) -> Image | str:
+) -> ImageContent | str:
     """Save a multiview snapshot of a CAD file. The input file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
 
     This multiview image shows the render of the model from 4 different views:
@@ -209,7 +211,7 @@ async def multiview_snapshot_of_cad(
             input_path=input_file,
             padding=padding,
         )
-        return Image(data=image, format="jpeg")
+        return encode_image(image)
     except Exception as e:
         return f"There was an error creating the multiview snapshot: {e}"
 
@@ -219,7 +221,7 @@ async def multiview_snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: str | None,
     padding: float = 0.2,
-) -> Image | str:
+) -> ImageContent | str:
     """Save a multiview snapshot of KCL code. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     This multiview image shows the render of the model from 4 different views:
@@ -245,7 +247,7 @@ async def multiview_snapshot_of_kcl(
             kcl_path=kcl_path,
             padding=padding,
         )
-        return Image(data=image, format="jpeg")
+        return encode_image(image)
     except Exception as e:
         return f"There was an error creating the multiview snapshot: {e}"
 
@@ -255,7 +257,7 @@ async def snapshot_of_cad(
     input_file: str,
     camera: dict | None = None,
     padding: float = 0.2,
-) -> Image | str:
+) -> ImageContent | str:
     """Save a snapshot of a CAD file.
 
     Args:
@@ -289,7 +291,7 @@ async def snapshot_of_cad(
             camera=camera,
             padding=padding,
         )
-        return Image(data=image, format="jpeg")
+        return encode_image(image)
     except Exception as e:
         return f"There was an error creating the snapshot: {e}"
 
@@ -300,7 +302,7 @@ async def snapshot_of_kcl(
     kcl_path: str | None,
     camera: dict | None = None,
     padding: float = 0.2,
-) -> Image | str:
+) -> ImageContent | str:
     """Save a snapshot of KCL
 
     Args:
@@ -336,7 +338,7 @@ async def snapshot_of_kcl(
             camera=camera,
             padding=padding,
         )
-        return Image(data=image, format="jpeg")
+        return encode_image(image)
     except Exception as e:
         return f"There was an error creating the snapshot: {e}"
 
