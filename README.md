@@ -51,7 +51,7 @@ Individual tools can be used in your own python code as well
 
 ```python
 from mcp.server.fastmcp import FastMCP
-from zoo_mcp.ai_tools import _text_to_cad
+from zoo_mcp.ai_tools import text_to_cad
 
 mcp = FastMCP(name="My Example Server")
 
@@ -61,7 +61,7 @@ async def my_text_text_to_cad(prompt: str) -> str:
     """
     Example tool that uses the text_to_cad function from zoo_mcp.tools
     """
-    return await _text_to_cad(prompt=prompt)
+    return await text_to_cad(prompt=prompt)
 ```
 
 The server can be integrated with [Claude desktop](https://claude.ai/download) using the following command
