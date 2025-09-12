@@ -13,7 +13,7 @@ from zoo_mcp.zoo_tools import (
 
 mcp = FastMCP(
     name="Zoo MCP Server",
-    log_level="INFO",
+    log_level="WARNING",
 )
 
 
