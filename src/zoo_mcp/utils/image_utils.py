@@ -1,6 +1,8 @@
 import io
 
-from PIL import Image
+from PIL import Image as PILImage
+from mcp.server.fastmcp.utilities.types import Image
+from mcp.types import ImageContent
 
 
 def create_image_collage(image_byte_list: list[bytes]) -> bytes:
@@ -11,7 +13,7 @@ def create_image_collage(image_byte_list: list[bytes]) -> bytes:
     # Load images
     images = []
     for img_bytes in image_byte_list:
-        img = Image.open(io.BytesIO(img_bytes))
+        img = PILImage.open(io.BytesIO(img_bytes))
         img = img.convert("RGB") if img.mode != "RGB" else img
         images.append(img)
 
@@ -23,7 +25,7 @@ def create_image_collage(image_byte_list: list[bytes]) -> bytes:
     img_w, img_h = images[0].size
 
     # Create blank canvas 2x2
-    collage = Image.new("RGB", (img_w * 2, img_h * 2))
+    collage = PILImage.new("RGB", (img_w * 2, img_h * 2))
     positions = [
         (0, 0),  # Top-left
         (img_w, 0),  # Top-right
@@ -35,7 +37,7 @@ def create_image_collage(image_byte_list: list[bytes]) -> bytes:
         collage.paste(img, pos)
 
     # Scale down by 2x
-    collage = collage.resize((img_w, img_h), Image.Resampling.LANCZOS)
+    collage = collage.resize((img_w, img_h), PILImage.Resampling.LANCZOS)
 
     # Save to bytes
     out = io.BytesIO()
@@ -49,3 +51,11 @@ def create_image_collage(image_byte_list: list[bytes]) -> bytes:
     out.close()
 
     return collage_bytes
+
+
+def encode_image(img_bytes: bytes) -> ImageContent:
+    """
+    Encodes a PIL Image to a format compatible with ImageContent.
+    """
+    img_obj = Image(data=img_bytes, format="jpeg")
+    return img_obj.to_image_content()
