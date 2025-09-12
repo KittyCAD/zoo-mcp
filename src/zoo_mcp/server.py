@@ -1,6 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 
-from zoo_mcp import logger, ZooMCPException
+from zoo_mcp import logger
 from zoo_mcp.ai_tools import _text_to_cad
 from zoo_mcp.zoo_tools import (
     zoo_export_kcl,
@@ -36,7 +36,7 @@ async def calculate_center_of_mass(input_file: str, unit_length: str) -> str:
             file_path=input_file, unit_length=unit_length
         )
         return f"The center of mass of the file is {com} with units of length of {unit_length}."
-    except ZooMCPException as e:
+    except Exception as e:
         return f"There was an error calculating the center of mass of the file: {e}"
 
 
@@ -66,7 +66,7 @@ async def calculate_mass(
             density=density,
         )
         return f"The mass of the file is {mass} {unit_mass}."
-    except ZooMCPException as e:
+    except Exception as e:
         return f"There was an error calculating the mass of the file: {e}"
 
 
@@ -89,7 +89,7 @@ async def calculate_surface_area(input_file: str, unit_area: str) -> str:
             file_path=input_file, unit_area=unit_area
         )
         return f"The surface area of the file is {surface_area} {unit_area}."
-    except ZooMCPException as e:
+    except Exception as e:
         return f"There was an error calculating the surface area of the file: {e}"
 
 
@@ -110,7 +110,7 @@ async def calculate_volume(input_file: str, unit_volume: str) -> str:
     try:
         volume = await zoo_calculate_volume(file_path=input_file, unit_vol=unit_volume)
         return f"The volume of the file is {volume} {unit_volume}."
-    except ZooMCPException as e:
+    except Exception as e:
         return f"There was an error calculating the volume of the file: {e}"
 
 
@@ -138,7 +138,7 @@ async def convert_cad_file(
             input_path=input_path, export_path=export_path, export_format=export_format
         )
         return f"The file was successfully converted to a CAD file at: {step_path}"
-    except ZooMCPException as e:
+    except Exception as e:
         return f"There was an error converting the CAD file: {e}"
 
 
@@ -171,7 +171,7 @@ async def export_kcl(
             export_format=export_format,
         )
         return f"The KCL code was successfully exported to a CAD file at: {cad_path}"
-    except ZooMCPException as e:
+    except Exception as e:
         return f"There was an error exporting the CAD file: {e}"
 
 
