@@ -369,7 +369,10 @@ async def text_to_cad(prompt: str) -> str:
         str: The generated KCL code if Text-to-CAD is successful, otherwise the error message.
     """
     logger.info("Text-To-CAD called with prompt: %s", prompt)
-    return await _text_to_cad(prompt=prompt)
+    try:
+        return await _text_to_cad(prompt=prompt)
+    except Exception as e:
+        return f"There was an error generating the CAD file from text: {e}"
 
 
 if __name__ == "__main__":
