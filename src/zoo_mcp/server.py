@@ -255,7 +255,7 @@ async def multiview_snapshot_of_kcl(
 @mcp.tool()
 async def snapshot_of_cad(
     input_file: str,
-    camera_dict: dict[str, list] | None = None,
+    camera_dict: dict[str, list[float]] | None = None,
     padding: float = 0.2,
 ) -> ImageContent | str:
     """Save a snapshot of a CAD file.
@@ -309,7 +309,7 @@ async def snapshot_of_cad(
 async def snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: str | None,
-    camera_dict: dict[str, list] | None = None,
+    camera_dict: dict[str, list[float]] | None = None,
     padding: float = 0.2,
 ) -> ImageContent | str:
     """Save a snapshot of KCL
