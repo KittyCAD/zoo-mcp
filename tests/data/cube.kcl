@@ -1,0 +1,18 @@
+@settings(defaultLengthUnit = mm)
+
+// Define the dimensions of the cube
+cubeSize = 10
+
+// Create a sketch for the cube
+cubeSketch = startSketchOn(XY)
+
+// Create the cube profile
+cubeProfile = startProfile(cubeSketch, at = [0, 0])
+  |> xLine(length = cubeSize)
+  |> yLine(length = cubeSize)
+  |> xLine(length = -cubeSize)
+  |> yLine(length = -cubeSize)
+  |> close()
+
+// Extrude the cube profile to create the 3D cube
+cube = extrude(cubeProfile, length = cubeSize)

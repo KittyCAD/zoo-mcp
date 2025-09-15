@@ -51,7 +51,7 @@ Individual tools can be used in your own python code as well
 
 ```python
 from mcp.server.fastmcp import FastMCP
-from zoo_mcp.tools import _text_to_cad
+from zoo_mcp.ai_tools import text_to_cad
 
 mcp = FastMCP(name="My Example Server")
 
@@ -61,12 +61,17 @@ async def my_text_text_to_cad(prompt: str) -> str:
     """
     Example tool that uses the text_to_cad function from zoo_mcp.tools
     """
-    return await _text_to_cad(prompt=prompt)
+    return await text_to_cad(prompt=prompt)
 ```
 
 The server can be integrated with [Claude desktop](https://claude.ai/download) using the following command
 ```bash 
 uv run mcp install src/zoo_mcp/server.py
+```
+
+The server can also be integrated with [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) using the following command
+```bash
+claude mcp add --scope project "Zoo-MCP" uv -- --directory "$PWD"/src/zoo_mcp run server.py
 ```
 
 The server can also be tested using the [MCP Inspector](https://modelcontextprotocol.io/legacy/tools/inspector#python)
@@ -88,7 +93,7 @@ uvx ruff format
 
 ### [ty](https://docs.astral.sh/ty/) is used for type checking.
 ```bash
-uvx ty check src/
+uvx ty check
 ```
 
 ## Testing
