@@ -5,6 +5,9 @@ import aiofiles
 import kcl
 from kittycad import KittyCAD
 from kittycad.models import (
+    Axis,
+    AxisDirectionPair,
+    Direction,
     FileCenterOfMass,
     FileConversion,
     FileExportFormat,
@@ -14,16 +17,27 @@ from kittycad.models import (
     FileVolume,
     ImageFormat,
     ImportFile,
+    InputFormat3d,
     ModelingCmd,
     ModelingCmdId,
     Point3d,
     PostEffectType,
+    System,
     UnitArea,
     UnitDensity,
     UnitLength,
     UnitMass,
     UnitVolume,
     WebSocketRequest,
+)
+from kittycad.models.input_format3d import (
+    OptionFbx,
+    OptionGltf,
+    OptionObj,
+    OptionPly,
+    OptionSldprt,
+    OptionStep,
+    OptionStl,
 )
 from kittycad.models.modeling_cmd import (
     OptionDefaultCameraLookAt,
@@ -49,6 +63,55 @@ _kcl_export_format_map = {
     "step": kcl.FileExportFormat.Step,
     "stl": kcl.FileExportFormat.Stl,
 }
+
+
+def _get_input_format(ext: str) -> InputFormat3d | None:
+    match ext.lower():
+        case "fbx":
+            return InputFormat3d(OptionFbx())
+        case "gltf":
+            return InputFormat3d(OptionGltf())
+        case "obj":
+            return InputFormat3d(
+                OptionObj(
+                    coords=System(
+                        forward=AxisDirectionPair(
+                            axis=Axis.Y, direction=Direction.NEGATIVE
+                        ),
+                        up=AxisDirectionPair(axis=Axis.Z, direction=Direction.POSITIVE),
+                    ),
+                    units=UnitLength.MM,
+                )
+            )
+        case "ply":
+            return InputFormat3d(
+                OptionPly(
+                    coords=System(
+                        forward=AxisDirectionPair(
+                            axis=Axis.Y, direction=Direction.NEGATIVE
+                        ),
+                        up=AxisDirectionPair(axis=Axis.Z, direction=Direction.POSITIVE),
+                    ),
+                    units=UnitLength.MM,
+                )
+            )
+        case "sldprt":
+            return InputFormat3d(OptionSldprt(split_closed_faces=True))
+        case "step" | "stp":
+            return InputFormat3d(OptionStep(split_closed_faces=True))
+        case "stl":
+            return InputFormat3d(
+                OptionStl(
+                    coords=System(
+                        forward=AxisDirectionPair(
+                            axis=Axis.Y, direction=Direction.NEGATIVE
+                        ),
+                        up=AxisDirectionPair(axis=Axis.Z, direction=Direction.POSITIVE),
+                    ),
+                    units=UnitLength.MM,
+                )
+            )
+    return None
 
 
 async def zoo_calculate_center_of_mass(
@@ -469,13 +532,18 @@ def zoo_multiview_snapshot_of_cad(
                 "The provided input path does not have a valid extension"
             )
 
+        input_format = _get_input_format(input_ext)
+        if input_format is None:
+            logger.error("The provided extension is not supported for import")
+            raise ZooMCPException("The provided extension is not supported for import")
+
         ws.send_binary(
             WebSocketRequest(
                 OptionModelingCmdReq(
                     cmd=ModelingCmd(
                         OptionImportFiles(
                             files=[ImportFile(data=data.read(), path=str(input_path))],
-                            format=FileImportFormat(input_ext),
+                            format=input_format,
                         )
                     ),
                     cmd_id=ModelingCmdId(import_id),
@@ -718,13 +786,18 @@ def zoo_snapshot_of_cad(
                 "The provided input path does not have a valid extension"
             )
 
+        input_format = _get_input_format(input_ext)
+        if input_format is None:
+            logger.error("The provided extension is not supported for import")
+            raise ZooMCPException("The provided extension is not supported for import")
+
         ws.send_binary(
             WebSocketRequest(
                 OptionModelingCmdReq(
                     cmd=ModelingCmd(
                         OptionImportFiles(
                             files=[ImportFile(data=data.read(), path=str(input_path))],
-                            format=FileImportFormat(input_ext),
+                            format=input_format,
                         )
                     ),
                     cmd_id=ModelingCmdId(import_id),
