@@ -7,15 +7,33 @@ from mcp.types import ImageContent
 from zoo_mcp.server import mcp
 
 
-@pytest.mark.asyncio
-async def test_calculate_center_of_mass():
+@pytest.fixture
+def cube_stl(tmp_path: str):
     test_file = Path(__file__).parent / "data" / "cube.stl"
     path = f"{test_file.resolve()}"
+    yield path
 
+
+@pytest.fixture
+def cube_kcl(tmp_path: str):
+    test_file = Path(__file__).parent / "data" / "cube.kcl"
+    path = f"{test_file.resolve()}"
+    yield path
+
+
+@pytest.fixture
+def empty_step(tmp_path: str):
+    test_file = Path(__file__).parent / "data" / "empty.step"
+    path = f"{test_file.resolve()}"
+    yield path
+
+
+@pytest.mark.asyncio
+async def test_calculate_center_of_mass(cube_stl: str):
     response = await mcp.call_tool(
         "calculate_center_of_mass",
         arguments={
-            "input_file": path,
+            "input_file": cube_stl,
             "unit_length": "mm",
         },
     )
@@ -30,13 +48,11 @@ async def test_calculate_center_of_mass():
 
 
 @pytest.mark.asyncio
-async def test_calculate_center_of_mass_error():
-    test_file = Path(__file__).parent / "data" / "cube.stl"
-    path = f"{test_file.resolve()}"
+async def test_calculate_center_of_mass_error(cube_stl: str):
     response = await mcp.call_tool(
         "calculate_center_of_mass",
         arguments={
-            "input_file": path,
+            "input_file": cube_stl,
             "unit_length": "asdf",
         },
     )
@@ -47,14 +63,11 @@ async def test_calculate_center_of_mass_error():
 
 
 @pytest.mark.asyncio
-async def test_calculate_mass():
-    test_file = Path(__file__).parent / "data" / "cube.stl"
-    path = f"{test_file.resolve()}"
-
+async def test_calculate_mass(cube_stl: str):
     response = await mcp.call_tool(
         "calculate_mass",
         arguments={
-            "input_file": path,
+            "input_file": cube_stl,
             "unit_mass": "g",
             "unit_density": "kg:m3",
             "density": 1000.0,
@@ -68,14 +81,11 @@ async def test_calculate_mass():
 
 
 @pytest.mark.asyncio
-async def test_calculate_mass_error():
-    test_file = Path(__file__).parent / "data" / "cube.stl"
-    path = f"{test_file.resolve()}"
-
+async def test_calculate_mass_error(cube_stl: str):
     response = await mcp.call_tool(
         "calculate_mass",
         arguments={
-            "input_file": path,
+            "input_file": cube_stl,
             "unit_mass": "asdf",
             "unit_density": "kg:m3",
             "density": 1000.0,
@@ -88,12 +98,9 @@ async def test_calculate_mass_error():
 
 
 @pytest.mark.asyncio
-async def test_calculate_surface_area():
-    test_file = Path(__file__).parent / "data" / "cube.stl"
-    path = f"{test_file.resolve()}"
-
+async def test_calculate_surface_area(cube_stl: str):
     response = await mcp.call_tool(
-        "calculate_surface_area", arguments={"input_file": path, "unit_area": "mm2"}
+        "calculate_surface_area", arguments={"input_file": cube_stl, "unit_area": "mm2"}
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -103,14 +110,11 @@ async def test_calculate_surface_area():
 
 
 @pytest.mark.asyncio
-async def test_calculate_surface_area_error():
-    test_file = Path(__file__).parent / "data" / "cube.step"
-    path = f"{test_file.resolve()}"
-
+async def test_calculate_surface_area_error(cube_stl: str):
     response = await mcp.call_tool(
         "calculate_surface_area",
         arguments={
-            "input_file": path,
+            "input_file": cube_stl,
             "unit_area": "asdf",
         },
     )
@@ -121,12 +125,9 @@ async def test_calculate_surface_area_error():
 
 
 @pytest.mark.asyncio
-async def test_calculate_volume():
-    test_file = Path(__file__).parent / "data" / "cube.step"
-    path = f"{test_file.resolve()}"
-
+async def test_calculate_volume(cube_stl: str):
     response = await mcp.call_tool(
-        "calculate_volume", arguments={"input_file": path, "unit_volume": "cm3"}
+        "calculate_volume", arguments={"input_file": cube_stl, "unit_volume": "cm3"}
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -136,12 +137,9 @@ async def test_calculate_volume():
 
 
 @pytest.mark.asyncio
-async def test_calculate_volume_error():
-    test_file = Path(__file__).parent / "data" / "cube.step"
-    path = f"{test_file.resolve()}"
-
+async def test_calculate_volume_error(cube_stl: str):
     response = await mcp.call_tool(
-        "calculate_volume", arguments={"input_file": path, "unit_volume": "asdf"}
+        "calculate_volume", arguments={"input_file": cube_stl, "unit_volume": "asdf"}
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -150,14 +148,11 @@ async def test_calculate_volume_error():
 
 
 @pytest.mark.asyncio
-async def test_convert_cad_file():
-    test_file = Path(__file__).parent / "data" / "cube.step"
-    path = f"{test_file.resolve()}"
-
+async def test_convert_cad_file(cube_stl: str):
     response = await mcp.call_tool(
         "convert_cad_file",
         arguments={
-            "input_path": path,
+            "input_path": cube_stl,
             "export_path": None,
             "export_format": "obj",
         },
@@ -171,7 +166,7 @@ async def test_convert_cad_file():
 
 @pytest.mark.asyncio
 async def test_convert_cad_file_error():
-    test_file = Path(__file__).parent / "data" / "cube.step"
+    test_file = Path(__file__).parent / "data" / "cube.asdf"
     path = f"{test_file.resolve()}"
 
     response = await mcp.call_tool(
@@ -189,15 +184,12 @@ async def test_convert_cad_file_error():
 
 
 @pytest.mark.asyncio
-async def test_export_kcl():
-    test_file = Path(__file__).parent / "data" / "cube.kcl"
-    path = f"{test_file.resolve()}"
-
+async def test_export_kcl(cube_kcl: str):
     response = await mcp.call_tool(
         "export_kcl",
         arguments={
             "kcl_code": None,
-            "kcl_path": path,
+            "kcl_path": cube_kcl,
             "export_path": None,
             "export_format": "step",
         },
@@ -227,14 +219,11 @@ async def test_export_kcl_error():
 
 
 @pytest.mark.asyncio
-async def test_multiview_snapshot_of_cad():
-    test_file = Path(__file__).parent / "data" / "cube.step"
-    path = f"{test_file.resolve()}"
-
+async def test_multiview_snapshot_of_cad(cube_stl: str):
     response = await mcp.call_tool(
         "multiview_snapshot_of_cad",
         arguments={
-            "input_file": path,
+            "input_file": cube_stl,
         },
     )
     assert isinstance(response, Sequence)
@@ -244,15 +233,12 @@ async def test_multiview_snapshot_of_cad():
 
 
 @pytest.mark.asyncio
-async def test_multiview_snapshot_of_kcl():
-    test_file = Path(__file__).parent / "data" / "cube.kcl"
-    path = f"{test_file.resolve()}"
-
+async def test_multiview_snapshot_of_kcl(cube_kcl: str):
     response = await mcp.call_tool(
         "multiview_snapshot_of_kcl",
         arguments={
             "kcl_code": None,
-            "kcl_path": path,
+            "kcl_path": cube_kcl,
         },
     )
     assert isinstance(response, Sequence)
@@ -262,13 +248,11 @@ async def test_multiview_snapshot_of_kcl():
 
 
 @pytest.mark.asyncio
-async def test_snapshot_of_cad():
-    test_file = Path(__file__).parent / "data" / "cube.step"
-    path = f"{test_file.resolve()}"
+async def test_snapshot_of_cad(cube_stl: str):
     response = await mcp.call_tool(
         "snapshot_of_cad",
         arguments={
-            "input_file": path,
+            "input_file": cube_stl,
             "camera_dict": None,
         },
     )
@@ -279,13 +263,11 @@ async def test_snapshot_of_cad():
 
 
 @pytest.mark.asyncio
-async def test_snapshot_of_cad_camera():
-    test_file = Path(__file__).parent / "data" / "cube.step"
-    path = f"{test_file.resolve()}"
+async def test_snapshot_of_cad_camera(cube_stl: str):
     response = await mcp.call_tool(
         "snapshot_of_cad",
         arguments={
-            "input_file": path,
+            "input_file": cube_stl,
             "camera_dict": {
                 "up": [0, 0, 1],
                 "vantage": [0, -1, 0],
@@ -300,14 +282,12 @@ async def test_snapshot_of_cad_camera():
 
 
 @pytest.mark.asyncio
-async def test_snapshot_of_kcl():
-    test_file = Path(__file__).parent / "data" / "cube.kcl"
-    path = f"{test_file.resolve()}"
+async def test_snapshot_of_kcl(cube_kcl: str):
     response = await mcp.call_tool(
         "snapshot_of_kcl",
         arguments={
             "kcl_code": None,
-            "kcl_path": path,
+            "kcl_path": cube_kcl,
             "camera_dict": None,
         },
     )
@@ -318,14 +298,12 @@ async def test_snapshot_of_kcl():
 
 
 @pytest.mark.asyncio
-async def test_snapshot_of_kcl_camera():
-    test_file = Path(__file__).parent / "data" / "cube.kcl"
-    path = f"{test_file.resolve()}"
+async def test_snapshot_of_kcl_camera(cube_kcl: str):
     response = await mcp.call_tool(
         "snapshot_of_kcl",
         arguments={
             "kcl_code": None,
-            "kcl_path": path,
+            "kcl_path": cube_kcl,
             "camera_dict": {
                 "up": [0, 0, 1],
                 "vantage": [0, -1, 0],
