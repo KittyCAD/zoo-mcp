@@ -1,8 +1,8 @@
 import io
 
-from PIL import Image as PILImage
 from mcp.server.fastmcp.utilities.types import Image
 from mcp.types import ImageContent
+from PIL import Image as PILImage
 
 
 def create_image_collage(image_byte_list: list[bytes]) -> bytes:

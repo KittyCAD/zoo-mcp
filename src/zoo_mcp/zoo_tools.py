@@ -1,14 +1,17 @@
 from pathlib import Path
 from uuid import uuid4
 
+import aiofiles
+import kcl
+from kittycad import KittyCAD
 from kittycad.models import (
     FileCenterOfMass,
     FileConversion,
     FileExportFormat,
     FileImportFormat,
+    FileMass,
     FileSurfaceArea,
     FileVolume,
-    FileMass,
     ImageFormat,
     ImportFile,
     ModelingCmd,
@@ -31,11 +34,8 @@ from kittycad.models.modeling_cmd import (
     OptionZoomToFit,
 )
 from kittycad.models.web_socket_request import OptionModelingCmdReq
-from kittycad import KittyCAD
-import aiofiles
-import kcl
 
-from zoo_mcp import logger, ZooMCPException
+from zoo_mcp import ZooMCPException, logger
 from zoo_mcp.utils.image_utils import create_image_collage
 
 kittycad_client = KittyCAD()
