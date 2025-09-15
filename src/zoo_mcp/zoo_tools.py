@@ -1,9 +1,13 @@
 from pathlib import Path
+from uuid import uuid4
 
 import aiofiles
 import kcl
 from kittycad import KittyCAD
 from kittycad.models import (
+    Axis,
+    AxisDirectionPair,
+    Direction,
     FileCenterOfMass,
     FileConversion,
     FileExportFormat,
@@ -11,14 +15,42 @@ from kittycad.models import (
     FileMass,
     FileSurfaceArea,
     FileVolume,
+    ImageFormat,
+    ImportFile,
+    InputFormat3d,
+    ModelingCmd,
+    ModelingCmdId,
+    Point3d,
+    PostEffectType,
+    System,
     UnitArea,
     UnitDensity,
     UnitLength,
     UnitMass,
     UnitVolume,
+    WebSocketRequest,
 )
+from kittycad.models.input_format3d import (
+    OptionFbx,
+    OptionGltf,
+    OptionObj,
+    OptionPly,
+    OptionSldprt,
+    OptionStep,
+    OptionStl,
+)
+from kittycad.models.modeling_cmd import (
+    OptionDefaultCameraLookAt,
+    OptionDefaultCameraSetOrthographic,
+    OptionImportFiles,
+    OptionTakeSnapshot,
+    OptionViewIsometric,
+    OptionZoomToFit,
+)
+from kittycad.models.web_socket_request import OptionModelingCmdReq
 
 from zoo_mcp import ZooMCPException, logger
+from zoo_mcp.utils.image_utils import create_image_collage
 
 kittycad_client = KittyCAD()
 
@@ -31,6 +63,55 @@ _kcl_export_format_map = {
     "step": kcl.FileExportFormat.Step,
     "stl": kcl.FileExportFormat.Stl,
 }
+
+
+def _get_input_format(ext: str) -> InputFormat3d | None:
+    match ext.lower():
+        case "fbx":
+            return InputFormat3d(OptionFbx())
+        case "gltf":
+            return InputFormat3d(OptionGltf())
+        case "obj":
+            return InputFormat3d(
+                OptionObj(
+                    coords=System(
+                        forward=AxisDirectionPair(
+                            axis=Axis.Y, direction=Direction.NEGATIVE
+                        ),
+                        up=AxisDirectionPair(axis=Axis.Z, direction=Direction.POSITIVE),
+                    ),
+                    units=UnitLength.MM,
+                )
+            )
+        case "ply":
+            return InputFormat3d(
+                OptionPly(
+                    coords=System(
+                        forward=AxisDirectionPair(
+                            axis=Axis.Y, direction=Direction.NEGATIVE
+                        ),
+                        up=AxisDirectionPair(axis=Axis.Z, direction=Direction.POSITIVE),
+                    ),
+                    units=UnitLength.MM,
+                )
+            )
+        case "sldprt":
+            return InputFormat3d(OptionSldprt(split_closed_faces=True))
+        case "step" | "stp":
+            return InputFormat3d(OptionStep(split_closed_faces=True))
+        case "stl":
+            return InputFormat3d(
+                OptionStl(
+                    coords=System(
+                        forward=AxisDirectionPair(
+                            axis=Axis.Y, direction=Direction.NEGATIVE
+                        ),
+                        up=AxisDirectionPair(axis=Axis.Z, direction=Direction.POSITIVE),
+                    ),
+                    units=UnitLength.MM,
+                )
+            )
+    return None
 
 
 async def zoo_calculate_center_of_mass(
@@ -410,3 +491,451 @@ async def zoo_export_kcl(
 
     logger.info("KCL exported successfully to %s", str(export_path))
     return Path(export_path)
+
+
+def zoo_multiview_snapshot_of_cad(
+    input_path: Path | str,
+    padding: float = 0.2,
+) -> bytes:
+    """Save a multiview snapshot of a CAD file.
+
+    Args:
+        input_path (Path | str): Path to the CAD file to save a multiview snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        padding (float): The padding to apply to the snapshot. Default is 0.2.
+
+    Returns:
+        bytes or None: The JPEG image contents if successful
+    """
+
+    input_path = Path(input_path)
+
+    # Connect to the websocket.
+    with (
+        kittycad_client.modeling.modeling_commands_ws(
+            fps=30,
+            post_effect=PostEffectType.SSAO,
+            show_grid=False,
+            unlocked_framerate=False,
+            video_res_height=1024,
+            video_res_width=1024,
+            webrtc=False,
+        ) as ws,
+        open(input_path, "rb") as data,
+    ):
+        # Import files request must be sent as binary, because the file contents might be binary.
+        import_id = ModelingCmdId(uuid4())
+
+        input_ext = input_path.suffix.split(".")[1]
+        if input_ext not in [i.value for i in FileImportFormat]:
+            logger.error("The provided input path does not have a valid extension")
+            raise ZooMCPException(
+                "The provided input path does not have a valid extension"
+            )
+
+        input_format = _get_input_format(input_ext)
+        if input_format is None:
+            logger.error("The provided extension is not supported for import")
+            raise ZooMCPException("The provided extension is not supported for import")
+
+        ws.send_binary(
+            WebSocketRequest(
+                OptionModelingCmdReq(
+                    cmd=ModelingCmd(
+                        OptionImportFiles(
+                            files=[ImportFile(data=data.read(), path=str(input_path))],
+                            format=input_format,
+                        )
+                    ),
+                    cmd_id=ModelingCmdId(import_id),
+                )
+            )
+        )
+
+        # Wait for the import to succeed.
+        while True:
+            message = ws.recv().model_dump()
+            if message["request_id"] == import_id:
+                break
+        if message["success"] is not True:
+            logger.error("Failed to import CAD file")
+            raise ZooMCPException("Failed to import CAD file")
+        object_id = message["resp"]["data"]["modeling_response"]["data"]["object_id"]
+
+        # set camera to ortho
+        ortho_cam_id = ModelingCmdId(uuid4())
+        ws.send(
+            WebSocketRequest(
+                OptionModelingCmdReq(
+                    cmd=ModelingCmd(OptionDefaultCameraSetOrthographic()),
+                    cmd_id=ModelingCmdId(ortho_cam_id),
+                )
+            )
+        )
+
+        views = [
+            OptionDefaultCameraLookAt(
+                up=Point3d(x=0, y=0, z=1),
+                vantage=Point3d(x=0, y=-1, z=0),
+                center=Point3d(x=0, y=0, z=0),
+            ),
+            OptionDefaultCameraLookAt(
+                up=Point3d(x=0, y=0, z=1),
+                vantage=Point3d(x=1, y=0, z=0),
+                center=Point3d(x=0, y=0, z=0),
+            ),
+            OptionDefaultCameraLookAt(
+                up=Point3d(x=0, y=1, z=0),
+                vantage=Point3d(x=0, y=0, z=1),
+                center=Point3d(x=0, y=0, z=0),
+            ),
+            OptionViewIsometric(),
+        ]
+
+        jpeg_contents_list = []
+
+        for view in views:
+            # change camera look at
+            camera_look_id = ModelingCmdId(uuid4())
+            ws.send(
+                WebSocketRequest(
+                    OptionModelingCmdReq(
+                        cmd=ModelingCmd(view),
+                        cmd_id=ModelingCmdId(camera_look_id),
+                    )
+                )
+            )
+
+            focus_id = ModelingCmdId(uuid4())
+            ws.send(
+                WebSocketRequest(
+                    OptionModelingCmdReq(
+                        cmd=ModelingCmd(
+                            OptionZoomToFit(object_ids=[object_id], padding=padding)
+                        ),
+                        cmd_id=ModelingCmdId(focus_id),
+                    )
+                )
+            )
+
+            # Wait for success message.
+            while True:
+                message = ws.recv().model_dump()
+                if message["request_id"] == focus_id:
+                    break
+            if message["success"] is not True:
+                logger.error("Failed to move camera to fit object")
+                raise ZooMCPException("Failed to move camera to fit object")
+
+            # Take a snapshot as a JPEG.
+            snapshot_id = ModelingCmdId(uuid4())
+            ws.send(
+                WebSocketRequest(
+                    OptionModelingCmdReq(
+                        cmd=ModelingCmd(OptionTakeSnapshot(format=ImageFormat.JPEG)),
+                        cmd_id=ModelingCmdId(snapshot_id),
+                    )
+                )
+            )
+
+            # Wait for success message.
+            while True:
+                message = ws.recv().model_dump()
+                if message["request_id"] == snapshot_id:
+                    break
+            if message["success"] is not True:
+                logger.error("Failed to capture snapshot")
+                raise ZooMCPException("Failed to capture snapshot")
+            jpeg_contents = message["resp"]["data"]["modeling_response"]["data"][
+                "contents"
+            ]
+
+            jpeg_contents_list.append(jpeg_contents)
+
+        collage = create_image_collage(jpeg_contents_list)
+
+        return collage
+
+
+async def zoo_multiview_snapshot_of_kcl(
+    kcl_code: str | None,
+    kcl_path: Path | str | None,
+    padding: float = 0.2,
+) -> bytes:
+    """Execute the KCL code and save a multiview snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str): KCL code
+        kcl_path (Path | str): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+        padding (float): The padding to apply to the snapshot. Default is 0.2.
+
+    Returns:
+        bytes or None: The JPEG image contents if successful
+    """
+
+    logger.info("Taking a multiview snapshot of KCL")
+
+    # default to using the code if both are provided
+    if kcl_code and kcl_path:
+        logger.warning("Both code and kcl_path provided, using code")
+        kcl_path = None
+
+    if kcl_path:
+        kcl_path = Path(kcl_path)
+        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
+            logger.error("The provided kcl_path is not a .kcl file")
+            raise ZooMCPException("The provided kcl_path is not a .kcl file")
+        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
+            logger.error(
+                "The provided kcl_path directory does not contain a main.kcl file"
+            )
+            raise ZooMCPException(
+                "The provided kcl_path does not contain a main.kcl file"
+            )
+
+    if not kcl_code and not kcl_path:
+        logger.error("Neither code nor kcl_path provided")
+        raise ZooMCPException("Neither code nor kcl_path provided")
+
+    try:
+        # None in the camera list means isometric view
+        # https://github.com/KittyCAD/modeling-app/blob/main/rust/kcl-python-bindings/tests/tests.py#L192
+        camera_list = [
+            kcl.CameraLookAt(
+                up=kcl.Point3d(x=0, y=0, z=1),
+                vantage=kcl.Point3d(x=0, y=-1, z=0),
+                center=kcl.Point3d(x=0, y=0, z=0),
+            ),
+            kcl.CameraLookAt(
+                up=kcl.Point3d(x=0, y=0, z=1),
+                vantage=kcl.Point3d(x=1, y=0, z=0),
+                center=kcl.Point3d(x=0, y=0, z=0),
+            ),
+            kcl.CameraLookAt(
+                up=kcl.Point3d(x=0, y=1, z=0),
+                vantage=kcl.Point3d(x=0, y=0, z=1),
+                center=kcl.Point3d(x=0, y=0, z=0),
+            ),
+            None,
+        ]
+
+        views = [
+            kcl.SnapshotOptions(camera=camera, padding=padding)
+            for camera in camera_list
+        ]
+
+        if kcl_code:
+            jpeg_contents_list = await kcl.execute_code_and_snapshot_views(
+                kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=views
+            )
+        else:
+            assert isinstance(kcl_path, Path)
+            jpeg_contents_list = await kcl.execute_and_snapshot_views(
+                str(kcl_path), kcl.ImageFormat.Jpeg, snapshot_options=views
+            )
+
+        assert isinstance(jpeg_contents_list, list)
+        for byte_obj in jpeg_contents_list:
+            assert isinstance(byte_obj, bytes)
+        collage = create_image_collage(jpeg_contents_list)
+
+        return collage
+
+    except Exception as e:
+        logger.error("Failed to take multiview snapshot: %s", e)
+        raise ZooMCPException(f"Failed to take multiview snapshot: {e}")
+
+
+def zoo_snapshot_of_cad(
+    input_path: Path | str,
+    camera: OptionDefaultCameraLookAt | OptionViewIsometric | None = None,
+    padding: float = 0.2,
+) -> bytes:
+    """Save a single view snapshot of a CAD file.
+
+    Args:
+        input_path (Path | str): Path to the CAD file to save a snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        camera (OptionDefaultCameraLookAt | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
+        padding (float): The padding to apply to the snapshot. Default is 0.2.
+
+    Returns:
+        bytes or None: The JPEG image contents if successful
+    """
+
+    input_path = Path(input_path)
+
+    # Connect to the websocket.
+    with (
+        kittycad_client.modeling.modeling_commands_ws(
+            fps=30,
+            post_effect=PostEffectType.SSAO,
+            show_grid=False,
+            unlocked_framerate=False,
+            video_res_height=1024,
+            video_res_width=1024,
+            webrtc=False,
+        ) as ws,
+        open(input_path, "rb") as data,
+    ):
+        # Import files request must be sent as binary, because the file contents might be binary.
+        import_id = ModelingCmdId(uuid4())
+
+        input_ext = input_path.suffix.split(".")[1]
+        if input_ext not in [i.value for i in FileImportFormat]:
+            logger.error("The provided input path does not have a valid extension")
+            raise ZooMCPException(
+                "The provided input path does not have a valid extension"
+            )
+
+        input_format = _get_input_format(input_ext)
+        if input_format is None:
+            logger.error("The provided extension is not supported for import")
+            raise ZooMCPException("The provided extension is not supported for import")
+
+        ws.send_binary(
+            WebSocketRequest(
+                OptionModelingCmdReq(
+                    cmd=ModelingCmd(
+                        OptionImportFiles(
+                            files=[ImportFile(data=data.read(), path=str(input_path))],
+                            format=input_format,
+                        )
+                    ),
+                    cmd_id=ModelingCmdId(import_id),
+                )
+            )
+        )
+
+        # Wait for the import to succeed.
+        while True:
+            message = ws.recv().model_dump()
+            if message["request_id"] == import_id:
+                break
+        if message["success"] is not True:
+            raise ZooMCPException("Failed to import CAD file")
+        object_id = message["resp"]["data"]["modeling_response"]["data"]["object_id"]
+
+        # set camera to ortho
+        ortho_cam_id = ModelingCmdId(uuid4())
+        ws.send(
+            WebSocketRequest(
+                OptionModelingCmdReq(
+                    cmd=ModelingCmd(OptionDefaultCameraSetOrthographic()),
+                    cmd_id=ModelingCmdId(ortho_cam_id),
+                )
+            )
+        )
+
+        camera_look_id = ModelingCmdId(uuid4())
+        if camera is None:
+            camera = OptionViewIsometric()
+        ws.send(
+            WebSocketRequest(
+                OptionModelingCmdReq(
+                    cmd=ModelingCmd(camera),
+                    cmd_id=ModelingCmdId(camera_look_id),
+                )
+            )
+        )
+
+        focus_id = ModelingCmdId(uuid4())
+        ws.send(
+            WebSocketRequest(
+                OptionModelingCmdReq(
+                    cmd=ModelingCmd(
+                        OptionZoomToFit(object_ids=[object_id], padding=padding)
+                    ),
+                    cmd_id=ModelingCmdId(focus_id),
+                )
+            )
+        )
+
+        # Wait for success message.
+        while True:
+            message = ws.recv().model_dump()
+            if message["request_id"] == focus_id:
+                break
+        if message["success"] is not True:
+            raise ZooMCPException("Failed to zoom to fit on CAD file")
+
+        # Take a snapshot as a JPEG.
+        snapshot_id = ModelingCmdId(uuid4())
+        ws.send(
+            WebSocketRequest(
+                OptionModelingCmdReq(
+                    cmd=ModelingCmd(OptionTakeSnapshot(format=ImageFormat.JPEG)),
+                    cmd_id=ModelingCmdId(snapshot_id),
+                )
+            )
+        )
+
+        # Wait for success message.
+        while True:
+            message = ws.recv().model_dump()
+            if message["request_id"] == snapshot_id:
+                break
+        if message["success"] is not True:
+            raise ZooMCPException("Failed to take snapshot of CAD file")
+        jpeg_contents = message["resp"]["data"]["modeling_response"]["data"]["contents"]
+
+        return jpeg_contents
+
+
+async def zoo_snapshot_of_kcl(
+    kcl_code: str | None,
+    kcl_path: Path | str | None,
+    camera: kcl.CameraLookAt | None = None,
+    padding: float = 0.2,
+) -> bytes:
+    """Execute the KCL code and save a single view snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str): KCL code
+        kcl_path (Path | str): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+        camera (kcl.CameraLookAt | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
+        padding (float): The padding to apply to the snapshot. Default is 0.2.
+
+    Returns:
+        bytes or None: The JPEG image contents if successful
+    """
+
+    logger.info("Taking a snapshot of KCL")
+
+    # default to using the code if both are provided
+    if kcl_code and kcl_path:
+        logger.warning("Both code and kcl_path provided, using code")
+        kcl_path = None
+
+    if kcl_path:
+        kcl_path = Path(kcl_path)
+        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
+            logger.error("The provided kcl_path is not a .kcl file")
+            raise ZooMCPException("The provided kcl_path is not a .kcl file")
+        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
+            logger.error(
+                "The provided kcl_path directory does not contain a main.kcl file"
+            )
+            raise ZooMCPException(
+                "The provided kcl_path does not contain a main.kcl file"
+            )
+
+    if not kcl_code and not kcl_path:
+        logger.error("Neither code nor kcl_path provided")
+        raise ZooMCPException("Neither code nor kcl_path provided")
+
+    view = kcl.SnapshotOptions(camera=camera, padding=padding)
+
+    if kcl_code:
+        jpeg_contents_list = await kcl.execute_code_and_snapshot_views(
+            kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=[view]
+        )
+    else:
+        assert isinstance(kcl_path, Path)
+        jpeg_contents_list = await kcl.execute_and_snapshot_views(
+            str(kcl_path), kcl.ImageFormat.Jpeg, snapshot_options=[view]
+        )
+
+    assert isinstance(jpeg_contents_list, list)
+    for byte_obj in jpeg_contents_list:
+        assert isinstance(byte_obj, bytes)
+
+    return jpeg_contents_list[0]

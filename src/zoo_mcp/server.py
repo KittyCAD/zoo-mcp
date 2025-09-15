@@ -1,7 +1,11 @@
+import kcl
+from kittycad.models.modeling_cmd import OptionDefaultCameraLookAt, Point3d
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ImageContent
 
 from zoo_mcp import logger
 from zoo_mcp.ai_tools import text_to_cad as _text_to_cad
+from zoo_mcp.utils.image_utils import encode_image
 from zoo_mcp.zoo_tools import (
     zoo_calculate_center_of_mass,
     zoo_calculate_mass,
@@ -9,6 +13,10 @@ from zoo_mcp.zoo_tools import (
     zoo_calculate_volume,
     zoo_convert_cad_file,
     zoo_export_kcl,
+    zoo_multiview_snapshot_of_cad,
+    zoo_multiview_snapshot_of_kcl,
+    zoo_snapshot_of_cad,
+    zoo_snapshot_of_kcl,
 )
 
 mcp = FastMCP(
@@ -173,6 +181,172 @@ async def export_kcl(
         return str(cad_path)
     except Exception as e:
         return f"There was an error exporting the CAD file: {e}"
+
+
+@mcp.tool()
+async def multiview_snapshot_of_cad(
+    input_file: str,
+) -> ImageContent | str:
+    """Save a multiview snapshot of a CAD file. The input file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+
+    This multiview image shows the render of the model from 4 different views:
+        The top left images is a front view.
+        The top right image is a right side view.
+        The bottom left image is a top view.
+        The bottom right image is an isometric view
+
+    Args:
+        input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+
+    Returns:
+        ImageContent | str: The multiview snapshot of the CAD file as an image, or an error message if the operation fails.
+    """
+
+    logger.info("multiview_snapshot_of_cad called for file: %s", input_file)
+
+    try:
+        image = zoo_multiview_snapshot_of_cad(
+            input_path=input_file,
+        )
+        return encode_image(image)
+    except Exception as e:
+        return f"There was an error creating the multiview snapshot: {e}"
+
+
+@mcp.tool()
+async def multiview_snapshot_of_kcl(
+    kcl_code: str | None,
+    kcl_path: str | None,
+) -> ImageContent | str:
+    """Save a multiview snapshot of KCL code. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    This multiview image shows the render of the model from 4 different views:
+        The top left images is a front view.
+        The top right image is a right side view.
+        The bottom left image is a top view.
+        The bottom right image is an isometric view
+
+    Args:
+        kcl_code (str): The KCL code to export to a CAD file.
+        kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
+
+    Returns:
+        ImageContent | str: The multiview snapshot of the KCL code as an image, or an error message if the operation fails.
+    """
+
+    logger.info("multiview_snapshot_of_kcl called")
+
+    try:
+        image = await zoo_multiview_snapshot_of_kcl(
+            kcl_code=kcl_code,
+            kcl_path=kcl_path,
+        )
+        return encode_image(image)
+    except Exception as e:
+        return f"There was an error creating the multiview snapshot: {e}"
+
+
+@mcp.tool()
+async def snapshot_of_cad(
+    input_file: str,
+    camera_dict: dict[str, list[float]] | None = None,
+) -> ImageContent | str:
+    """Save a snapshot of a CAD file.
+
+    Args:
+        input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        camera_dict (dict | None): The camera to use for the snapshot. If no camera is provided, a default isometric camera will be used. Otherwise, supply a dict with the following keys,
+            "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
+            For example camera = {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]} would set the camera to be looking at the origin from the right side (-y direction).
+
+    Returns:
+        ImageContent | str: The snapshot of the CAD file as an image, or an error message if the operation fails.
+    """
+
+    logger.info("snapshot_of_cad called for file: %s", input_file)
+
+    try:
+        if camera_dict is not None:
+            camera = OptionDefaultCameraLookAt(
+                up=Point3d(
+                    x=camera_dict["up"][0],
+                    y=camera_dict["up"][1],
+                    z=camera_dict["up"][2],
+                ),
+                vantage=Point3d(
+                    x=camera_dict["vantage"][0],
+                    y=-camera_dict["vantage"][1],
+                    z=camera_dict["vantage"][2],
+                ),
+                center=Point3d(
+                    x=camera_dict["center"][0],
+                    y=camera_dict["center"][1],
+                    z=camera_dict["center"][2],
+                ),
+            )
+        else:
+            camera = None
+
+        image = zoo_snapshot_of_cad(
+            input_path=input_file,
+            camera=camera,
+        )
+        return encode_image(image)
+    except Exception as e:
+        return f"There was an error creating the snapshot: {e}"
+
+
+@mcp.tool()
+async def snapshot_of_kcl(
+    kcl_code: str | None,
+    kcl_path: str | None,
+    camera_dict: dict[str, list[float]] | None = None,
+) -> ImageContent | str:
+    """Save a snapshot of a model represented by KCL. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str): The KCL code to export to a CAD file.
+        kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
+        camera_dict (dict | None): The camera to use for the snapshot. If no camera is provided, a default isometric camera will be used. Otherwise, supply a dict with the following keys,
+            "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
+            For example camera = {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]} would set the camera to be looking at the origin from the right side (-y direction).
+
+    Returns:
+        ImageContent | str: The snapshot of the CAD file as an image, or an error message if the operation fails.
+    """
+
+    logger.info("snapshot_of_kcl called for file")
+
+    try:
+        if camera_dict is not None:
+            camera = kcl.CameraLookAt(
+                up=kcl.Point3d(
+                    x=camera_dict["up"][0],
+                    y=camera_dict["up"][1],
+                    z=camera_dict["up"][2],
+                ),
+                vantage=kcl.Point3d(
+                    x=camera_dict["vantage"][0],
+                    y=-camera_dict["vantage"][1],
+                    z=camera_dict["vantage"][2],
+                ),
+                center=kcl.Point3d(
+                    x=camera_dict["center"][0],
+                    y=camera_dict["center"][1],
+                    z=camera_dict["center"][2],
+                ),
+            )
+        else:
+            camera = None
+
+        image = await zoo_snapshot_of_kcl(
+            kcl_code=kcl_code,
+            kcl_path=kcl_path,
+            camera=camera,
+        )
+        return encode_image(image)
+    except Exception as e:
+        return f"There was an error creating the snapshot: {e}"
 
 
 @mcp.tool()
