@@ -186,7 +186,6 @@ async def export_kcl(
 @mcp.tool()
 async def multiview_snapshot_of_cad(
     input_file: str,
-    padding: float = 0.2,
 ) -> ImageContent | str:
     """Save a multiview snapshot of a CAD file. The input file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
 
@@ -198,7 +197,6 @@ async def multiview_snapshot_of_cad(
 
     Args:
         input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
-        padding (float): The amount of padding to add around the model in the image. Default is 0.2.
 
     Returns:
         ImageContent | str: The multiview snapshot of the CAD file as an image, or an error message if the operation fails.
@@ -209,7 +207,6 @@ async def multiview_snapshot_of_cad(
     try:
         image = zoo_multiview_snapshot_of_cad(
             input_path=input_file,
-            padding=padding,
         )
         return encode_image(image)
     except Exception as e:
@@ -220,7 +217,6 @@ async def multiview_snapshot_of_cad(
 async def multiview_snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: str | None,
-    padding: float = 0.2,
 ) -> ImageContent | str:
     """Save a multiview snapshot of KCL code. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -233,7 +229,6 @@ async def multiview_snapshot_of_kcl(
     Args:
         kcl_code (str): The KCL code to export to a CAD file.
         kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
-        padding (float): The amount of padding to add around the model in the image. Default is 0.2.
 
     Returns:
         ImageContent | str: The multiview snapshot of the KCL code as an image, or an error message if the operation fails.
@@ -245,7 +240,6 @@ async def multiview_snapshot_of_kcl(
         image = await zoo_multiview_snapshot_of_kcl(
             kcl_code=kcl_code,
             kcl_path=kcl_path,
-            padding=padding,
         )
         return encode_image(image)
     except Exception as e:
@@ -256,7 +250,6 @@ async def multiview_snapshot_of_kcl(
 async def snapshot_of_cad(
     input_file: str,
     camera_dict: dict[str, list[float]] | None = None,
-    padding: float = 0.2,
 ) -> ImageContent | str:
     """Save a snapshot of a CAD file.
 
@@ -265,7 +258,6 @@ async def snapshot_of_cad(
         camera_dict (dict | None): The camera to use for the snapshot. If no camera is provided, a default isometric camera will be used. Otherwise, supply a dict with the following keys,
             "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
             For example camera = {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]} would set the camera to be looking at the origin from the right side (-y direction).
-        padding (float): The amount of padding to add around the model in the image. Default is 0.2.
 
     Returns:
         ImageContent | str: The snapshot of the CAD file as an image, or an error message if the operation fails.
@@ -298,7 +290,6 @@ async def snapshot_of_cad(
         image = zoo_snapshot_of_cad(
             input_path=input_file,
             camera=camera,
-            padding=padding,
         )
         return encode_image(image)
     except Exception as e:
@@ -310,7 +301,6 @@ async def snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: str | None,
     camera_dict: dict[str, list[float]] | None = None,
-    padding: float = 0.2,
 ) -> ImageContent | str:
     """Save a snapshot of a model represented by KCL. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -320,7 +310,6 @@ async def snapshot_of_kcl(
         camera_dict (dict | None): The camera to use for the snapshot. If no camera is provided, a default isometric camera will be used. Otherwise, supply a dict with the following keys,
             "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
             For example camera = {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]} would set the camera to be looking at the origin from the right side (-y direction).
-        padding (float): The amount of padding to add around the model in the image. Default is 0.2.
 
     Returns:
         ImageContent | str: The snapshot of the CAD file as an image, or an error message if the operation fails.
@@ -354,7 +343,6 @@ async def snapshot_of_kcl(
             kcl_code=kcl_code,
             kcl_path=kcl_path,
             camera=camera,
-            padding=padding,
         )
         return encode_image(image)
     except Exception as e:
