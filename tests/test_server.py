@@ -165,14 +165,11 @@ async def test_convert_cad_file(cube_stl: str):
 
 
 @pytest.mark.asyncio
-async def test_convert_cad_file_error():
-    test_file = Path(__file__).parent / "data" / "cube.asdf"
-    path = f"{test_file.resolve()}"
-
+async def test_convert_cad_file_error(empty_step: str):
     response = await mcp.call_tool(
         "convert_cad_file",
         arguments={
-            "input_path": path,
+            "input_path": empty_step,
             "export_path": None,
             "export_format": "asdf",
         },
