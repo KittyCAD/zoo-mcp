@@ -255,16 +255,15 @@ async def multiview_snapshot_of_kcl(
 @mcp.tool()
 async def snapshot_of_cad(
     input_file: str,
-    camera: dict | None = None,
+    camera: dict[str, list] | None = None,
     padding: float = 0.2,
 ) -> ImageContent | str:
     """Save a snapshot of a CAD file.
 
     Args:
         input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
-        camera (dict | None): The camera to use for the snapshot. If using a dict it should have the following keys,
+        camera (dict | None): The camera to use for the snapshot. If no camera is provided, a default isometric camera will be used. Otherwise, supply a dict with the following keys,
             "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
-            If no camera is provided, a default isometric camera will be used.
             For example camera = {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]} would set the camera to be looking at the origin from the right side (-y direction).
         padding (float): The amount of padding to add around the model in the image. Default is 0.2.
 
@@ -302,7 +301,7 @@ async def snapshot_of_cad(
 async def snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: str | None,
-    camera: dict | None = None,
+    camera: dict[str, list] | None = None,
     padding: float = 0.2,
 ) -> ImageContent | str:
     """Save a snapshot of KCL
@@ -310,9 +309,8 @@ async def snapshot_of_kcl(
     Args:
         kcl_code (str): The KCL code to export to a CAD file.
         kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
-        camera (dict | None): The camera to use for the snapshot. If using a dict it should have the following keys,
+        camera (dict | None): The camera to use for the snapshot. If no camera is provided, a default isometric camera will be used. Otherwise, supply a dict with the following keys,
             "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
-            If no camera is provided, a default isometric camera will be used.
             For example camera = {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]} would set the camera to be looking at the origin from the right side (-y direction).
         padding (float): The amount of padding to add around the model in the image. Default is 0.2.
 
