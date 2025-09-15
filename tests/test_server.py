@@ -2,6 +2,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
+from mcp.types import ImageContent
 
 from zoo_mcp.server import mcp
 
@@ -223,6 +224,119 @@ async def test_export_kcl_error():
     assert isinstance(response[1], dict)
     result = response[1]["result"]
     assert "error exporting the CAD" in result
+
+
+@pytest.mark.asyncio
+async def test_multiview_snapshot_of_cad():
+    test_file = Path(__file__).parent / "data" / "cube.step"
+    path = f"{test_file.resolve()}"
+
+    response = await mcp.call_tool(
+        "multiview_snapshot_of_cad",
+        arguments={
+            "input_file": path,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[0], list)
+    result = response[0][0]
+    assert isinstance(result, ImageContent)
+
+
+@pytest.mark.asyncio
+async def test_multiview_snapshot_of_kcl():
+    test_file = Path(__file__).parent / "data" / "cube.kcl"
+    path = f"{test_file.resolve()}"
+
+    response = await mcp.call_tool(
+        "multiview_snapshot_of_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": path,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[0], list)
+    result = response[0][0]
+    assert isinstance(result, ImageContent)
+
+
+@pytest.mark.asyncio
+async def test_snapshot_of_cad():
+    test_file = Path(__file__).parent / "data" / "cube.step"
+    path = f"{test_file.resolve()}"
+    response = await mcp.call_tool(
+        "snapshot_of_cad",
+        arguments={
+            "input_file": path,
+            "camera_dict": None,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[0], list)
+    result = response[0][0]
+    assert isinstance(result, ImageContent)
+
+
+@pytest.mark.asyncio
+async def test_snapshot_of_cad_camera():
+    test_file = Path(__file__).parent / "data" / "cube.step"
+    path = f"{test_file.resolve()}"
+    response = await mcp.call_tool(
+        "snapshot_of_cad",
+        arguments={
+            "input_file": path,
+            "camera_dict": {
+                "up": [0, 0, 1],
+                "vantage": [0, -1, 0],
+                "center": [0, 0, 0],
+            },
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[0], list)
+    result = response[0][0]
+    assert isinstance(result, ImageContent)
+
+
+@pytest.mark.asyncio
+async def test_snapshot_of_kcl():
+    test_file = Path(__file__).parent / "data" / "cube.kcl"
+    path = f"{test_file.resolve()}"
+    response = await mcp.call_tool(
+        "snapshot_of_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": path,
+            "camera_dict": None,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[0], list)
+    result = response[0][0]
+    assert isinstance(result, ImageContent)
+
+
+@pytest.mark.asyncio
+async def test_snapshot_of_kcl_camera():
+    test_file = Path(__file__).parent / "data" / "cube.kcl"
+    path = f"{test_file.resolve()}"
+    response = await mcp.call_tool(
+        "snapshot_of_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": path,
+            "camera_dict": {
+                "up": [0, 0, 1],
+                "vantage": [0, -1, 0],
+                "center": [0, 0, 0],
+            },
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[0], list)
+    result = response[0][0]
+    assert isinstance(result, ImageContent)
 
 
 @pytest.mark.asyncio
