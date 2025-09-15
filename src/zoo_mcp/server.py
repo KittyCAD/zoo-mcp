@@ -201,7 +201,7 @@ async def multiview_snapshot_of_cad(
         padding (float): The amount of padding to add around the model in the image. Default is 0.2.
 
     Returns:
-        Image: The multiview snapshot of the CAD file as an image, or an error message if the operation fails.
+        ImageContent | str: The multiview snapshot of the CAD file as an image, or an error message if the operation fails.
     """
 
     logger.info("multiview_snapshot_of_cad called for file: %s", input_file)
@@ -236,7 +236,7 @@ async def multiview_snapshot_of_kcl(
         padding (float): The amount of padding to add around the model in the image. Default is 0.2.
 
     Returns:
-        Image: The multiview snapshot of the KCL code as an image, or an error message if the operation fails.
+        ImageContent | str: The multiview snapshot of the KCL code as an image, or an error message if the operation fails.
     """
 
     logger.info("multiview_snapshot_of_kcl called")
@@ -268,7 +268,7 @@ async def snapshot_of_cad(
         padding (float): The amount of padding to add around the model in the image. Default is 0.2.
 
     Returns:
-        Image: The snapshot of the CAD file as an image, or an error message if the operation fails.
+        ImageContent | str: The snapshot of the CAD file as an image, or an error message if the operation fails.
     """
 
     logger.info("snapshot_of_cad called for file: %s", input_file)
@@ -323,7 +323,7 @@ async def snapshot_of_kcl(
         padding (float): The amount of padding to add around the model in the image. Default is 0.2.
 
     Returns:
-        Image: The snapshot of the CAD file as an image, or an error message if the operation fails.
+        ImageContent | str: The snapshot of the CAD file as an image, or an error message if the operation fails.
     """
 
     logger.info("snapshot_of_kcl called for file")
