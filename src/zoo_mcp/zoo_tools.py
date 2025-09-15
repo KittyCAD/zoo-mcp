@@ -864,3 +864,5 @@ async def zoo_snapshot_of_kcl(
     assert isinstance(jpeg_contents_list, list)
     for byte_obj in jpeg_contents_list:
         assert isinstance(byte_obj, bytes)
+
+    return jpeg_contents_list[0]
