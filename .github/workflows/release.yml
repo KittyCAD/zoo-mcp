@@ -76,4 +76,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           # Publish all built wheels to the configured index
-          uv publish --publish-url https://api.pyx.dev/v1/upload/zoo/main --trusted-publishing=never dist/wheels/*
+          uv publish --publish-url https://api.pyx.dev/v1/upload/zoo/main --trusted-publishing=never dist/*
