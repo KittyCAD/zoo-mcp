@@ -6,7 +6,6 @@ build-backend = "uv_build"
 name = "zoo_mcp"
 version = "0.0.10"
 requires-python = ">=3.11"
-
 dependencies = [
     "aiofiles==24.1.0",
     "kittycad==1.1.3",
@@ -14,7 +13,6 @@ dependencies = [
     "pillow==11.3.0",
     "zoo-kcl==0.3.95",
 ]
-
 authors = [
     { name = "Ryan Barton", email = "ryan@zoo.dev" },
 ]
@@ -23,16 +21,28 @@ maintainers = [
 ]
 description = "An MCP server utilizing Zoo's various tools"
 readme = "README.md"
+license-files = ["LICENSE"]
+license = "MIT"
+keywords = ["zoo", "mcp", "kittycad", "3d", "modeling", "server"]
+classifiers = [
+    "Development Status :: 4 - Beta",
 
+    "Intended Audience :: Developers",
+
+    "Topic :: Software Development",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
 [project.urls]
 Repository = "https://github.com/KittyCAD/zoo-mcp"
-
 [tool.setuptools]
 include-package-data = true
-
 [tool.setuptools.packages.find]
 where = ["src"]
-
 [tool.setuptools.package-data]
 "*" = ["*.*"]
 
