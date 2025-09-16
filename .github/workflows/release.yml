@@ -54,7 +54,7 @@ jobs:
           files: ./dist/*
 
   publish-pyx:
-    name: Release to pyx
+    name: Publish to pyx
     runs-on:
       - runs-on=${{ github.run_id }}
       - runner=8cpu-linux-x64
@@ -76,4 +76,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           # Publish all built wheels to the configured index
-          uv publish --publish-url https://api.pyx.dev/v1/upload/zoo/main --trusted-publishing=never dist/wheels/*
+          uv publish --publish-url https://api.pyx.dev/v1/upload/zoo/main --trusted-publishing=never dist/*
