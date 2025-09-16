@@ -54,7 +54,7 @@ jobs:
           files: ./dist/*
 
   publish-pyx:
-    name: Release to pyx
+    name: Publish to pyx
     runs-on:
       - runs-on=${{ github.run_id }}
       - runner=8cpu-linux-x64
