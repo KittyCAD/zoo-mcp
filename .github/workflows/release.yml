@@ -2,11 +2,8 @@ name: release
 
 on:
   push:
-    branches:
-      - main
     tags:
       - '*'
-  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -141,4 +138,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           # Publish all built wheels to the configured index
-          uv publish --publish-url https://api.pyx.dev/v1/upload/zoo/main --trusted-publishing=never dist/**
+          uv publish --publish-url https://api.pyx.dev/v1/upload/zoo/main --trusted-publishing=never dist/wheels-*/*
