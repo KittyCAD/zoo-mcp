@@ -316,7 +316,7 @@ async def snapshot_of_kcl(
     kcl_path: str | None,
     camera_view: dict[str, list[float]] | str | None = None,
 ) -> ImageContent | str:
-    """Save a snapshot of a CAD file.
+    """Save a snapshot of a model represented by KCL. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
         kcl_code (str): The KCL code to export to a CAD file.
