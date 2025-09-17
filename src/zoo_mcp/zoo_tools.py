@@ -1,3 +1,4 @@
+from enum import Enum
 from pathlib import Path
 from uuid import uuid4
 
@@ -54,15 +55,68 @@ from zoo_mcp.utils.image_utils import create_image_collage
 
 kittycad_client = KittyCAD()
 
-_kcl_export_format_map = {
-    "fbx": kcl.FileExportFormat.Fbx,
-    "gltf": kcl.FileExportFormat.Gltf,
-    "glb": kcl.FileExportFormat.Glb,
-    "obj": kcl.FileExportFormat.Obj,
-    "ply": kcl.FileExportFormat.Ply,
-    "step": kcl.FileExportFormat.Step,
-    "stl": kcl.FileExportFormat.Stl,
-}
+
+class KCLExportFormat(Enum):
+    formats = {
+        "fbx": kcl.FileExportFormat.Fbx,
+        "gltf": kcl.FileExportFormat.Gltf,
+        "glb": kcl.FileExportFormat.Glb,
+        "obj": kcl.FileExportFormat.Obj,
+        "ply": kcl.FileExportFormat.Ply,
+        "step": kcl.FileExportFormat.Step,
+        "stl": kcl.FileExportFormat.Stl,
+    }
+
+
+class CameraView(Enum):
+    views = {
+        "front": {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]},
+        "back": {"up": [0, 0, 1], "vantage": [0, 1, 0], "center": [0, 0, 0]},
+        "left": {"up": [0, 0, 1], "vantage": [-1, 0, 0], "center": [0, 0, 0]},
+        "right": {"up": [0, 0, 1], "vantage": [1, 0, 0], "center": [0, 0, 0]},
+        "top": {"up": [0, 1, 0], "vantage": [0, 0, 1], "center": [0, 0, 0]},
+        "bottom": {"up": [0, -1, 0], "vantage": [0, 0, -1], "center": [0, 0, 0]},
+    }
+
+    @staticmethod
+    def to_kcl_camera(view: dict[str, list[float]]) -> kcl.CameraLookAt:
+        return kcl.CameraLookAt(
+            up=kcl.Point3d(
+                x=view["up"][0],
+                y=view["up"][1],
+                z=view["up"][2],
+            ),
+            vantage=kcl.Point3d(
+                x=view["vantage"][0],
+                y=-view["vantage"][1],
+                z=view["vantage"][2],
+            ),
+            center=kcl.Point3d(
+                x=view["center"][0],
+                y=view["center"][1],
+                z=view["center"][2],
+            ),
+        )
+
+    @staticmethod
+    def to_kittycad_camera(view: dict[str, list[float]]) -> OptionDefaultCameraLookAt:
+        return OptionDefaultCameraLookAt(
+            up=Point3d(
+                x=view["up"][0],
+                y=view["up"][1],
+                z=view["up"][2],
+            ),
+            vantage=Point3d(
+                x=view["vantage"][0],
+                y=-view["vantage"][1],
+                z=view["vantage"][2],
+            ),
+            center=Point3d(
+                x=view["center"][0],
+                y=view["center"][1],
+                z=view["center"][2],
+            ),
+        )
 
 
 def _get_input_format(ext: str) -> InputFormat3d | None:
@@ -440,13 +494,13 @@ async def zoo_export_kcl(
         logger.warning("No export format provided, defaulting to step")
         export_format = kcl.FileExportFormat.Step
     else:
-        if export_format not in _kcl_export_format_map.keys():
+        if export_format not in KCLExportFormat.formats.value.keys():
             logger.warning(
                 "Invalid export format %s provided, defaulting to step", export_format
             )
             export_format = kcl.FileExportFormat.Step
         else:
-            export_format = _kcl_export_format_map[export_format]
+            export_format = KCLExportFormat.formats.value[export_format]
 
     if export_path is None:
         logger.warning("No export path provided, creating a temporary file")
