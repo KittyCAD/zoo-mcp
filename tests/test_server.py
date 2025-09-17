@@ -496,3 +496,39 @@ async def test_text_to_cad_failure():
     assert isinstance(response[1], dict)
     result = response[1]["result"]
     assert "400 Bad Request" in result
+
+
+@pytest.mark.asyncio
+async def test_text_to_cad_iteration_success(cube_kcl: str):
+    prompt = "add a hole to the center"
+    response = await mcp.call_tool(
+        "text_to_cad_iteration",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+            "prompt": prompt,
+        },
+    )
+
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "|>" in result
+
+
+@pytest.mark.asyncio
+async def test_text_to_cad_iteration_success_error(cube_kcl: str):
+    prompt = "the quick brown fox jumps over the lazy dog"
+    response = await mcp.call_tool(
+        "text_to_cad_iteration",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+            "prompt": prompt,
+        },
+    )
+
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "400 Bad Request" in result
