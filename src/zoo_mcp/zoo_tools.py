@@ -54,15 +54,17 @@ from zoo_mcp.utils.image_utils import create_image_collage
 
 kittycad_client = KittyCAD()
 
-_kcl_export_format_map = {
-    "fbx": kcl.FileExportFormat.Fbx,
-    "gltf": kcl.FileExportFormat.Gltf,
-    "glb": kcl.FileExportFormat.Glb,
-    "obj": kcl.FileExportFormat.Obj,
-    "ply": kcl.FileExportFormat.Ply,
-    "step": kcl.FileExportFormat.Step,
-    "stl": kcl.FileExportFormat.Stl,
-}
+
+class KCLExportFormat(Enum):
+    formats = {
+        "fbx": kcl.FileExportFormat.Fbx,
+        "gltf": kcl.FileExportFormat.Gltf,
+        "glb": kcl.FileExportFormat.Glb,
+        "obj": kcl.FileExportFormat.Obj,
+        "ply": kcl.FileExportFormat.Ply,
+        "step": kcl.FileExportFormat.Step,
+        "stl": kcl.FileExportFormat.Stl,
+    }
 
 
 def _get_input_format(ext: str) -> InputFormat3d | None:
@@ -440,13 +442,13 @@ async def zoo_export_kcl(
         logger.warning("No export format provided, defaulting to step")
         export_format = kcl.FileExportFormat.Step
     else:
-        if export_format not in _kcl_export_format_map.keys():
+        if export_format not in KCLExportFormat.formats.value.keys():
             logger.warning(
                 "Invalid export format %s provided, defaulting to step", export_format
             )
             export_format = kcl.FileExportFormat.Step
         else:
-            export_format = _kcl_export_format_map[export_format]
+            export_format = KCLExportFormat.formats.value[export_format]
 
     if export_path is None:
         logger.warning("No export path provided, creating a temporary file")
