@@ -5,6 +5,7 @@ from mcp.types import ImageContent
 
 from zoo_mcp import ZooMCPException, logger
 from zoo_mcp.ai_tools import text_to_cad as _text_to_cad
+from zoo_mcp.ai_tools import text_to_cad_iteration as _text_to_cad_iteration
 from zoo_mcp.utils.image_utils import encode_image
 from zoo_mcp.zoo_tools import (
     CameraView,
@@ -408,6 +409,61 @@ async def text_to_cad(prompt: str) -> str:
         return await _text_to_cad(prompt=prompt)
     except Exception as e:
         return f"There was an error generating the CAD file from text: {e}"
+
+
+@mcp.tool()
+async def text_to_cad_iteration(
+    kcl_code: str | None,
+    kcl_path: str | None,
+    prompt: str,
+    start_column: int = 1,
+    start_line: int = 1,
+    end_column: int = 1,
+    end_line: int = 1,
+) -> str:
+    """Modify existing KCL code based on a text prompt. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file
+
+    # General Tips
+    - You can use verbs like "add", "remove", "change", "make", "fillet", etc. to describe the modification you want to make.
+    - Be specific about what you want to change in the model. For example, "add a hole to the center" is more specific than "add a hole".
+    - If your prompt omits important dimensions, Text-to-CAD will make its best guess to fill in missing details.
+    - Text-to-CAD returns a 422 error code if it fails to generate a valid geometry internally, even if it understands your prompt. We're working on reducing the amount of errors.
+    - Shorter prompts, 1-2 sentences in length, succeed more often than longer prompts.
+    - The maximum prompt length is approximately 6000 words. Generally, shorter prompts of one or two sentences work best. Longer prompts take longer to resolve.
+    - The same prompt can generate different results when submitted multiple times. Sometimes a failing prompt will succeed on the next attempt, and vice versa.
+
+    # Examples
+    - "Add a hole to the center of the plate."
+    - "Make the gear twice as large."
+    - "Remove the top face of the box."
+    - "Fillet each corner"
+
+    Args:
+        kcl_code (str | None): The existing KCL code to be modified.
+        kcl_path (str | None): The path to a KCL file to be modified. The path should point to a .kcl file
+        prompt (str): The text prompt describing the modification to be made.
+        start_column (int): The starting column of the selection in the KCL code to be modified
+        start_line (int): The starting line of the selection in the KCL code to be modified.
+        end_column (int): The ending column of the selection in the KCL code to be modified.
+        end_line (int): The ending line of the selection in the KCL code to be modified.
+
+    Returns:
+        str: The modified KCL code if Text-to-CAD iteration is successful, otherwise the error message.
+    """
+
+    logger.info("Text-To-CAD iteration called with prompt: %s", prompt)
+    try:
+        return await _text_to_cad_iteration(
+            kcl_code=kcl_code,
+            kcl_path=kcl_path,
+            prompt=prompt,
+            start_column=start_column,
+            start_line=start_line,
+            end_column=end_column,
+            end_line=end_line,
+        )
+    except Exception as e:
+        return f"There was an error modifying the CAD file from text: {e}"
 
 
 if __name__ == "__main__":
