@@ -8,6 +8,8 @@ from kittycad.models import (
 )
 from kittycad.models.text_to_cad_response import OptionTextToCad
 
+from zoo_mcp import ZooMCPException, logger
+
 kittycad_client = KittyCAD()
 
 
@@ -21,6 +23,9 @@ async def text_to_cad(prompt: str) -> str:
         A string containing the complete KCL code of the CAD model if Text-To-CAD was successful, otherwise an error
         message from Text-To-CAD
     """
+
+    logger.info("Sending prompt to Text-To-CAD")
+
     # send prompt via the kittycad client
     t2c = kittycad_client.ml.create_text_to_cad(
         output_format=FileExportFormat.STEP,
@@ -37,6 +42,8 @@ async def text_to_cad(prompt: str) -> str:
     while result.root.status not in [ApiCallStatus.COMPLETED, ApiCallStatus.FAILED]:
         result = kittycad_client.ml.get_text_to_cad_model_for_user(id=t2c.id)
         await asyncio.sleep(1)
+
+    logger.info("Received response from Text-To-CAD")
 
     # get the data object (root) of the response
     response = result.root
