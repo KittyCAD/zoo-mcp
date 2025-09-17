@@ -309,7 +309,7 @@ async def snapshot_of_kcl(
         kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
         camera_dict (dict | None): The camera to use for the snapshot. If no camera is provided, a default isometric camera will be used. Otherwise, supply a dict with the following keys,
             "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
-            For example camera = {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]} would set the camera to be looking at the origin from the right side (-y direction).
+            For example camera = {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]} would set the camera to be looking at the origin from the front side (-y direction).
 
     Returns:
         ImageContent | str: The snapshot of the CAD file as an image, or an error message if the operation fails.
