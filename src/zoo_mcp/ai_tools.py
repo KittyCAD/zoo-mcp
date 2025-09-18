@@ -6,9 +6,6 @@ from kittycad import KittyCAD
 from kittycad.models import (
     ApiCallStatus,
     FileExportFormat,
-    SourcePosition,
-    SourceRange,
-    SourceRangePrompt,
     TextToCadCreateBody,
     TextToCadIterationBody,
 )
@@ -73,24 +70,16 @@ async def text_to_cad(prompt: str) -> str:
 
 
 async def text_to_cad_iteration(
-    kcl_code: str | None,
-    kcl_path: Path | str | None,
     prompt: str,
-    start_column: int = 1,
-    start_line: int = 1,
-    end_column: int = 1,
-    end_line: int = 1,
+    kcl_code: str | None = None,
+    kcl_path: Path | str | None = None,
 ) -> str:
     """Send a prompt to Zoo's Text-To-CAD iteration endpoint. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file
 
     Args:
+        prompt (str): a description of the changes to be made to the CAD model
         kcl_code (str | None): The existing KCL code to be modified
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file
-        prompt (str): a description of the changes to be made to the CAD model
-        start_column (int): The starting column of the range to be modified. This should be greater than or equal to 1.
-        start_line (int): The starting line of the range to be modified. This should be greater than or equal to 1.
-        end_column (int): The ending column of the range to be modified. This should be greater than or equal to 1.
-        end_line (int): The ending line of the range to be modified. This should be greater than or equal to 1.
 
     Returns:
         A string containing the complete KCL code of the CAD model if Text-To-CAD iteration was successful, otherwise an error
@@ -123,36 +112,13 @@ async def text_to_cad_iteration(
         async with aiofiles.open(kcl_path, "r") as inp:
             kcl_code = await inp.read()
 
-    if start_column < 1 or end_column < 1 or start_line < 1 or end_line < 1:
-        logger.error(
-            "start_column, start_line, end_column, and end_line must be greater than or equal to 1"
-        )
-        raise ZooMCPException(
-            "start_column, start_line, end_column, and end_line must be greater than or equal to 1"
-        )
-
     if not isinstance(kcl_code, str):
         logger.error("kcl_code is not a string")
         raise ZooMCPException("kcl_code is not a string")
 
     t2ci = kittycad_client.ml.create_text_to_cad_iteration(
         body=TextToCadIterationBody(
-            original_source_code=kcl_code,
-            source_ranges=[
-                SourceRangePrompt(
-                    prompt=prompt,
-                    range=SourceRange(
-                        start=SourcePosition(
-                            column=start_column,
-                            line=start_line,
-                        ),
-                        end=SourcePosition(
-                            column=end_column,
-                            line=end_line,
-                        ),
-                    ),
-                )
-            ],
+            original_source_code=kcl_code, prompt=prompt, source_ranges=[]
         )
     )
 
