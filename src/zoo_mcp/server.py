@@ -6,6 +6,9 @@ from mcp.types import ImageContent
 from zoo_mcp import ZooMCPException, logger
 from zoo_mcp.ai_tools import text_to_cad as _text_to_cad
 from zoo_mcp.ai_tools import text_to_cad_iteration as _text_to_cad_iteration
+from zoo_mcp.ai_tools import (
+    text_to_cad_multi_file_iteration as _text_to_cad_multi_file_iteration,
+)
 from zoo_mcp.utils.image_utils import encode_image
 from zoo_mcp.zoo_tools import (
     CameraView,
@@ -154,10 +157,10 @@ async def convert_cad_file(
 
 @mcp.tool()
 async def export_kcl(
-    kcl_code: str | None,
-    kcl_path: str | None,
-    export_path: str | None,
-    export_format: str,
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
+    export_path: str | None = None,
+    export_format: str | None = None,
 ) -> str:
     """Export KCL code to a CAD file. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -217,8 +220,8 @@ async def multiview_snapshot_of_cad(
 
 @mcp.tool()
 async def multiview_snapshot_of_kcl(
-    kcl_code: str | None,
-    kcl_path: str | None,
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
 ) -> ImageContent | str:
     """Save a multiview snapshot of KCL code. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -313,8 +316,8 @@ async def snapshot_of_cad(
 
 @mcp.tool()
 async def snapshot_of_kcl(
-    kcl_code: str | None,
-    kcl_path: str | None,
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
     camera_view: dict[str, list[float]] | str | None = None,
 ) -> ImageContent | str:
     """Save a snapshot of a model represented by KCL. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
@@ -413,13 +416,9 @@ async def text_to_cad(prompt: str) -> str:
 
 @mcp.tool()
 async def text_to_cad_iteration(
-    kcl_code: str | None,
-    kcl_path: str | None,
     prompt: str,
-    start_column: int = 1,
-    start_line: int = 1,
-    end_column: int = 1,
-    end_line: int = 1,
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
 ) -> str:
     """Modify existing KCL code based on a text prompt. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file
 
@@ -439,13 +438,9 @@ async def text_to_cad_iteration(
     - "Fillet each corner"
 
     Args:
+        prompt (str): The text prompt describing the modification to be made.
         kcl_code (str | None): The existing KCL code to be modified.
         kcl_path (str | None): The path to a KCL file to be modified. The path should point to a .kcl file
-        prompt (str): The text prompt describing the modification to be made.
-        start_column (int): The starting column of the selection in the KCL code to be modified
-        start_line (int): The starting line of the selection in the KCL code to be modified.
-        end_column (int): The ending column of the selection in the KCL code to be modified.
-        end_line (int): The ending line of the selection in the KCL code to be modified.
 
     Returns:
         str: The modified KCL code if Text-to-CAD iteration is successful, otherwise the error message.
@@ -457,13 +452,55 @@ async def text_to_cad_iteration(
             kcl_code=kcl_code,
             kcl_path=kcl_path,
             prompt=prompt,
-            start_column=start_column,
-            start_line=start_line,
-            end_column=end_column,
-            end_line=end_line,
         )
     except Exception as e:
-        return f"There was an error modifying the CAD file from text: {e}"
+        return f"There was an error modifying the KCL file from text: {e}"
+
+
+@mcp.tool()
+async def text_to_cad_multi_file_iteration(
+    prompt: str,
+    file_paths: list[str] | None = None,
+    proj_path: str | None = None,
+) -> dict | str:
+    """Modify multiple existing KCL files based on a text prompt. Either file_paths or proj_path must be provided. If proj_path is provided all contained files will be sent to the endpoint.
+
+    # General Tips
+    - You can use verbs like "add", "remove", "change", "make", "fillet", etc. to describe the modification you want to make.
+    - Be specific about what you want to change in the model. For example, "add a hole to the center" is more specific than "add a hole".
+    - If your prompt omits important dimensions, Text-to-CAD will make its best guess to fill in missing details.
+    - Text-to-CAD returns a 422 error code if it fails to generate a valid geometry internally, even if it understands your prompt. We're working on reducing the amount of errors.
+    - Shorter prompts, 1-2 sentences in length, succeed more often than longer prompts.
+    - The maximum prompt length is approximately 6000 words. Generally, shorter prompts of one or two sentences work best. Longer prompts take longer to resolve.
+    - The same prompt can generate different results when submitted multiple times. Sometimes a failing prompt will succeed on the next attempt, and vice versa.
+
+    # Examples
+    - "Add a hole to the center of the plate."
+    - "Make the gear twice as large."
+    - "Remove the top face of the box."
+    - "Fillet each corner"
+
+    Args:
+        prompt (str): The text prompt describing the modification to be made.
+        file_paths (list[Path | str] | None): A list of paths to KCL files
+        proj_path (Path | str | None): A path to a directory containing a main.kcl file. All contained files will be sent to the endpoint.
+
+    Returns:
+        dict | str: A dictionary containing the complete KCL code of the CAD model if Text-To-CAD multi-file iteration was successful.
+                    Each key in the dict, refers to a kcl file path relative to the project path (determined by the commonpath if a project path is not supplied), and the value is the complete KCL code for that file.
+                    otherwise an error message from Text-To-CAD
+    """
+
+    logger.info("Text-To-CAD multi file iteration called with prompt: %s", prompt)
+
+    try:
+        return await _text_to_cad_multi_file_iteration(
+            file_paths=file_paths,
+            proj_path=proj_path,
+            prompt=prompt,
+        )
+    except Exception as e:
+        return f"There was an error modifying the KCL files from text: {e}"
 
 
 if __name__ == "__main__":
