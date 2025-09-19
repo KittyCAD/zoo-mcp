@@ -100,7 +100,9 @@ async def edit_kcl_project(
 
     if not (proj_path / "main.kcl").is_file():
         logger.error("No main.kcl file found in the root of the provided project path")
-        raise ZooMCPException("No main.kcl file found in the root of the provided project path")
+        raise ZooMCPException(
+            "No main.kcl file found in the root of the provided project path"
+        )
 
     file_attachments = {
         str(fp.relative_to(proj_path)): fp for fp in file_paths if fp.is_file()

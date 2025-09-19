@@ -4,11 +4,8 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ImageContent
 
 from zoo_mcp import ZooMCPException, logger
-from zoo_mcp.ai_tools import text_to_cad as _text_to_cad
 from zoo_mcp.ai_tools import edit_kcl_project as _edit_kcl_project
-from zoo_mcp.ai_tools import (
-    edit_kcl_project as _text_to_cad_multi_file_iteration,
-)
+from zoo_mcp.ai_tools import text_to_cad as _text_to_cad
 from zoo_mcp.utils.image_utils import encode_image
 from zoo_mcp.zoo_tools import (
     CameraView,
