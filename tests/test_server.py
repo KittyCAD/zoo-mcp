@@ -520,7 +520,7 @@ async def test_edit_kcl_project_success(kcl_project: str):
 
 
 @pytest.mark.asyncio
-async def test_text_to_cad_multifile_iteration_error(kcl_project: str):
+async def test_edit_kcl_project_error(kcl_project: str):
     prompt = "the quick brown fox jumps over the lazy dog"
     response = await mcp.call_tool(
         "edit_kcl_project",

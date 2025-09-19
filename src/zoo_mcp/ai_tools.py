@@ -79,7 +79,7 @@ async def edit_kcl_project(
         proj_path (Path | str ): A path to a directory containing a main.kcl file. All contained files (found recursively) will be sent to the endpoint.
 
     Returns:
-        dict | str: A dictionary containing the complete KCL code of the CAD model if Text-To-CAD multi-file iteration was successful.
+        dict | str: A dictionary containing the complete KCL code of the CAD model if Text-To-CAD edit KCL project was successful.
                     Each key in the dict, refers to a KCL file path relative to the project path (determined by the commonpath if a project path is not supplied), and the value is the complete KCL code for that file.
                     otherwise an error message from Text-To-CAD
     """
@@ -134,9 +134,9 @@ async def edit_kcl_project(
     # if Text To CAD iteration was successful return the KCL code, otherwise return the error
     if response.status == ApiCallStatus.COMPLETED:
         if response.outputs is None:
-            return "Error: Text-to-CAD iteration response is null."
+            return "Error: Text-to-CAD edit kcl project response is null."
         return response.outputs
     else:
         if response.error is None:
-            return "Error: Text-to-CAD iteration response is null."
+            return "Error: Text-to-CAD edit kcl project response is null."
         return response.error
