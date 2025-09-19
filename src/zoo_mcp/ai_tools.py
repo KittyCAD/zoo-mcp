@@ -76,7 +76,7 @@ async def edit_kcl_project(
 
     Args:
         prompt (str): A description of the changes to be made to the KCL project associated with the provided KCL files.
-        proj_path (Path | str ): A path to a directory containing a main.kcl file. All contained files (found recursively) will be sent to the endpoint.
+        proj_path (Path | str): A path to a directory containing a main.kcl file. All contained files (found recursively) will be sent to the endpoint.
 
     Returns:
         dict | str: A dictionary containing the complete KCL code of the CAD model if Text-To-CAD edit KCL project was successful.
