@@ -1,6 +1,8 @@
 import asyncio
+import ssl
 from pathlib import Path
 
+import truststore
 from kittycad import KittyCAD
 from kittycad.models import (
     ApiCallStatus,
@@ -14,9 +16,6 @@ from kittycad.models.text_to_cad_response import (
 )
 
 from zoo_mcp import ZooMCPException, logger
-
-import ssl
-import truststore
 
 ctx = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 kittycad_client = KittyCAD(verify_ssl=ctx)

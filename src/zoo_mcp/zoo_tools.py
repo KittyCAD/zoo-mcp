@@ -1,9 +1,11 @@
+import ssl
 from enum import Enum
 from pathlib import Path
 from uuid import uuid4
 
 import aiofiles
 import kcl
+import truststore
 from kittycad import KittyCAD
 from kittycad.models import (
     Axis,
@@ -52,9 +54,6 @@ from kittycad.models.web_socket_request import OptionModelingCmdReq
 
 from zoo_mcp import ZooMCPException, logger
 from zoo_mcp.utils.image_utils import create_image_collage
-
-import ssl
-import truststore
 
 ctx = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 kittycad_client = KittyCAD(verify_ssl=ctx)
