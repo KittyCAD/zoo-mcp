@@ -72,7 +72,7 @@ async def edit_kcl_project(
     prompt: str,
     proj_path: Path | str,
 ) -> dict | str:
-    """Send a prompt and a project to Zoo's Text-To-CAD edit kcl project endpoint. The proj_path will upload all contained files will be sent to the endpoint. There must be a main.kcl file in the root of the project.
+    """Send a prompt and a KCL project to Zoo's Text-To-CAD edit KCL project endpoint. The proj_path will upload all contained files to the endpoint. There must be a main.kcl file in the root of the project.
 
     Args:
         prompt (str): a description of the changes to be made to the KCL project associated with the provided KCL files
@@ -80,7 +80,7 @@ async def edit_kcl_project(
 
     Returns:
         dict | str: A dictionary containing the complete KCL code of the CAD model if Text-To-CAD multi-file iteration was successful.
-                    Each key in the dict, refers to a kcl file path relative to the project path (determined by the commonpath if a project path is not supplied), and the value is the complete KCL code for that file.
+                    Each key in the dict, refers to a KCL file path relative to the project path (determined by the commonpath if a project path is not supplied), and the value is the complete KCL code for that file.
                     otherwise an error message from Text-To-CAD
     """
     logger.info("Sending KCL code prompt to Text-To-CAD edit kcl project")
