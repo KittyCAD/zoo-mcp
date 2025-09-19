@@ -79,7 +79,7 @@ async def edit_kcl_project(
         proj_path (Path | str): A path to a directory containing a main.kcl file. All contained files (found recursively) will be sent to the endpoint.
 
     Returns:
-        dict | str: A dictionary containing the complete KCL code of the CAD model if Text-To-CAD multi-file iteration was successful.
+        dict | str: A dictionary containing the complete KCL code of the CAD model if Text-To-CAD edit KCL project was successful.
                     Each key in the dict refers to a KCL file path relative to the project path, and each value is the complete KCL code for that file.
                     If unsuccessful, returns an error message from Text-To-CAD.
     """
