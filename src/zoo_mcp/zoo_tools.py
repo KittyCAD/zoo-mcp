@@ -790,7 +790,7 @@ async def zoo_multiview_snapshot_of_kcl(
         assert isinstance(jpeg_contents_list, list)
         for byte_obj in jpeg_contents_list:
             assert isinstance(byte_obj, bytes)
-        collage = create_image_collage(jpeg_contents_list)
+        collage = create_image_collage(jpeg_contents_list)  # ty: ignore[invalid-argument-type]
 
         return collage
 
@@ -992,4 +992,4 @@ async def zoo_snapshot_of_kcl(
     for byte_obj in jpeg_contents_list:
         assert isinstance(byte_obj, bytes)
 
-    return jpeg_contents_list[0]
+    return jpeg_contents_list[0]   # ty: ignore[invalid-return-type]
