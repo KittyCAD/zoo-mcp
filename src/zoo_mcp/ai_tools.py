@@ -75,7 +75,7 @@ async def edit_kcl_project(
     """Send a prompt and a KCL project to Zoo's Text-To-CAD edit KCL project endpoint. The proj_path will upload all contained files to the endpoint. There must be a main.kcl file in the root of the project.
 
     Args:
-        prompt (str): a description of the changes to be made to the KCL project associated with the provided KCL files
+        prompt (str): A description of the changes to be made to the KCL project associated with the provided KCL files.
         proj_path (Path | str ): A path to a directory containing a main.kcl file. All contained files (found recursively) will be sent to the endpoint.
 
     Returns:
