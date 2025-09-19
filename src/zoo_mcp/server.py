@@ -422,7 +422,7 @@ async def edit_kcl_project(
     - You can use verbs like "add", "remove", "change", "make", "fillet", etc. to describe the modification you want to make.
     - Be specific about what you want to change in the model. For example, "add a hole to the center" is more specific than "add a hole".
     - If your prompt omits important dimensions, Text-to-CAD will make its best guess to fill in missing details.
-    - Text-to-CAD returns a 422 error code if it fails to generate a valid geometry internally, even if it understands your prompt. We're working on reducing the amount of errors.
+    - Text-to-CAD returns a 422 error code if it fails to generate a valid geometry internally, even if it understands your prompt.
     - Shorter prompts, 1-2 sentences in length, succeed more often than longer prompts.
     - The maximum prompt length is approximately 6000 words. Generally, shorter prompts of one or two sentences work best. Longer prompts take longer to resolve.
     - The same prompt can generate different results when submitted multiple times. Sometimes a failing prompt will succeed on the next attempt, and vice versa.
