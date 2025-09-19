@@ -1,6 +1,8 @@
 import asyncio
+import ssl
 from pathlib import Path
 
+import truststore
 from kittycad import KittyCAD
 from kittycad.models import (
     ApiCallStatus,
@@ -15,7 +17,8 @@ from kittycad.models.text_to_cad_response import (
 
 from zoo_mcp import ZooMCPException, logger
 
-kittycad_client = KittyCAD()
+ctx = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+kittycad_client = KittyCAD(verify_ssl=ctx)
 
 
 async def text_to_cad(prompt: str) -> str:
@@ -41,11 +44,11 @@ async def text_to_cad(prompt: str) -> str:
     )
 
     # get the response based on the request id
-    result = kittycad_client.ml.get_text_to_cad_model_for_user(id=t2c.id)
+    result = kittycad_client.ml.get_text_to_cad_parts_for_user(id=t2c.id)
 
     # check if the request has either completed or failed, otherwise sleep and try again
     while result.root.status not in [ApiCallStatus.COMPLETED, ApiCallStatus.FAILED]:
-        result = kittycad_client.ml.get_text_to_cad_model_for_user(id=t2c.id)
+        result = kittycad_client.ml.get_text_to_cad_parts_for_user(id=t2c.id)
         await asyncio.sleep(1)
 
     logger.info("Received response from Text-To-CAD")
@@ -117,11 +120,11 @@ async def edit_kcl_project(
     )
 
     # get the response based on the request id
-    result = kittycad_client.ml.get_text_to_cad_model_for_user(id=t2cmfi.id)
+    result = kittycad_client.ml.get_text_to_cad_parts_for_user(id=t2cmfi.id)
 
     # check if the request has either completed or failed, otherwise sleep and try again
     while result.root.status not in [ApiCallStatus.COMPLETED, ApiCallStatus.FAILED]:
-        result = kittycad_client.ml.get_text_to_cad_model_for_user(id=t2cmfi.id)
+        result = kittycad_client.ml.get_text_to_cad_parts_for_user(id=t2cmfi.id)
         await asyncio.sleep(1)
 
     # get the data object (root) of the response
