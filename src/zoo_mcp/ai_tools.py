@@ -8,7 +8,11 @@ from kittycad.models import (
 )
 from kittycad.models.text_to_cad_response import OptionTextToCad
 
-kittycad_client = KittyCAD()
+import ssl
+import truststore
+
+ctx = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+kittycad_client = KittyCAD(verify_ssl=ctx)
 
 
 async def text_to_cad(prompt: str) -> str:

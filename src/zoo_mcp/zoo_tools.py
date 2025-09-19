@@ -52,7 +52,11 @@ from kittycad.models.web_socket_request import OptionModelingCmdReq
 from zoo_mcp import ZooMCPException, logger
 from zoo_mcp.utils.image_utils import create_image_collage
 
-kittycad_client = KittyCAD()
+import ssl
+import truststore
+
+ctx = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+kittycad_client = KittyCAD(verify_ssl=ctx)
 
 _kcl_export_format_map = {
     "fbx": kcl.FileExportFormat.Fbx,
