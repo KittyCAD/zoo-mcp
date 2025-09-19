@@ -555,3 +555,4 @@ async def test_edit_kcl_project_subdir_main(kcl_project: str):
     assert isinstance(result, dict)
     assert "main.kcl" in result.keys()
     assert "bench-parts.kcl" in result.keys()
+    assert "subdir/main.kcl" in result.keys()
