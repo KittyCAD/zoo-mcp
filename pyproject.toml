@@ -51,6 +51,6 @@ dev = [
     "pytest-asyncio==1.2.0",
     "pytest-xdist==3.8.0",
     "ruff==0.13.1",
-    "ty>=0.0.1a20",
+    "ty==0.0.1a21",
     "uv-build==0.8.18",
 ]
