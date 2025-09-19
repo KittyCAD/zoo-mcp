@@ -416,7 +416,7 @@ async def edit_kcl_project(
     prompt: str,
     proj_path: str,
 ) -> dict | str:
-    """Modify an existing KCL project by sending a prompt and a KCL project path to Zoo's Text-To-CAD edit KCL project endpoint. The proj_path will upload all contained files to the endpoint. There must be a main.kcl file in the root of the project.
+    """Modify an existing KCL project by sending a prompt and a KCL project path to Zoo's Text-To-CAD "edit KCL project" endpoint. The proj_path will upload all contained files to the endpoint. There must be a main.kcl file in the root of the project.
 
     # General Tips
     - You can use verbs like "add", "remove", "change", "make", "fillet", etc. to describe the modification you want to make.
