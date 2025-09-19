@@ -2,11 +2,6 @@ name: pytest
 permissions:
   contents: read
 on:
-  push:
-    branches: main
-    paths:
-      - '**.py'
-      - 'pyproject.toml'
   pull_request:
     paths:
       - '**.py'
@@ -34,4 +29,4 @@ jobs:
         env:
           ZOO_API_TOKEN: ${{ secrets.ZOO_API_TOKEN }}
         run: |
-          uv run pytest
+          uv run pytest -n auto

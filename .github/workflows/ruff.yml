@@ -2,12 +2,6 @@ name: ruff
 permissions:
   contents: read
 on:
-  push:
-    branches: main
-    paths:
-      - '**.py'
-      - .github/workflows/ruff.yml
-      - 'pyproject.toml'
   pull_request:
     paths:
       - '**.py'
@@ -27,4 +21,4 @@ jobs:
       - name: Ruff Format
         uses: chartboost/ruff-action@v1
         with:
-          args: 'format'
+          args: 'format --check'

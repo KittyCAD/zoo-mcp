@@ -8,31 +8,33 @@ from zoo_mcp.server import mcp
 
 
 @pytest.fixture
-def cube_kcl(tmp_path: str):
+def cube_kcl():
     test_file = Path(__file__).parent / "data" / "cube.kcl"
-    path = f"{test_file.resolve()}"
-    yield path
+    yield f"{test_file.resolve()}"
 
 
 @pytest.fixture
-def cube_stl(tmp_path: str):
+def cube_stl():
     test_file = Path(__file__).parent / "data" / "cube.stl"
-    path = f"{test_file.resolve()}"
-    yield path
+    yield f"{test_file.resolve()}"
 
 
 @pytest.fixture
-def empty_kcl(tmp_path: str):
+def empty_kcl():
     test_file = Path(__file__).parent / "data" / "empty.kcl"
-    path = f"{test_file.resolve()}"
-    yield path
+    yield f"{test_file.resolve()}"
 
 
 @pytest.fixture
-def empty_step(tmp_path: str):
+def empty_step():
     test_file = Path(__file__).parent / "data" / "empty.step"
-    path = f"{test_file.resolve()}"
-    yield path
+    yield f"{test_file.resolve()}"
+
+
+@pytest.fixture
+def kcl_project():
+    project_path = Path(__file__).parent / "data" / "test_kcl_project"
+    yield f"{project_path.resolve()}"
 
 
 @pytest.mark.asyncio
@@ -496,3 +498,61 @@ async def test_text_to_cad_failure():
     assert isinstance(response[1], dict)
     result = response[1]["result"]
     assert "400 Bad Request" in result
+
+
+@pytest.mark.asyncio
+async def test_edit_kcl_project_success(kcl_project: str):
+    prompt = "make the bench longer"
+    response = await mcp.call_tool(
+        "edit_kcl_project",
+        arguments={
+            "proj_path": kcl_project,
+            "prompt": prompt,
+        },
+    )
+
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, dict)
+    assert "main.kcl" in result.keys()
+    assert "bench-parts.kcl" in result.keys()
+
+
+@pytest.mark.asyncio
+async def test_edit_kcl_project_error(kcl_project: str):
+    prompt = "the quick brown fox jumps over the lazy dog"
+    response = await mcp.call_tool(
+        "edit_kcl_project",
+        arguments={
+            "proj_path": kcl_project,
+            "prompt": prompt,
+        },
+    )
+
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, str)
+    assert "400 Bad Request" in result
+
+
+@pytest.mark.skip("Currently a bug with sub-dirs getting mangled")
+@pytest.mark.asyncio
+async def test_edit_kcl_project_subdir_main(kcl_project: str):
+    prompt = "make the bench longer"
+    response = await mcp.call_tool(
+        "edit_kcl_project",
+        arguments={
+            "proj_path": kcl_project,
+            "prompt": prompt,
+        },
+    )
+
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, dict)
+    assert "main.kcl" in result.keys()
+    assert "bench-parts.kcl" in result.keys()
+    assert "subdir/main.kcl" in result.keys()

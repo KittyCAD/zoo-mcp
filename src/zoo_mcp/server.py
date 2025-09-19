@@ -4,6 +4,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ImageContent
 
 from zoo_mcp import ZooMCPException, logger
+from zoo_mcp.ai_tools import edit_kcl_project as _edit_kcl_project
 from zoo_mcp.ai_tools import text_to_cad as _text_to_cad
 from zoo_mcp.utils.image_utils import encode_image
 from zoo_mcp.zoo_tools import (
@@ -38,7 +39,7 @@ async def calculate_center_of_mass(input_file: str, unit_length: str) -> dict | 
         str: The center of mass of the file in the specified unit of length, or an error message if the operation fails.
     """
 
-    logger.info("calculate_center_of_mass called for file: %s", input_file)
+    logger.info("calculate_center_of_mass tool called for file: %s", input_file)
 
     try:
         com = await zoo_calculate_center_of_mass(
@@ -65,7 +66,7 @@ async def calculate_mass(
         str: The mass of the file in the specified unit of mass, or an error message if the operation fails.
     """
 
-    logger.info("calculate_mass called for file: %s", input_file)
+    logger.info("calculate_mass tool called for file: %s", input_file)
 
     try:
         mass = await zoo_calculate_mass(
@@ -91,7 +92,7 @@ async def calculate_surface_area(input_file: str, unit_area: str) -> float | str
         str: The surface area of the file in the specified unit of area, or an error message if the operation fails.
     """
 
-    logger.info("calculate_surface_area called for file: %s", input_file)
+    logger.info("calculate_surface_area tool called for file: %s", input_file)
 
     try:
         surface_area = await zoo_calculate_surface_area(
@@ -114,7 +115,7 @@ async def calculate_volume(input_file: str, unit_volume: str) -> float | str:
         str: The volume of the file in the specified unit of volume, or an error message if the operation fails.
     """
 
-    logger.info("calculate_volume called for file: %s", input_file)
+    logger.info("calculate_volume tool called for file: %s", input_file)
 
     try:
         volume = await zoo_calculate_volume(file_path=input_file, unit_vol=unit_volume)
@@ -140,7 +141,7 @@ async def convert_cad_file(
         str: The path to the converted CAD file, or an error message if the operation fails.
     """
 
-    logger.info("convert_cad_file called")
+    logger.info("convert_cad_file tool called")
 
     try:
         step_path = await zoo_convert_cad_file(
@@ -153,10 +154,10 @@ async def convert_cad_file(
 
 @mcp.tool()
 async def export_kcl(
-    kcl_code: str | None,
-    kcl_path: str | None,
-    export_path: str | None,
-    export_format: str,
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
+    export_path: str | None = None,
+    export_format: str | None = None,
 ) -> str:
     """Export KCL code to a CAD file. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -170,7 +171,7 @@ async def export_kcl(
         str: The path to the converted CAD file, or an error message if the operation fails.
     """
 
-    logger.info("convert_kcl_to_step called")
+    logger.info("convert_kcl_to_step tool called")
 
     try:
         cad_path = await zoo_export_kcl(
@@ -203,7 +204,7 @@ async def multiview_snapshot_of_cad(
         ImageContent | str: The multiview snapshot of the CAD file as an image, or an error message if the operation fails.
     """
 
-    logger.info("multiview_snapshot_of_cad called for file: %s", input_file)
+    logger.info("multiview_snapshot_of_cad tool called for file: %s", input_file)
 
     try:
         image = zoo_multiview_snapshot_of_cad(
@@ -216,8 +217,8 @@ async def multiview_snapshot_of_cad(
 
 @mcp.tool()
 async def multiview_snapshot_of_kcl(
-    kcl_code: str | None,
-    kcl_path: str | None,
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
 ) -> ImageContent | str:
     """Save a multiview snapshot of KCL code. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -235,7 +236,7 @@ async def multiview_snapshot_of_kcl(
         ImageContent | str: The multiview snapshot of the KCL code as an image, or an error message if the operation fails.
     """
 
-    logger.info("multiview_snapshot_of_kcl called")
+    logger.info("multiview_snapshot_of_kcl tool called")
 
     try:
         image = await zoo_multiview_snapshot_of_kcl(
@@ -270,7 +271,7 @@ async def snapshot_of_cad(
         ImageContent | str: The snapshot of the CAD file as an image, or an error message if the operation fails.
     """
 
-    logger.info("snapshot_of_cad called for file: %s", input_file)
+    logger.info("snapshot_of_cad tool called for file: %s", input_file)
 
     try:
         camera = None
@@ -312,8 +313,8 @@ async def snapshot_of_cad(
 
 @mcp.tool()
 async def snapshot_of_kcl(
-    kcl_code: str | None,
-    kcl_path: str | None,
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
     camera_view: dict[str, list[float]] | str | None = None,
 ) -> ImageContent | str:
     """Save a snapshot of a model represented by KCL. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
@@ -335,7 +336,7 @@ async def snapshot_of_kcl(
         ImageContent | str: The snapshot of the CAD file as an image, or an error message if the operation fails.
     """
 
-    logger.info("snapshot_of_kcl called for file")
+    logger.info("snapshot_of_kcl tool called")
 
     try:
         camera = None
@@ -403,11 +404,54 @@ async def text_to_cad(prompt: str) -> str:
     Returns:
         str: The generated KCL code if Text-to-CAD is successful, otherwise the error message.
     """
-    logger.info("Text-To-CAD called with prompt: %s", prompt)
+    logger.info("text_to_cad tool called with prompt: %s", prompt)
     try:
         return await _text_to_cad(prompt=prompt)
     except Exception as e:
         return f"There was an error generating the CAD file from text: {e}"
+
+
+@mcp.tool()
+async def edit_kcl_project(
+    prompt: str,
+    proj_path: str,
+) -> dict | str:
+    """Modify an existing KCL project by sending a prompt and a KCL project path to Zoo's Text-To-CAD "edit KCL project" endpoint. The proj_path will upload all contained files to the endpoint. There must be a main.kcl file in the root of the project.
+
+    # General Tips
+    - You can use verbs like "add", "remove", "change", "make", "fillet", etc. to describe the modification you want to make.
+    - Be specific about what you want to change in the model. For example, "add a hole to the center" is more specific than "add a hole".
+    - If your prompt omits important dimensions, Text-to-CAD will make its best guess to fill in missing details.
+    - Text-to-CAD returns a 422 error code if it fails to generate a valid geometry internally, even if it understands your prompt.
+    - Shorter prompts, 1-2 sentences in length, succeed more often than longer prompts.
+    - The maximum prompt length is approximately 6000 words. Generally, shorter prompts of one or two sentences work best. Longer prompts take longer to resolve.
+    - The same prompt can generate different results when submitted multiple times. Sometimes a failing prompt will succeed on the next attempt, and vice versa.
+
+    # Examples
+    - "Add a hole to the center of the plate."
+    - "Make the gear twice as large."
+    - "Remove the top face of the box."
+    - "Fillet each corner"
+
+    Args:
+        prompt (str): The text prompt describing the modification to be made.
+        proj_path (str): A path to a KCL project directory containing a main.kcl file in the root. All contained files (found recursively) will be sent to the endpoint.
+
+    Returns:
+        dict | str: A dictionary containing the complete KCL code of the CAD model if Text-To-CAD edit KCL project was successful.
+                    Each key in the dict refers to a KCL file path relative to the project path, and each value is the complete KCL code for that file.
+                    If unsuccessful, returns an error message from Text-To-CAD.
+    """
+
+    logger.info("edit_kcl_project tool called with prompt: %s", prompt)
+
+    try:
+        return await _edit_kcl_project(
+            proj_path=proj_path,
+            prompt=prompt,
+        )
+    except Exception as e:
+        return f"There was an error modifying the KCL project from text: {e}"
 
 
 if __name__ == "__main__":

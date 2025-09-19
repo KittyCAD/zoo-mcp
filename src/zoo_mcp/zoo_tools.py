@@ -225,7 +225,7 @@ async def zoo_calculate_mass(
     """Calculate the mass of the file in the requested unit
 
     Args:
-        file_path(Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        file_path(Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_mass(str): The unit mass to return. This should be one of 'g', 'kg', 'lb'.
         unit_density(str): The unit density of the material. This should be one of 'lb:ft3', 'kg:m3'.
         density(float): The density of the material.
@@ -269,7 +269,7 @@ async def zoo_calculate_surface_area(file_path: Path | str, unit_area: str) -> f
     """Calculate the surface area of the file in the requested unit
 
     Args:
-        file_path (Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        file_path (Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_area (str): The unit area to return. This should be one of 'cm2', 'dm2', 'ft2', 'in2', 'km2', 'm2', 'mm2', 'yd2'.
 
     Returns:
@@ -314,7 +314,7 @@ async def zoo_calculate_volume(file_path: Path | str, unit_vol: str) -> float:
     """Calculate the volume of the file in the requested unit
 
     Args:
-        file_path (Path or str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        file_path (Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         unit_vol (str): The unit volume to return. This should be one of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
 
     Returns:
@@ -361,7 +361,7 @@ async def zoo_convert_cad_file(
 
     Args:
         input_path (Path | str): path to the CAD file to convert. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
-        export_path (Path | str): The path to save the cad file. If no path is provided, a temporary file will be created. If the path is a directory, a temporary file will be created in the directory. If the path is a file, it will be overwritten if the extension is valid.
+        export_path (Path | str | None): The path to save the cad file. If no path is provided, a temporary file will be created. If the path is a directory, a temporary file will be created in the directory. If the path is a file, it will be overwritten if the extension is valid.
         export_format (FileExportFormat | str | None): format to export the KCL code to. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
 
     Returns:
@@ -453,11 +453,11 @@ async def zoo_export_kcl(
     export_path: Path | str | None = None,
     export_format: kcl.FileExportFormat | str | None = kcl.FileExportFormat.Step,
 ) -> Path:
-    """Export KCL code to a CAD file. Either code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+    """Export KCL code to a CAD file. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
-        kcl_code (str): KCL code
-        kcl_path (Path | str): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+        kcl_code (str | None): KCL code
+        kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
         export_path (Path | str | None): path to save the step file, this should be a directory or a file with the appropriate extension. If no path is provided, a temporary file will be created.
         export_format (kcl.FileExportFormat | str | None): format to export the KCL code to. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
 
@@ -718,7 +718,7 @@ async def zoo_multiview_snapshot_of_kcl(
     """Execute the KCL code and save a multiview snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
-        kcl_code (str): KCL code
+        kcl_code (str | None): KCL code
         kcl_path (Path | str): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
@@ -790,7 +790,7 @@ async def zoo_multiview_snapshot_of_kcl(
         assert isinstance(jpeg_contents_list, list)
         for byte_obj in jpeg_contents_list:
             assert isinstance(byte_obj, bytes)
-        collage = create_image_collage(jpeg_contents_list)
+        collage = create_image_collage(jpeg_contents_list)  # ty: ignore[invalid-argument-type]
 
         return collage
 
@@ -808,7 +808,7 @@ def zoo_snapshot_of_cad(
 
     Args:
         input_path (Path | str): Path to the CAD file to save a snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
-        camera (OptionDefaultCameraLookAt | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
+        camera (OptionDefaultCameraLookAt | OptionViewIsometric | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
     Returns:
@@ -943,8 +943,8 @@ async def zoo_snapshot_of_kcl(
     """Execute the KCL code and save a single view snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
-        kcl_code (str): KCL code
-        kcl_path (Path | str): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+        kcl_code (str | None): KCL code
+        kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
         camera (kcl.CameraLookAt | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
@@ -992,4 +992,4 @@ async def zoo_snapshot_of_kcl(
     for byte_obj in jpeg_contents_list:
         assert isinstance(byte_obj, bytes)
 
-    return jpeg_contents_list[0]
+    return jpeg_contents_list[0]  # ty: ignore[invalid-return-type]
