@@ -501,48 +501,11 @@ async def test_text_to_cad_failure():
 
 
 @pytest.mark.asyncio
-async def test_text_to_cad_iteration_success(cube_kcl: str):
-    prompt = "add a hole to the center"
-    response = await mcp.call_tool(
-        "text_to_cad_iteration",
-        arguments={
-            "kcl_code": None,
-            "kcl_path": cube_kcl,
-            "prompt": prompt,
-        },
-    )
-
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
-    assert "|>" in result
-
-
-@pytest.mark.asyncio
-async def test_text_to_cad_iteration_success_error(cube_kcl: str):
-    prompt = "the quick brown fox jumps over the lazy dog"
-    response = await mcp.call_tool(
-        "text_to_cad_iteration",
-        arguments={
-            "kcl_code": None,
-            "kcl_path": cube_kcl,
-            "prompt": prompt,
-        },
-    )
-
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
-    assert "400 Bad Request" in result
-
-
-@pytest.mark.asyncio
-async def test_text_to_cad_multifile_iteration_success(kcl_project: str):
+async def test_edit_kcl_project_success(kcl_project: str):
     prompt = "make the bench longer"
     response = await mcp.call_tool(
-        "text_to_cad_multi_file_iteration",
+        "edit_kcl_project",
         arguments={
-            "file_paths": None,
             "proj_path": kcl_project,
             "prompt": prompt,
         },
@@ -560,9 +523,8 @@ async def test_text_to_cad_multifile_iteration_success(kcl_project: str):
 async def test_text_to_cad_multifile_iteration_error(kcl_project: str):
     prompt = "the quick brown fox jumps over the lazy dog"
     response = await mcp.call_tool(
-        "text_to_cad_multi_file_iteration",
+        "edit_kcl_project",
         arguments={
-            "file_paths": None,
             "proj_path": kcl_project,
             "prompt": prompt,
         },
@@ -573,3 +535,23 @@ async def test_text_to_cad_multifile_iteration_error(kcl_project: str):
     result = response[1]["result"]
     assert isinstance(result, str)
     assert "400 Bad Request" in result
+
+
+@pytest.mark.skip("Currently a bug with sub-dirs getting mangled")
+@pytest.mark.asyncio
+async def test_edit_kcl_project_subdir_main(kcl_project: str):
+    prompt = "make the bench longer"
+    response = await mcp.call_tool(
+        "edit_kcl_project",
+        arguments={
+            "proj_path": kcl_project,
+            "prompt": prompt,
+        },
+    )
+
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, dict)
+    assert "main.kcl" in result.keys()
+    assert "bench-parts.kcl" in result.keys()
