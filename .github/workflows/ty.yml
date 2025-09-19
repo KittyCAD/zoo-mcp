@@ -1,11 +1,7 @@
 name: ty
+permissions:
+  contents: read
 on:
-  push:
-    branches: main
-    paths:
-      - '**.py'
-      - ty.yml
-      - 'pyproject.toml'
   pull_request:
     paths:
       - '**.py'

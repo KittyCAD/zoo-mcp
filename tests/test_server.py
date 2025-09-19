@@ -8,31 +8,33 @@ from zoo_mcp.server import mcp
 
 
 @pytest.fixture
-def cube_kcl(tmp_path: str):
+def cube_kcl():
     test_file = Path(__file__).parent / "data" / "cube.kcl"
-    path = f"{test_file.resolve()}"
-    yield path
+    yield f"{test_file.resolve()}"
 
 
 @pytest.fixture
-def cube_stl(tmp_path: str):
+def cube_stl():
     test_file = Path(__file__).parent / "data" / "cube.stl"
-    path = f"{test_file.resolve()}"
-    yield path
+    yield f"{test_file.resolve()}"
 
 
 @pytest.fixture
-def empty_kcl(tmp_path: str):
+def empty_kcl():
     test_file = Path(__file__).parent / "data" / "empty.kcl"
-    path = f"{test_file.resolve()}"
-    yield path
+    yield f"{test_file.resolve()}"
 
 
 @pytest.fixture
-def empty_step(tmp_path: str):
+def empty_step():
     test_file = Path(__file__).parent / "data" / "empty.step"
-    path = f"{test_file.resolve()}"
-    yield path
+    yield f"{test_file.resolve()}"
+
+
+@pytest.fixture
+def kcl_project():
+    project_path = Path(__file__).parent / "data" / "test_kcl_project"
+    yield f"{project_path.resolve()}"
 
 
 @pytest.mark.asyncio
@@ -286,7 +288,7 @@ async def test_snapshot_of_cad(cube_stl: str):
         "snapshot_of_cad",
         arguments={
             "input_file": cube_stl,
-            "camera_dict": None,
+            "camera_view": None,
         },
     )
     assert isinstance(response, Sequence)
@@ -301,7 +303,7 @@ async def test_snapshot_of_cad_error(empty_step: str):
         "snapshot_of_cad",
         arguments={
             "input_file": empty_step,
-            "camera_dict": None,
+            "camera_view": None,
         },
     )
     assert isinstance(response, Sequence)
@@ -316,7 +318,7 @@ async def test_snapshot_of_cad_camera(cube_stl: str):
         "snapshot_of_cad",
         arguments={
             "input_file": cube_stl,
-            "camera_dict": {
+            "camera_view": {
                 "up": [0, 0, 1],
                 "vantage": [0, -1, 0],
                 "center": [0, 0, 0],
@@ -335,7 +337,7 @@ async def test_snapshot_of_cad_camera_error(empty_step: str):
         "snapshot_of_cad",
         arguments={
             "input_file": empty_step,
-            "camera_dict": {
+            "camera_view": {
                 "hello": [0, 0, 0],
             },
         },
@@ -347,13 +349,43 @@ async def test_snapshot_of_cad_camera_error(empty_step: str):
 
 
 @pytest.mark.asyncio
+async def test_snapshot_of_cad_view(cube_stl: str):
+    response = await mcp.call_tool(
+        "snapshot_of_cad",
+        arguments={
+            "input_file": cube_stl,
+            "camera_view": "front",
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[0], list)
+    result = response[0][0]
+    assert isinstance(result, ImageContent)
+
+
+@pytest.mark.asyncio
+async def test_snapshot_of_cad_view_error(cube_stl: str):
+    response = await mcp.call_tool(
+        "snapshot_of_cad",
+        arguments={
+            "input_file": cube_stl,
+            "camera_view": "asdf",
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "Invalid camera view" in result
+
+
+@pytest.mark.asyncio
 async def test_snapshot_of_kcl(cube_kcl: str):
     response = await mcp.call_tool(
         "snapshot_of_kcl",
         arguments={
             "kcl_code": None,
             "kcl_path": cube_kcl,
-            "camera_dict": None,
+            "camera_view": None,
         },
     )
     assert isinstance(response, Sequence)
@@ -369,7 +401,7 @@ async def test_snapshot_of_kcl_error(empty_step: str):
         arguments={
             "kcl_code": None,
             "kcl_path": empty_step,
-            "camera_dict": None,
+            "camera_view": None,
         },
     )
     assert isinstance(response, Sequence)
@@ -385,7 +417,7 @@ async def test_snapshot_of_kcl_camera(cube_kcl: str):
         arguments={
             "kcl_code": None,
             "kcl_path": cube_kcl,
-            "camera_dict": {
+            "camera_view": {
                 "up": [0, 0, 1],
                 "vantage": [0, -1, 0],
                 "center": [0, 0, 0],
@@ -405,7 +437,7 @@ async def test_snapshot_of_kcl_camera_error(empty_kcl: str):
         arguments={
             "kcl_code": None,
             "kcl_path": empty_kcl,
-            "camera_dict": {
+            "camera_view": {
                 "hello": [0, 0, 0],
             },
         },
@@ -414,6 +446,38 @@ async def test_snapshot_of_kcl_camera_error(empty_kcl: str):
     assert isinstance(response[1], dict)
     result = response[1]["result"]
     assert "error creating the snapshot" in result
+
+
+@pytest.mark.asyncio
+async def test_snapshot_of_kcl_view(cube_kcl: str):
+    response = await mcp.call_tool(
+        "snapshot_of_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+            "camera_view": "front",
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[0], list)
+    result = response[0][0]
+    assert isinstance(result, ImageContent)
+
+
+@pytest.mark.asyncio
+async def test_snapshot_of_kcl_view_error(cube_kcl: str):
+    response = await mcp.call_tool(
+        "snapshot_of_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+            "camera_view": "asdf",
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "Invalid camera view" in result
 
 
 @pytest.mark.asyncio
@@ -434,3 +498,61 @@ async def test_text_to_cad_failure():
     assert isinstance(response[1], dict)
     result = response[1]["result"]
     assert "400 Bad Request" in result
+
+
+@pytest.mark.asyncio
+async def test_edit_kcl_project_success(kcl_project: str):
+    prompt = "make the bench longer"
+    response = await mcp.call_tool(
+        "edit_kcl_project",
+        arguments={
+            "proj_path": kcl_project,
+            "prompt": prompt,
+        },
+    )
+
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, dict)
+    assert "main.kcl" in result.keys()
+    assert "bench-parts.kcl" in result.keys()
+
+
+@pytest.mark.asyncio
+async def test_edit_kcl_project_error(kcl_project: str):
+    prompt = "the quick brown fox jumps over the lazy dog"
+    response = await mcp.call_tool(
+        "edit_kcl_project",
+        arguments={
+            "proj_path": kcl_project,
+            "prompt": prompt,
+        },
+    )
+
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, str)
+    assert "400 Bad Request" in result
+
+
+@pytest.mark.skip("Currently a bug with sub-dirs getting mangled")
+@pytest.mark.asyncio
+async def test_edit_kcl_project_subdir_main(kcl_project: str):
+    prompt = "make the bench longer"
+    response = await mcp.call_tool(
+        "edit_kcl_project",
+        arguments={
+            "proj_path": kcl_project,
+            "prompt": prompt,
+        },
+    )
+
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, dict)
+    assert "main.kcl" in result.keys()
+    assert "bench-parts.kcl" in result.keys()
+    assert "subdir/main.kcl" in result.keys()

@@ -1,21 +1,18 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build"]
+build-backend = "uv_build"
 
 [project]
 name = "zoo_mcp"
-version = "0.0.3"
-requires-python = ">=3.12"
-
+version = "0.2.0"
+requires-python = ">=3.11"
 dependencies = [
     "aiofiles==24.1.0",
     "kittycad==1.1.3",
-    "mcp[cli]==1.14.0",
+    "mcp[cli]==1.14.1",
     "pillow==11.3.0",
-    "setuptools~=80.9",
-    "zoo-kcl==0.3.95",
+    "zoo-kcl==0.3.96",
 ]
-
 authors = [
     { name = "Ryan Barton", email = "ryan@zoo.dev" },
 ]
@@ -24,22 +21,36 @@ maintainers = [
 ]
 description = "An MCP server utilizing Zoo's various tools"
 readme = "README.md"
+license-files = ["LICENSE"]
+license = "MIT"
+keywords = ["zoo", "mcp", "kittycad", "3d", "modeling", "server"]
+classifiers = [
+    "Development Status :: 4 - Beta",
 
+    "Intended Audience :: Developers",
+
+    "Topic :: Software Development",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
 [project.urls]
 Repository = "https://github.com/KittyCAD/zoo-mcp"
-
 [tool.setuptools]
 include-package-data = true
-
 [tool.setuptools.packages.find]
 where = ["src"]
-
 [tool.setuptools.package-data]
 "*" = ["*.*"]
 
 [dependency-groups]
 dev = [
     "pytest-asyncio==1.2.0",
-    "ruff==0.13.0",
-    "ty>=0.0.1a20",
+    "pytest-xdist==3.8.0",
+    "ruff==0.13.1",
+    "ty==0.0.1a21",
+    "uv-build==0.8.18",
 ]
