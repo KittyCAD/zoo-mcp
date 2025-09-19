@@ -55,5 +55,5 @@ dev = [
     "pytest-xdist==3.8.0",
     "ruff==0.13.1",
     "ty==0.0.1a21",
-    "uv-build==0.8.18",
+    "uv-build==0.8.19",
 ]
