@@ -40,6 +40,8 @@ classifiers = [
 ]
 [project.urls]
 Repository = "https://github.com/KittyCAD/zoo-mcp"
+[project.scripts]
+zoo-mcp = "zoo_mcp.server:main"
 [tool.setuptools]
 include-package-data = true
 [tool.setuptools.packages.find]

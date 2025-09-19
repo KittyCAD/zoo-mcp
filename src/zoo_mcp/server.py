@@ -454,6 +454,10 @@ async def edit_kcl_project(
         return f"There was an error modifying the KCL project from text: {e}"
 
 
-if __name__ == "__main__":
+def main():
     logger.info("Starting MCP server...")
     mcp.run(transport="stdio")
+
+
+if __name__ == "__main__":
+    main()
