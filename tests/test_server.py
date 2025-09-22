@@ -537,7 +537,6 @@ async def test_edit_kcl_project_error(kcl_project: str):
     assert "400 Bad Request" in result
 
 
-@pytest.mark.skip("Currently a bug with sub-dirs getting mangled")
 @pytest.mark.asyncio
 async def test_edit_kcl_project_subdir_main(kcl_project: str):
     prompt = "make the bench longer"
