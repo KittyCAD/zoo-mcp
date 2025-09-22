@@ -91,6 +91,7 @@ async def edit_kcl_project(
     logger.info("Finding all files in project path")
     proj_path = Path(proj_path)
     file_paths = list(proj_path.rglob("*"))
+    file_paths = [fp for fp in file_paths if fp.is_file()]
     logger.info("Found %s files in project path", len(file_paths))
 
     if not file_paths:
@@ -108,7 +109,7 @@ async def edit_kcl_project(
         )
 
     file_attachments = {
-        str(fp.relative_to(proj_path)): fp for fp in file_paths if fp.is_file()
+        str(fp.relative_to(proj_path)): str(fp.resolve()) for fp in file_paths
     }
 
     t2cmfi = kittycad_client.ml.create_text_to_cad_multi_file_iteration(
