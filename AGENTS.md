@@ -30,8 +30,8 @@ This is a Model Context Protocol (MCP) server that exposes Zoo's AI-powered CAD 
 - `src/zoo_mcp/__init__.py` - Package initialization with logging configuration
 
 ### Key Dependencies
-- `kittycad` (v1.1.0) - Official Zoo API client for accessing Text-to-CAD functionality
-- `mcp[cli]` (v1.13.1) - Model Context Protocol framework for AI assistant integration
+- `kittycad` - Official Zoo API client for accessing Text-to-CAD functionality
+- `mcp[cli]` - Model Context Protocol framework for AI assistant integration
 - `pytest-asyncio` - For testing async functions
 
 ### API Integration
