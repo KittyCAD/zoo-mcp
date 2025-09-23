@@ -28,7 +28,9 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows trust store only available on Windows")
+@pytest.mark.skipif(
+    sys.platform != "win32", reason="Windows trust store only available on Windows"
+)
 def test_win_ca_smoke() -> None:
     if not _truthy_env("WIN_CA_SMOKE"):
         pytest.skip("WIN_CA_SMOKE not set; skipping Windows CA smoke test")
