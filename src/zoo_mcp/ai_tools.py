@@ -40,8 +40,8 @@ def log_websocket_message(conn_id: str) -> None:
                     match message_option:
                         case OptionCreatedKclFile():
                             logger.info(
-                                "Created %s: %s",
-                                (message_option.file_name, message_option.content),
+                                "Created %s: %s"
+                                % (message_option.file_name, message_option.content),
                             )
                         case OptionDeletedKclFile():
                             logger.info("Deleted %s", message_option.file_name)
@@ -71,8 +71,8 @@ def log_websocket_message(conn_id: str) -> None:
                             logger.info(message_option.content)
                         case OptionUpdatedKclFile():
                             logger.info(
-                                "Updated %s: %s",
-                                (message_option.file_name, message_option.content),
+                                "Updated %s: %s"
+                                % (message_option.file_name, message_option.content),
                             )
                         case _:
                             logger.info(
