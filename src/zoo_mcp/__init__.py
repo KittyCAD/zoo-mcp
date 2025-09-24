@@ -35,3 +35,6 @@ class ZooMCPException(Exception):
 ctx = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 kittycad_client = KittyCAD(verify_ssl=ctx)
 kittycad_client.websocket_recv_timeout = 120
+
+httpx_logger = logging.getLogger("httpx")
+httpx_logger.setLevel(logging.WARNING)
