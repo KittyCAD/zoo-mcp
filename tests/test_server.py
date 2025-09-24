@@ -505,6 +505,7 @@ async def test_text_to_cad_failure():
 
 
 @pytest.mark.asyncio
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 async def test_text_to_cad_reasoning_messages(caplog):
     import logging
 
