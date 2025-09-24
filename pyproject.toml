@@ -8,11 +8,11 @@ version = "0.3.0"
 requires-python = ">=3.11"
 dependencies = [
     "aiofiles==24.1.0",
-    "kittycad==1.2.2",
+    "kittycad==1.2.3",
     "mcp[cli]==1.14.1",
     "pillow==11.3.0",
     "truststore>=0.10.4",
-    "zoo-kcl==0.3.96",
+    "zoo-kcl==0.3.97",
 ]
 authors = [
     { name = "Ryan Barton", email = "ryan@zoo.dev" },
@@ -38,14 +38,19 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
+
 [project.urls]
 Repository = "https://github.com/KittyCAD/zoo-mcp"
+
 [project.scripts]
 zoo-mcp = "zoo_mcp.server:main"
+
 [tool.setuptools]
 include-package-data = true
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
 [tool.setuptools.package-data]
 "*" = ["*.*"]
 
@@ -55,5 +60,5 @@ dev = [
     "pytest-xdist==3.8.0",
     "ruff==0.13.1",
     "ty==0.0.1a21",
-    "uv-build==0.8.19",
+    "uv-build==0.8.22",
 ]
