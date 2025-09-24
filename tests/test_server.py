@@ -482,6 +482,9 @@ async def test_snapshot_of_kcl_view_error(cube_kcl: str):
 
 @pytest.mark.asyncio
 async def test_text_to_cad_success():
+    from zoo_mcp import kittycad_client
+    kittycad_client.headers["Cache-Control"] = "no-cache"
+
     prompt = "Create a 10x10x10 cube."
     response = await mcp.call_tool("text_to_cad", arguments={"prompt": prompt})
     assert isinstance(response, Sequence)
@@ -502,6 +505,9 @@ async def test_text_to_cad_failure():
 
 @pytest.mark.asyncio
 async def test_edit_kcl_project_success(kcl_project: str):
+    from zoo_mcp import kittycad_client
+    kittycad_client.headers["Cache-Control"] = "no-cache"
+
     prompt = "make the bench longer"
     response = await mcp.call_tool(
         "edit_kcl_project",
@@ -539,6 +545,9 @@ async def test_edit_kcl_project_error(kcl_project: str):
 
 @pytest.mark.asyncio
 async def test_edit_kcl_project_subdir_main(kcl_project: str):
+    from zoo_mcp import kittycad_client
+    kittycad_client.headers["Cache-Control"] = "no-cache"
+
     prompt = "make the bench longer"
     response = await mcp.call_tool(
         "edit_kcl_project",
