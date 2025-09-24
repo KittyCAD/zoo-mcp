@@ -1,0 +1,19 @@
+name: win-ca-smoke
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  smoke:
+    uses: kittycad/gh-action-win-ca/.github/workflows/win-ca-smoke.yml@main
+    with:
+      setup-python: true
+      python-version-file: pyproject.toml
+      install-command: uv sync --dev
+      pre-test-command: uv run pytest tests/test_win_ca_smoke.py --maxfail=1 --disable-warnings -q
+      post-test-command: uv run pytest tests/test_win_ca_smoke.py --maxfail=1 --disable-warnings -q
