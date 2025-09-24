@@ -28,6 +28,11 @@ An [MCP server](https://modelcontextprotocol.io/docs/getting-started/intro) hous
 
 ## Running the Server
 
+The server can be started by using [uvx](https://docs.astral.sh/uv/guides/tools/#running-tools)
+```bash
+uvx zoo-mcp
+```
+
 The server can be started locally by using uv and the zoo_mcp module
 ```bash
 uv run -m zoo_mcp
