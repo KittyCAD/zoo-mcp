@@ -29,12 +29,11 @@ except PackageNotFoundError:
 class ZooMCPException(Exception):
     """Custom exception for Zoo MCP Server."""
 
-    pass
-
 
 ctx = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 kittycad_client = KittyCAD(verify_ssl=ctx)
-kittycad_client.websocket_recv_timeout = 120
+# set the websocket receive timeout to 5 minutes
+kittycad_client.websocket_recv_timeout = 300
 
 httpx_logger = logging.getLogger("httpx")
 httpx_logger.setLevel(logging.WARNING)
