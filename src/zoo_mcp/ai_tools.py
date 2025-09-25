@@ -141,11 +141,11 @@ async def text_to_cad(prompt: str) -> str:
     log_websocket_message(t2c.id)
 
     # get the response based on the request id
-    result = kittycad_client.ml.get_text_to_cad_parts_for_user(id=t2c.id)
+    result = kittycad_client.ml.get_text_to_cad_part_for_user(id=t2c.id)
 
     # check if the request has either completed or failed, otherwise sleep and try again
     while result.root.status not in [ApiCallStatus.COMPLETED, ApiCallStatus.FAILED]:
-        result = kittycad_client.ml.get_text_to_cad_parts_for_user(id=t2c.id)
+        result = kittycad_client.ml.get_text_to_cad_part_for_user(id=t2c.id)
         await asyncio.sleep(1)
 
     logger.info("Received response from Text-To-CAD")
@@ -220,11 +220,11 @@ async def edit_kcl_project(
     log_websocket_message(t2cmfi.id)
 
     # get the response based on the request id
-    result = kittycad_client.ml.get_text_to_cad_parts_for_user(id=t2cmfi.id)
+    result = kittycad_client.ml.get_text_to_cad_part_for_user(id=t2cmfi.id)
 
     # check if the request has either completed or failed, otherwise sleep and try again
     while result.root.status not in [ApiCallStatus.COMPLETED, ApiCallStatus.FAILED]:
-        result = kittycad_client.ml.get_text_to_cad_parts_for_user(id=t2cmfi.id)
+        result = kittycad_client.ml.get_text_to_cad_part_for_user(id=t2cmfi.id)
         await asyncio.sleep(1)
 
     # get the data object (root) of the response
