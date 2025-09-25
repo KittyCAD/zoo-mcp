@@ -547,6 +547,34 @@ async def test_edit_kcl_project_success(kcl_project: str):
 
 
 @pytest.mark.asyncio
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
+async def test_edit_kcl_project_reasoning_messages(kcl_project: str, caplog):
+    import logging
+
+    caplog.set_level(logging.INFO)
+    from zoo_mcp import kittycad_client
+
+    kittycad_client.headers["Cache-Control"] = "no-cache"
+
+    prompt = "make the bench longer"
+    response = await mcp.call_tool(
+        "edit_kcl_project",
+        arguments={
+            "proj_path": kcl_project,
+            "prompt": prompt,
+        },
+    )
+
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, dict)
+    assert "main.kcl" in result.keys()
+    assert "bench-parts.kcl" in result.keys()
+    assert "Text-To-CAD reasoning complete." in caplog.text
+
+
+@pytest.mark.asyncio
 async def test_edit_kcl_project_error(kcl_project: str):
     prompt = "the quick brown fox jumps over the lazy dog"
     response = await mcp.call_tool(
