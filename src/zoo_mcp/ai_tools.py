@@ -1,4 +1,5 @@
 import asyncio
+import time
 from pathlib import Path
 
 import websockets
@@ -100,7 +101,11 @@ def log_websocket_message(conn_id: str) -> None:
                     "Text To CAD could still be running but the websocket connection closed with error: %s",
                     e,
                 )
-                break
+                ws.close()
+                time.sleep(1)
+                logger.info("Reconnecting to Text-To-CAD websocket...")
+                ws = kittycad_client.ml.ml_reasoning_ws(id=conn_id)
+                continue
 
             except Exception as e:
                 logger.info(
