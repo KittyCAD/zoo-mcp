@@ -1,24 +1,119 @@
 import asyncio
-import ssl
+import time
 from pathlib import Path
 
-import truststore
-from kittycad import KittyCAD
+import websockets
 from kittycad.models import (
     ApiCallStatus,
     FileExportFormat,
     TextToCadCreateBody,
     TextToCadMultiFileIterationBody,
 )
+from kittycad.models.ml_copilot_server_message import EndOfStream, Reasoning, ToolOutput
+from kittycad.models.reasoning_message import (
+    OptionCreatedKclFile,
+    OptionDeletedKclFile,
+    OptionDesignPlan,
+    OptionFeatureTreeOutline,
+    OptionGeneratedKclCode,
+    OptionKclCodeError,
+    OptionKclCodeExamples,
+    OptionKclDocs,
+    OptionMarkdown,
+    OptionText,
+    OptionUpdatedKclFile,
+)
 from kittycad.models.text_to_cad_response import (
     OptionTextToCad,
     OptionTextToCadMultiFileIteration,
 )
 
-from zoo_mcp import ZooMCPException, logger
+from zoo_mcp import ZooMCPException, kittycad_client, logger
 
-ctx = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-kittycad_client = KittyCAD(verify_ssl=ctx)
+
+def log_websocket_message(conn_id: str) -> None:
+    with kittycad_client.ml.ml_reasoning_ws(id=conn_id) as ws:
+        while True:
+            try:
+                message = ws.recv()
+                if isinstance(message.root, Reasoning):
+                    message_option = message.root.reasoning.root
+                    match message_option:
+                        case OptionCreatedKclFile():
+                            logger.info(
+                                "Created %s: %s"
+                                % (message_option.file_name, message_option.content),
+                            )
+                        case OptionDeletedKclFile():
+                            logger.info("Deleted %s", message_option.file_name)
+                        case OptionDesignPlan():
+                            design_steps = " ".join(
+                                [
+                                    f"Editing: {step.filepath_to_edit} with these instruction {step.edit_instructions}"
+                                    for step in message_option.steps
+                                ]
+                            )
+                            logger.info("Design Plan: %s", design_steps)
+                        case OptionFeatureTreeOutline():
+                            logger.info(
+                                "Feature Tree Outline: %s", message_option.content
+                            )
+                        case OptionGeneratedKclCode():
+                            logger.info("Generated KCL code: %s", message_option.code)
+                        case OptionKclCodeError():
+                            logger.info("KCL Code Error: %s", message_option.error)
+                        case OptionKclDocs():
+                            logger.info("KCL Docs: %s", message_option.content)
+                        case OptionKclCodeExamples():
+                            logger.info("KCL Code Examples: %s", message_option.content)
+                        case OptionMarkdown():
+                            logger.info(message_option.content)
+                        case OptionText():
+                            logger.info(message_option.content)
+                        case OptionUpdatedKclFile():
+                            logger.info(
+                                "Updated %s: %s"
+                                % (message_option.file_name, message_option.content),
+                            )
+                        case _:
+                            logger.info(
+                                "Received unhandled reasoning message: %s",
+                                type(message_option),
+                            )
+                if isinstance(message.root, ToolOutput):
+                    tool_result = message.root.result.root
+                    if tool_result.error:
+                        logger.info(
+                            "Tool: %s, Error: %s"
+                            % (tool_result.type, tool_result.error)
+                        )
+                    else:
+                        logger.info(
+                            "Tool: %s, Output: %s"
+                            % (tool_result.type, tool_result.outputs)
+                        )
+                if isinstance(message.root, EndOfStream):
+                    logger.info("Text-To-CAD reasoning complete.")
+                    break
+
+            except websockets.exceptions.ConnectionClosedError as e:  # ty: ignore[unresolved-attribute]
+                logger.info(
+                    "Text To CAD could still be running but the websocket connection closed with error: %s",
+                    e,
+                )
+                ws.close()
+                time.sleep(1)
+                logger.info("Reconnecting to Text-To-CAD websocket...")
+                ws = kittycad_client.ml.ml_reasoning_ws(id=conn_id)
+                continue
+
+            except Exception as e:
+                logger.info(
+                    "Text To CAD could still be running but an unexpected error occurred: %s",
+                    e,
+                )
+                break
+        ws.close()
 
 
 async def text_to_cad(prompt: str) -> str:
@@ -42,6 +137,8 @@ async def text_to_cad(prompt: str) -> str:
             prompt=prompt,
         ),
     )
+
+    log_websocket_message(t2c.id)
 
     # get the response based on the request id
     result = kittycad_client.ml.get_text_to_cad_part_for_user(id=t2c.id)
@@ -91,6 +188,7 @@ async def edit_kcl_project(
     logger.info("Finding all files in project path")
     proj_path = Path(proj_path)
     file_paths = list(proj_path.rglob("*"))
+    file_paths = [fp for fp in file_paths if fp.is_file()]
     logger.info("Found %s files in project path", len(file_paths))
 
     if not file_paths:
@@ -108,7 +206,7 @@ async def edit_kcl_project(
         )
 
     file_attachments = {
-        str(fp.relative_to(proj_path)): fp for fp in file_paths if fp.is_file()
+        str(fp.relative_to(proj_path)): str(fp.resolve()) for fp in file_paths
     }
 
     t2cmfi = kittycad_client.ml.create_text_to_cad_multi_file_iteration(
@@ -118,6 +216,8 @@ async def edit_kcl_project(
         ),
         file_attachments=file_attachments,
     )
+
+    log_websocket_message(t2cmfi.id)
 
     # get the response based on the request id
     result = kittycad_client.ml.get_text_to_cad_part_for_user(id=t2cmfi.id)
