@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import ssl
 import sys
@@ -49,7 +50,8 @@ def test_win_ca_smoke() -> None:
         try:
             with request.urlopen(url, context=ctx, timeout=30) as response:
                 status = response.getcode()
-                body = response.read().decode("utf-8", errors="replace").strip()
+                # body = response.read().decode("utf-8", errors="replace").strip()
+                body = json.loads(response.read().decode("utf-8", errors="replace"))
                 assert status == 200, f"unexpected status {status} from {url}"
                 assert body == "ok", f"unexpected response body {body!r} from {url}"
                 return
