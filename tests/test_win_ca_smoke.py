@@ -52,7 +52,9 @@ def test_win_ca_smoke() -> None:
                 status = response.getcode()
                 body = json.loads(response.read().decode("utf-8", errors="replace"))
                 assert status == 200, f"unexpected status {status} from {url}"
-                assert body["status"] == "ok", f"unexpected response body {body!r} from {url}"
+                assert body["status"] == "ok", (
+                    f"unexpected response body {body!r} from {url}"
+                )
                 return
         except error.URLError as exc:  # handshake failure before trust
             last_error = exc
