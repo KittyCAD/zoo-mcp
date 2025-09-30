@@ -45,6 +45,9 @@ Repository = "https://github.com/KittyCAD/zoo-mcp"
 [project.scripts]
 zoo-mcp = "zoo_mcp.server:main"
 
+[tool.ruff.lint]
+extend-select = ["F", "I"]
+
 [tool.setuptools]
 include-package-data = true
 

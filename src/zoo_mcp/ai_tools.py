@@ -34,7 +34,9 @@ from zoo_mcp import ZooMCPException, kittycad_client, logger
 def log_websocket_message(conn_id: str) -> bool:
     logger.info("Connecting to Text-To-CAD websocket...")
     with kittycad_client.ml.ml_reasoning_ws(id=conn_id) as ws:
-        logger.info("Successfully connected to Text-To-CAD websocket with id %s", conn_id)
+        logger.info(
+            "Successfully connected to Text-To-CAD websocket with id %s", conn_id
+        )
         while True:
             try:
                 message = ws.recv()
@@ -142,13 +144,18 @@ async def text_to_cad(prompt: str) -> str:
     time_start = time.time()
     ws_complete = False
     while result.root.status not in [ApiCallStatus.COMPLETED, ApiCallStatus.FAILED]:
-        if result.root.status == ApiCallStatus.QUEUED and (time.time() - time_start) % 5 == 0:
+        if (
+            result.root.status == ApiCallStatus.QUEUED
+            and (time.time() - time_start) % 5 == 0
+        ):
             logger.info("Text-To-CAD queued...")
         if result.root.status == ApiCallStatus.IN_PROGRESS:
             logger.info("Text-To-CAD in progress...")
             if not ws_complete:
                 ws_complete = log_websocket_message(t2c.id)
-        logger.info("Waiting for Text-To-CAD to complete... status %s", result.root.status)
+        logger.info(
+            "Waiting for Text-To-CAD to complete... status %s", result.root.status
+        )
         result = kittycad_client.ml.get_text_to_cad_part_for_user(id=t2c.id)
         await asyncio.sleep(1)
 
