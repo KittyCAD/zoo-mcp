@@ -31,7 +31,7 @@ from kittycad.models.text_to_cad_response import (
 from zoo_mcp import ZooMCPException, kittycad_client, logger
 
 
-def log_websocket_message(conn_id: str) -> None:
+def log_websocket_message(conn_id: str) -> bool:
     logger.info("Connecting to Text-To-CAD websocket...")
     with kittycad_client.ml.ml_reasoning_ws(id=conn_id) as ws:
         logger.info("Successfully connected to Text-To-CAD websocket with id %s", conn_id)
@@ -96,27 +96,21 @@ def log_websocket_message(conn_id: str) -> None:
                         )
                 if isinstance(message.root, EndOfStream):
                     logger.info("Text-To-CAD reasoning complete.")
-                    break
+                    return True
 
             except websockets.exceptions.ConnectionClosedError as e:  # ty: ignore[unresolved-attribute]
                 logger.info(
                     "Text To CAD could still be running but the websocket connection closed with error: %s",
                     e,
                 )
-                ws.close()
-                time.sleep(1)
-                logger.info("Reconnecting to Text-To-CAD websocket...")
-                ws = kittycad_client.ml.ml_reasoning_ws(id=conn_id)
-                logger.info("Successfully reconnected to Text-To-CAD websocket with id %s", conn_id)
-                continue
+                return False
 
             except Exception as e:
                 logger.info(
                     "Text To CAD could still be running but an unexpected error occurred: %s",
                     e,
                 )
-                break
-        ws.close()
+                return False
 
 
 async def text_to_cad(prompt: str) -> str:
@@ -141,13 +135,20 @@ async def text_to_cad(prompt: str) -> str:
         ),
     )
 
-    log_websocket_message(t2c.id)
-
     # get the response based on the request id
     result = kittycad_client.ml.get_text_to_cad_part_for_user(id=t2c.id)
 
     # check if the request has either completed or failed, otherwise sleep and try again
+    time_start = time.time()
+    ws_complete = False
     while result.root.status not in [ApiCallStatus.COMPLETED, ApiCallStatus.FAILED]:
+        if result.root.status == ApiCallStatus.QUEUED and (time.time() - time_start) % 5 == 0:
+            logger.info("Text-To-CAD queued...")
+        if result.root.status == ApiCallStatus.IN_PROGRESS:
+            logger.info("Text-To-CAD in progress...")
+            if not ws_complete:
+                ws_complete = log_websocket_message(t2c.id)
+        logger.info("Waiting for Text-To-CAD to complete... status %s", result.root.status)
         result = kittycad_client.ml.get_text_to_cad_part_for_user(id=t2c.id)
         await asyncio.sleep(1)
 
