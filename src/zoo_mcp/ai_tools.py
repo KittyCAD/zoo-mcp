@@ -32,7 +32,9 @@ from zoo_mcp import ZooMCPException, kittycad_client, logger
 
 
 def log_websocket_message(conn_id: str) -> None:
+    logger.info("Connecting to Text-To-CAD websocket...")
     with kittycad_client.ml.ml_reasoning_ws(id=conn_id) as ws:
+        logger.info("Successfully connected to Text-To-CAD websocket with id %s", conn_id)
         while True:
             try:
                 message = ws.recv()
@@ -105,6 +107,7 @@ def log_websocket_message(conn_id: str) -> None:
                 time.sleep(1)
                 logger.info("Reconnecting to Text-To-CAD websocket...")
                 ws = kittycad_client.ml.ml_reasoning_ws(id=conn_id)
+                logger.info("Successfully reconnected to Text-To-CAD websocket with id %s", conn_id)
                 continue
 
             except Exception as e:
