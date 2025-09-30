@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "zoo_mcp"
-version = "0.3.0"
+version = "0.3.1"
 requires-python = ">=3.11"
 dependencies = [
     "aiofiles==24.1.0",
@@ -12,7 +12,7 @@ dependencies = [
     "mcp[cli]==1.15.0",
     "pillow==11.3.0",
     "truststore>=0.10.4",
-    "zoo-kcl==0.3.100",
+    "zoo-kcl==0.3.101",
 ]
 authors = [
     { name = "Ryan Barton", email = "ryan@zoo.dev" },
@@ -44,6 +44,9 @@ Repository = "https://github.com/KittyCAD/zoo-mcp"
 
 [project.scripts]
 zoo-mcp = "zoo_mcp.server:main"
+
+[tool.ruff.lint]
+extend-select = ["F", "I"]
 
 [tool.setuptools]
 include-package-data = true
