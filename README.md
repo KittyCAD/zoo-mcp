@@ -84,6 +84,14 @@ The server can also be tested using the [MCP Inspector](https://modelcontextprot
 uv run mcp dev src/zoo_mcp/server.py
 ```
 
+For running with [codex-cli](https://github.com/openai/codex)
+```bash
+codex \
+  -c 'mcp_servers.zoo.command="uvx"' \
+  -c 'mcp_servers.zoo.args=["zoo-mcp"]' \
+  -c mcp_servers.zoo.env.ZOO_API_TOKEN="$ZOO_API_TOKEN"
+```
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request on the [GitHub repository](https://github.com/KittyCAD/zoo-mcp)
