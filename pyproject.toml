@@ -12,7 +12,7 @@ dependencies = [
     "mcp[cli]==1.15.0",
     "pillow==11.3.0",
     "truststore>=0.10.4",
-    "zoo-kcl==0.3.101",
+    "zoo-kcl==0.3.102",
 ]
 authors = [
     { name = "Ryan Barton", email = "ryan@zoo.dev" },
@@ -62,7 +62,7 @@ dev = [
     "pytest-asyncio==1.2.0",
     "pytest-rerunfailures==16.0.1",
     "pytest-xdist==3.8.0",
-    "ruff==0.13.2",
+    "ruff==0.13.3",
     "ty==0.0.1a21",
-    "uv-build==0.8.22",
+    "uv-build==0.8.23",
 ]
