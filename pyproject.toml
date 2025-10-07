@@ -5,7 +5,7 @@ build-backend = "uv_build"
 [project]
 name = "zoo_mcp"
 version = "0.3.1"
-requires-python = ">=3.11"
+requires-python = "~=3.11"
 dependencies = [
     "aiofiles==24.1.0",
     "kittycad==1.2.6",
