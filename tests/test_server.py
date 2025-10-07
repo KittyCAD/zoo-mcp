@@ -171,6 +171,7 @@ async def test_convert_cad_file(cube_stl: str):
     result = response[1]["result"]
     assert Path(result).exists()
     assert Path(result).stat().st_size != 0
+    assert "obj" in Path(result).suffix
 
 
 @pytest.mark.asyncio
