@@ -9,7 +9,7 @@ requires-python = ">=3.11"
 dependencies = [
     "aiofiles==24.1.0",
     "kittycad==1.2.6",
-    "mcp[cli]==1.16.0",
+    "mcp[cli]==1.17.0",
     "pillow==11.3.0",
     "truststore>=0.10.4",
     "zoo-kcl==0.3.102",
@@ -60,9 +60,9 @@ where = ["src"]
 [dependency-groups]
 dev = [
     "pytest-asyncio==1.2.0",
-    "pytest-rerunfailures==16.0.1",
+    "pytest-rerunfailures==16.1",
     "pytest-xdist==3.8.0",
-    "ruff==0.13.2",
+    "ruff==0.14.0",
     "ty==0.0.1a21",
-    "uv-build==0.8.24",
+    "uv-build==0.9.2",
 ]
