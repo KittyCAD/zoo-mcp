@@ -10,7 +10,7 @@ dependencies = [
     "aiofiles~=25.1",
     "kittycad~=1.2",
     "mcp[cli]~=1.0",
-    "pillow~=11.3",
+    "pillow>=11.3,<13.0",
     "truststore~=0.10",
     "zoo-kcl~=0.3",
 ]
