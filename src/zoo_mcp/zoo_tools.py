@@ -544,6 +544,56 @@ async def zoo_export_kcl(
     return Path(export_path)
 
 
+def zoo_format_kcl(
+    kcl_code: str | None,
+    kcl_path: Path | str | None,
+) -> str | None:
+    """Format KCL given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): KCL code to format.
+        kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+
+    Returns:
+        str | None: Returns the formatted kcl code if the kcl_code is used otherwise returns None, the KCL in the kcl_path will be formatted in place
+    """
+
+    logger.info("Formatting the KCL")
+
+    # default to using the code if both are provided
+    if kcl_code and kcl_path:
+        logger.warning("Both code and kcl_path provided, using code")
+        kcl_path = None
+
+    if kcl_path:
+        kcl_path = Path(kcl_path)
+        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
+            logger.error("The provided kcl_path is not a .kcl file")
+            raise ZooMCPException("The provided kcl_path is not a .kcl file")
+        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
+            logger.error(
+                "The provided kcl_path directory does not contain a main.kcl file"
+            )
+            raise ZooMCPException(
+                "The provided kcl_path does not contain a main.kcl file"
+            )
+
+    if not kcl_code and not kcl_path:
+        logger.error("Neither code nor kcl_path provided")
+        raise ZooMCPException("Neither code nor kcl_path provided")
+
+    try:
+        if kcl_code:
+            formatted_code = kcl.format(kcl_code)
+            return formatted_code
+        else:
+            kcl.format_dir(str(kcl_path))
+            return None
+    except Exception as e:
+        logger.error(e)
+        raise ZooMCPException(f"Failed to format the KCL: {e}")
+
+
 def zoo_multiview_snapshot_of_cad(
     input_path: Path | str,
     padding: float = 0.2,
@@ -716,7 +766,7 @@ async def zoo_multiview_snapshot_of_kcl(
 
     Args:
         kcl_code (str | None): KCL code
-        kcl_path (Path | str): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+        kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
     Returns:
