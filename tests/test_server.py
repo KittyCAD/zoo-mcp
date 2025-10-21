@@ -231,7 +231,7 @@ async def test_format_kcl_path_success(cube_kcl: str):
         arguments={
             "kcl_code": None,
             "kcl_path": cube_kcl,
-        }
+        },
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -246,7 +246,7 @@ async def test_format_kcl_str_success(cube_kcl: str):
         arguments={
             "kcl_code": Path(cube_kcl).read_text(),
             "kcl_path": None,
-        }
+        },
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
@@ -261,7 +261,7 @@ async def test_format_kcl_error(cube_stl: str):
         arguments={
             "kcl_code": None,
             "kcl_path": cube_stl,
-        }
+        },
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
