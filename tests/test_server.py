@@ -225,6 +225,51 @@ async def test_export_kcl_error():
 
 
 @pytest.mark.asyncio
+async def test_format_kcl_path_success(cube_kcl: str):
+    response = await mcp.call_tool(
+        "format_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+        }
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "Successfully formatted KCL code at" in result
+
+
+@pytest.mark.asyncio
+async def test_format_kcl_str_success(cube_kcl: str):
+    response = await mcp.call_tool(
+        "format_kcl",
+        arguments={
+            "kcl_code": Path(cube_kcl).read_text(),
+            "kcl_path": None,
+        }
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "|>" in result
+
+
+@pytest.mark.asyncio
+async def test_format_kcl_error(cube_stl: str):
+    response = await mcp.call_tool(
+        "format_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_stl,
+        }
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "error formatting the KCL" in result
+
+
+@pytest.mark.asyncio
 async def test_multiview_snapshot_of_cad(cube_stl: str):
     response = await mcp.call_tool(
         "multiview_snapshot_of_cad",
