@@ -716,7 +716,7 @@ async def zoo_multiview_snapshot_of_kcl(
 
     Args:
         kcl_code (str | None): KCL code
-        kcl_path (Path | str): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+        kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
     Returns:

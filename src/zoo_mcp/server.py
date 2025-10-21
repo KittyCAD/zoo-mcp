@@ -135,7 +135,7 @@ async def convert_cad_file(
     Args:
         input_path (str): The input cad file to convert. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         export_path (str | None): The path to save the converted CAD file to. If the path is a directory, a temporary file will be created in the directory. If the path is a file, it will be overwritten if the extension is valid.
-        export_format (str): The format of the exported CAD file. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
+        export_format (str | None): The format of the exported CAD file. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
 
     Returns:
         str: The path to the converted CAD file, or an error message if the operation fails.
@@ -162,10 +162,10 @@ async def export_kcl(
     """Export KCL code to a CAD file. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
-        kcl_code (str): The KCL code to export to a CAD file.
+        kcl_code (str | None): The KCL code to export to a CAD file.
         kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
         export_path (str | None): The path to export the CAD file. If no path is provided, a temporary file will be created.
-        export_format (str): The format to export the file as. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
+        export_format (str | None): The format to export the file as. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
 
     Returns:
         str: The path to the converted CAD file, or an error message if the operation fails.
@@ -229,7 +229,7 @@ async def multiview_snapshot_of_kcl(
         The bottom right image is an isometric view
 
     Args:
-        kcl_code (str): The KCL code to export to a CAD file.
+        kcl_code (str | None): The KCL code to export to a CAD file.
         kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
 
     Returns:
@@ -320,7 +320,7 @@ async def snapshot_of_kcl(
     """Save a snapshot of a model represented by KCL. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
-        kcl_code (str): The KCL code to export to a CAD file.
+        kcl_code (str | None): The KCL code to export to a CAD file.
         kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
         camera_view (dict | str | None): The camera to use for the snapshot.
 
