@@ -545,8 +545,8 @@ async def zoo_export_kcl(
 
 
 def zoo_format_kcl(
-        kcl_code: str | None,
-        kcl_path: Path | str | None,
+    kcl_code: str | None,
+    kcl_path: Path | str | None,
 ) -> str | None:
     """Format KCL given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
