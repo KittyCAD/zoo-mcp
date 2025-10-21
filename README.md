@@ -113,5 +113,5 @@ uvx ty check
 
 The server includes tests located in [`tests`](`tests`). To run the tests, use the following command:
 ```bash
-uv run pytest
+uv run pytest -n auto
 ```
