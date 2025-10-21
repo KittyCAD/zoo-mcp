@@ -194,8 +194,8 @@ async def format_kcl(
     """Format KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
-        kcl_code (str | None): The KCL code to export to a CAD file.
-        kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
+        kcl_code (str | None): The KCL code to format.
+        kcl_path (str | None): The path to a KCL file to format. The path should point to a .kcl file or a directory containing a main.kcl file.
 
     Returns:
         str | None: Returns the formatted kcl code if the kcl_code is used otherwise returns None, the KCL in the kcl_path will be formatted in place
@@ -210,7 +210,7 @@ async def format_kcl(
         else:
             return f"Successfully formatted KCL code at: {kcl_path}"
     except Exception as e:
-        return f"There was an error formatting the CAD file: {e}"
+        return f"There was an error formatting the KCL: {e}"
 
 
 @mcp.tool()

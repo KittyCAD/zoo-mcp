@@ -551,7 +551,7 @@ def zoo_format_kcl(
     """Format KCL given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
-        kcl_code (str | None): KCL code
+        kcl_code (str | None): KCL code to format.
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
 
     Returns:
