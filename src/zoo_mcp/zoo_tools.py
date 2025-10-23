@@ -594,6 +594,58 @@ def zoo_format_kcl(
         raise ZooMCPException(f"Failed to format the KCL: {e}")
 
 
+def zoo_lint_and_fix_kcl(
+    kcl_code: str | None,
+    kcl_path: Path | str | None,
+) -> str | None:
+    """Lint and fix KCL given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): KCL code to lint and fix.
+        kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+
+    Returns:
+        str | None: Returns the linted and fixed kcl code if the kcl_code is used otherwise returns None, the KCL in the kcl_path will be linted and fixed in place
+    """
+
+    logger.info("Linting and fixing the KCL")
+
+    # default to using the code if both are provided
+    if kcl_code and kcl_path:
+        logger.warning("Both code and kcl_path provided, using code")
+        kcl_path = None
+
+    if kcl_path:
+        kcl_path = Path(kcl_path)
+        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
+            logger.error("The provided kcl_path is not a .kcl file")
+            raise ZooMCPException("The provided kcl_path is not a .kcl file")
+        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
+            logger.error(
+                "The provided kcl_path directory does not contain a main.kcl file"
+            )
+            raise ZooMCPException(
+                "The provided kcl_path does not contain a main.kcl file"
+            )
+
+    if not kcl_code and not kcl_path:
+        logger.error("Neither code nor kcl_path provided")
+        raise ZooMCPException("Neither code nor kcl_path provided")
+
+    try:
+        if kcl_code:
+            linted_kcl = kcl.lint_and_fix(kcl_code)
+            return linted_kcl.new_code  # ty: ignore[unresolved-attribute]
+        else:
+            for kcl_file in kcl_path.rglob("*.kcl"):  # ty: ignore[possibly-missing-attribute]
+                linted_kcl = kcl.lint_and_fix(kcl_file.read_text())
+                kcl_file.write_text(linted_kcl.new_code)  # ty: ignore[unresolved-attribute]
+            return None
+    except Exception as e:
+        logger.error(e)
+        raise ZooMCPException(f"Failed to lint and fix the KCL: {e}")
+
+
 def zoo_multiview_snapshot_of_cad(
     input_path: Path | str,
     padding: float = 0.2,
