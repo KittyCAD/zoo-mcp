@@ -292,6 +292,21 @@ async def test_lint_and_fix_kcl_str_success(box_with_linter_errors: str):
 
 
 @pytest.mark.asyncio
+async def test_lint_and_fix_kcl_path_success(kcl_project: str):
+    response = await mcp.call_tool(
+        "lint_and_fix_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": kcl_project,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "Successfully linted and fixed KCL code" in result
+
+
+@pytest.mark.asyncio
 async def test_lint_and_fix_kcl_error(cube_stl: str):
     response = await mcp.call_tool(
         "lint_and_fix_kcl",
