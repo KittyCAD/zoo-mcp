@@ -16,6 +16,7 @@ from zoo_mcp.zoo_tools import (
     zoo_convert_cad_file,
     zoo_export_kcl,
     zoo_format_kcl,
+    zoo_lint_and_fix_kcl,
     zoo_multiview_snapshot_of_cad,
     zoo_multiview_snapshot_of_kcl,
     zoo_snapshot_of_cad,
@@ -211,6 +212,33 @@ async def format_kcl(
             return f"Successfully formatted KCL code at: {kcl_path}"
     except Exception as e:
         return f"There was an error formatting the KCL: {e}"
+
+
+@mcp.tool()
+async def lint_and_fix_kcl(
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
+) -> str:
+    """Lint and fix KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): The KCL code to lint and fix.
+        kcl_path (str | None): The path to a KCL file to lint and fix. The path should point to a .kcl file or a directory containing a main.kcl file.
+
+    Returns:
+        str | None: Returns the linted and fixed kcl code if the kcl_code is used otherwise returns None, the KCL in the kcl_path will be linted and fixed in place
+    """
+
+    logger.info("lint_and_fix_kcl tool called")
+
+    try:
+        res = zoo_lint_and_fix_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
+        if isinstance(res, str):
+            return res
+        else:
+            return f"Successfully linted and fixed KCL code at: {kcl_path}"
+    except Exception as e:
+        return f"There was an error linting and fixing the KCL: {e}"
 
 
 @mcp.tool()
