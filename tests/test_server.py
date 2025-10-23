@@ -37,6 +37,12 @@ def kcl_project():
     yield f"{project_path.resolve()}"
 
 
+@pytest.fixture
+def box_with_linter_errors():
+    test_file = Path(__file__).parent / "data" / "box_with_linter_errors.kcl"
+    yield f"{test_file.resolve()}"
+
+
 @pytest.mark.asyncio
 async def test_calculate_center_of_mass(cube_stl: str):
     response = await mcp.call_tool(
@@ -267,6 +273,37 @@ async def test_format_kcl_error(cube_stl: str):
     assert isinstance(response[1], dict)
     result = response[1]["result"]
     assert "error formatting the KCL" in result
+
+
+@pytest.mark.asyncio
+async def test_lint_and_fix_kcl_str_success(box_with_linter_errors: str):
+    code = Path(box_with_linter_errors).read_text()
+    response = await mcp.call_tool(
+        "lint_and_fix_kcl",
+        arguments={
+            "kcl_code": code,
+            "kcl_path": None,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert result != code
+
+
+@pytest.mark.asyncio
+async def test_lint_and_fix_kcl_error(cube_stl: str):
+    response = await mcp.call_tool(
+        "lint_and_fix_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_stl,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "error linting and fixing" in result
 
 
 @pytest.mark.asyncio
