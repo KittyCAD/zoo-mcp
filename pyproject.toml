@@ -62,7 +62,7 @@ dev = [
     "pytest-asyncio==1.2.0",
     "pytest-rerunfailures==16.1",
     "pytest-xdist==3.8.0",
-    "ruff==0.14.2",
+    "ruff==0.14.3",
     "ty==0.0.1a24",
-    "uv-build==0.9.5",
+    "uv-build==0.9.7",
 ]
