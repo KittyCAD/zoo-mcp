@@ -218,7 +218,7 @@ async def format_kcl(
 async def lint_and_fix_kcl(
     kcl_code: str | None = None,
     kcl_path: str | None = None,
-) -> str:
+) -> tuple[str, list[str]]:
     """Lint and fix KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
@@ -226,19 +226,20 @@ async def lint_and_fix_kcl(
         kcl_path (str | None): The path to a KCL file to lint and fix. The path should point to a .kcl file or a directory containing a main.kcl file.
 
     Returns:
-        str | None: Returns the linted and fixed kcl code if the kcl_code is used otherwise returns None, the KCL in the kcl_path will be linted and fixed in place
+        tuple[str, list[str]]: If kcl_code is provided, it returns a tuple containing the fixed KCL code and a list of unfixed lints.
+                               If kcl_path is provided, it returns a tuple containing a success message and a list of unfixed lints for each file in the project.
     """
 
     logger.info("lint_and_fix_kcl tool called")
 
     try:
-        res = zoo_lint_and_fix_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
+        res, lints = zoo_lint_and_fix_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
         if isinstance(res, str):
-            return res
+            return res, lints
         else:
-            return f"Successfully linted and fixed KCL code at: {kcl_path}"
+            return f"Successfully linted and fixed KCL code at: {kcl_path}", lints
     except Exception as e:
-        return f"There was an error linting and fixing the KCL: {e}"
+        return f"There was an error linting and fixing the KCL: {e}", []
 
 
 @mcp.tool()
