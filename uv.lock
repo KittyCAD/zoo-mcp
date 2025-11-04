@@ -959,7 +959,7 @@ wheels = [
 
 [[package]]
 name = "zoo-mcp"
-version = "0.5.0"
+version = "0.6.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
@@ -983,8 +983,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiofiles", specifier = "~=25.1" },
-    { name = "kittycad", specifier = "~=1.2" },
-    { name = "mcp", extras = ["cli"], specifier = "~=1.0" },
+    { name = "kittycad", specifier = "<=2.0" },
+    { name = "mcp", extras = ["cli"], specifier = "<2.0" },
     { name = "pillow", specifier = ">=11.3,<13.0" },
     { name = "truststore", specifier = "~=0.10" },
     { name = "zoo-kcl", specifier = ">=0.3.105" },
