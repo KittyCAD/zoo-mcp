@@ -287,8 +287,8 @@ async def test_lint_and_fix_kcl_str_success(box_with_linter_errors: str):
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
-    result = response[1]["result"]
-    assert result != code
+    fixed_code, _ = response[1]["result"]
+    assert fixed_code != code
 
 
 @pytest.mark.asyncio
@@ -302,8 +302,8 @@ async def test_lint_and_fix_kcl_path_success(kcl_project: str):
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
-    result = response[1]["result"]
-    assert "Successfully linted and fixed KCL code" in result
+    fixed_code_msg, _ = response[1]["result"]
+    assert "Successfully linted and fixed KCL code" in fixed_code_msg
 
 
 @pytest.mark.asyncio
@@ -317,8 +317,8 @@ async def test_lint_and_fix_kcl_error(cube_stl: str):
     )
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
-    result = response[1]["result"]
-    assert "error linting and fixing" in result
+    fixed_code_msg, _ = response[1]["result"]
+    assert "error linting and fixing" in fixed_code_msg
 
 
 @pytest.mark.asyncio

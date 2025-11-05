@@ -597,7 +597,7 @@ def zoo_format_kcl(
 def zoo_lint_and_fix_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
-) -> str | None:
+) -> tuple[str | None, list[str]]:
     """Lint and fix KCL given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
@@ -605,7 +605,8 @@ def zoo_lint_and_fix_kcl(
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
 
     Returns:
-        str | None: Returns the linted and fixed kcl code if the kcl_code is used otherwise returns None, the KCL in the kcl_path will be linted and fixed in place
+        tuple[str | None, list[str]]: If kcl_code is provided, it returns a tuple of the fixed kcl code and a list of unfixed lints.
+                                      If kcl_path is provided, it returns None and a list of unfixed lints for each file in the project.
     """
 
     logger.info("Linting and fixing the KCL")
@@ -635,12 +636,29 @@ def zoo_lint_and_fix_kcl(
     try:
         if kcl_code:
             linted_kcl = kcl.lint_and_fix(kcl_code)
-            return linted_kcl.new_code  # ty: ignore[unresolved-attribute]
+            if len(linted_kcl.unfixed_lints) > 0:  # ty: ignore[unresolved-attribute]
+                unfixed_lints = [
+                    f"{lint.description}, {lint.finding.description}"
+                    for lint in linted_kcl.unfixed_lints  # ty: ignore[unresolved-attribute]
+                ]
+            else:
+                unfixed_lints = ["All lints fixed"]
+            return linted_kcl.new_code, unfixed_lints  # ty: ignore[unresolved-attribute]
         else:
+            unfixed_lints = []
             for kcl_file in kcl_path.rglob("*.kcl"):  # ty: ignore[possibly-missing-attribute]
                 linted_kcl = kcl.lint_and_fix(kcl_file.read_text())
                 kcl_file.write_text(linted_kcl.new_code)  # ty: ignore[unresolved-attribute]
-            return None
+                if len(linted_kcl.unfixed_lints) > 0:  # ty: ignore[unresolved-attribute]
+                    unfixed_lints.extend(
+                        [
+                            f"In file {kcl_file.name}, {lint.description}, {lint.finding.description}"
+                            for lint in linted_kcl.unfixed_lints  # ty: ignore[unresolved-attribute]
+                        ]
+                    )
+                else:
+                    unfixed_lints.append(f"In file {kcl_file.name}, All lints fixed")
+            return None, unfixed_lints
     except Exception as e:
         logger.error(e)
         raise ZooMCPException(f"Failed to lint and fix the KCL: {e}")
