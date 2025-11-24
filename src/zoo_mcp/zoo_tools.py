@@ -635,7 +635,9 @@ def zoo_lint_and_fix_kcl(
 
     try:
         if kcl_code:
-            linted_kcl = kcl.lint_and_fix(kcl_code)
+            linted_kcl = kcl.lint_and_fix_families(
+                kcl_code, [kcl.FindingFamily.Correctness, kcl.FindingFamily.Simplify]
+            )
             if len(linted_kcl.unfixed_lints) > 0:  # ty: ignore[unresolved-attribute]
                 unfixed_lints = [
                     f"{lint.description}, {lint.finding.description}"
@@ -647,7 +649,10 @@ def zoo_lint_and_fix_kcl(
         else:
             unfixed_lints = []
             for kcl_file in kcl_path.rglob("*.kcl"):  # ty: ignore[possibly-missing-attribute]
-                linted_kcl = kcl.lint_and_fix(kcl_file.read_text())
+                linted_kcl = kcl.lint_and_fix_families(
+                    kcl_file.read_text(),
+                    [kcl.FindingFamily.Correctness, kcl.FindingFamily.Simplify],
+                )
                 kcl_file.write_text(linted_kcl.new_code)  # ty: ignore[unresolved-attribute]
                 if len(linted_kcl.unfixed_lints) > 0:  # ty: ignore[unresolved-attribute]
                     unfixed_lints.extend(
