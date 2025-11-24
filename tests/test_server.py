@@ -276,8 +276,13 @@ async def test_format_kcl_error(cube_stl: str):
 
 
 @pytest.mark.asyncio
-async def test_lint_and_fix_kcl_str_success(box_with_linter_errors: str):
-    code = Path(box_with_linter_errors).read_text()
+async def test_lint_and_fix_kcl_str_success():
+    code = """c = startSketchOn(XY)
+  |> circle(center = [0, 0], radius = 1)
+  |> circle(center = [5, 0], radius = 1)
+  |> circle(center = [0,  5], radius = 1)
+  |> circle(center = [5, 5], radius = 1)
+"""
     response = await mcp.call_tool(
         "lint_and_fix_kcl",
         arguments={
