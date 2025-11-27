@@ -65,8 +65,6 @@ jobs:
     permissions:
       id-token: write # for Trusted Publishing to pyx
       contents: read
-    env:
-      PYX_API_KEY: ${{ secrets.PYX_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
