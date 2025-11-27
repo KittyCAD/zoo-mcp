@@ -63,9 +63,8 @@ jobs:
       - runner=8cpu-linux-x64
     needs: [ build ]
     permissions:
+      id-token: write # for Trusted Publishing to pyx
       contents: read
-    env:
-      PYX_API_KEY: ${{ secrets.PYX_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -80,11 +79,19 @@ jobs:
         with:
           enable-cache: true
 
+      - uses: astral-sh/pyx-auth-action@08873fa2b19cf2361327222bea1657faed760ae2 # v0.0.6
+        id: auth
+        with:
+          url: https://api.pyx.dev/v1/upload/zoo/main
+
       - name: "Publish to pyx"
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           # Publish all built wheels to the configured index
-          uv publish --publish-url https://api.pyx.dev/v1/upload/zoo/main --trusted-publishing=never dist/*
+          uv publish dist/*
+        env:
+          UV_PUBLISH_URL: ${{ steps.auth.outputs.url }}
+          UV_PUBLISH_TOKEN: ${{ steps.auth.outputs.token }}
 
   publish-pypi:
     name: Publish to pypi
