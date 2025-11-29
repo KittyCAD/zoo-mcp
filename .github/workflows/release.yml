@@ -79,7 +79,7 @@ jobs:
         with:
           enable-cache: true
 
-      - uses: astral-sh/pyx-auth-action@08873fa2b19cf2361327222bea1657faed760ae2 # v0.0.6
+      - uses: astral-sh/pyx-auth-action@6efe097bc6bf9295cacdd21d91df45b92f438a3e # v0.0.7
         id: auth
         with:
           url: https://api.pyx.dev/v1/upload/zoo/main
