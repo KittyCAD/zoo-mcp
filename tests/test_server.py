@@ -390,7 +390,7 @@ async def test_snapshot_of_cad(cube_stl: str):
         "snapshot_of_cad",
         arguments={
             "input_file": cube_stl,
-            "camera_view": None,
+            "camera_view": "isometric",
         },
     )
     assert isinstance(response, Sequence)
@@ -405,7 +405,7 @@ async def test_snapshot_of_cad_error(empty_step: str):
         "snapshot_of_cad",
         arguments={
             "input_file": empty_step,
-            "camera_view": None,
+            "camera_view": "isometric",
         },
     )
     assert isinstance(response, Sequence)
@@ -487,7 +487,7 @@ async def test_snapshot_of_kcl(cube_kcl: str):
         arguments={
             "kcl_code": None,
             "kcl_path": cube_kcl,
-            "camera_view": None,
+            "camera_view": "isometric",
         },
     )
     assert isinstance(response, Sequence)
@@ -503,7 +503,7 @@ async def test_snapshot_of_kcl_error(empty_step: str):
         arguments={
             "kcl_code": None,
             "kcl_path": empty_step,
-            "camera_view": None,
+            "camera_view": "isometric",
         },
     )
     assert isinstance(response, Sequence)
