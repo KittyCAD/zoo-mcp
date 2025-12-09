@@ -308,19 +308,17 @@ async def multiview_snapshot_of_kcl(
 @mcp.tool()
 async def snapshot_of_cad(
     input_file: str,
-    camera_view: dict[str, list[float]] | str | None = None,
+    camera_view: dict[str, list[float]] | str = "isometric",
 ) -> ImageContent | str:
     """Save a snapshot of a CAD file.
 
     Args:
         input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
-        camera_view (dict | str | None): The camera to use for the snapshot.
+        camera_view (dict | str): The camera to use for the snapshot.
 
-            1. If no camera is provided, a default isometric camera will be used.
+            1. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom', 'isometric' to set the camera to a predefined view.
 
-            2. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom' to set the camera to a predefined view.
-
-            3. If a dict is provided, supply a dict with the following keys and values:
+            2. If a dict is provided, supply a dict with the following keys and values:
                "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
                For example camera = {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]} would set the camera to be looking at the origin from the front side (-y direction).
 
@@ -331,7 +329,6 @@ async def snapshot_of_cad(
     logger.info("snapshot_of_cad tool called for file: %s", input_file)
 
     try:
-        camera = None
         if isinstance(camera_view, dict):
             camera = OptionDefaultCameraLookAt(
                 up=Point3d(
@@ -350,14 +347,12 @@ async def snapshot_of_cad(
                     z=camera_view["center"][2],
                 ),
             )
-        elif isinstance(camera_view, str):
+        else:
             if camera_view not in CameraView.views.value:
                 raise ZooMCPException(
                     f"Invalid camera view: {camera_view}. Must be one of {list(CameraView.views.value.keys())}"
                 )
             camera = CameraView.to_kittycad_camera(CameraView.views.value[camera_view])
-        elif camera_view is None:
-            camera = None
 
         image = zoo_snapshot_of_cad(
             input_path=input_file,
@@ -372,20 +367,18 @@ async def snapshot_of_cad(
 async def snapshot_of_kcl(
     kcl_code: str | None = None,
     kcl_path: str | None = None,
-    camera_view: dict[str, list[float]] | str | None = None,
+    camera_view: dict[str, list[float]] | str = "isometric",
 ) -> ImageContent | str:
     """Save a snapshot of a model represented by KCL. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
         kcl_code (str | None): The KCL code to export to a CAD file.
         kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
-        camera_view (dict | str | None): The camera to use for the snapshot.
+        camera_view (dict | str): The camera to use for the snapshot.
 
-            1. If no camera is provided, a default isometric camera will be used.
+            1. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom', 'isometric' to set the camera to a predefined view.
 
-            2. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom' to set the camera to a predefined view.
-
-            3. If a dict is provided, supply a dict with the following keys and values:
+            2. If a dict is provided, supply a dict with the following keys and values:
                "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
                For example camera = {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]} would set the camera to be looking at the origin from the front side (-y direction).
 
@@ -396,7 +389,6 @@ async def snapshot_of_kcl(
     logger.info("snapshot_of_kcl tool called")
 
     try:
-        camera = None
         if isinstance(camera_view, dict):
             camera = kcl.CameraLookAt(
                 up=kcl.Point3d(
@@ -415,14 +407,12 @@ async def snapshot_of_kcl(
                     z=camera_view["center"][2],
                 ),
             )
-        elif isinstance(camera_view, str):
+        else:
             if camera_view not in CameraView.views.value:
                 raise ZooMCPException(
                     f"Invalid camera view: {camera_view}. Must be one of {list(CameraView.views.value.keys())}"
                 )
             camera = CameraView.to_kcl_camera(CameraView.views.value[camera_view])
-        elif camera_view is None:
-            camera = None
 
         image = await zoo_snapshot_of_kcl(
             kcl_code=kcl_code,

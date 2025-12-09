@@ -73,6 +73,7 @@ class CameraView(Enum):
         "right": {"up": [0, 0, 1], "vantage": [1, 0, 0], "center": [0, 0, 0]},
         "top": {"up": [0, 1, 0], "vantage": [0, 0, 1], "center": [0, 0, 0]},
         "bottom": {"up": [0, -1, 0], "vantage": [0, 0, -1], "center": [0, 0, 0]},
+        "isometric": {"up": [0, 0, 1], "vantage": [1, -1, 1], "center": [0, 0, 0]},
     }
 
     @staticmethod
