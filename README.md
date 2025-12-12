@@ -92,6 +92,12 @@ codex \
   -c mcp_servers.zoo.env.ZOO_API_TOKEN="$ZOO_API_TOKEN"
 ```
 
+You can also use the helper script included in this repo:
+```bash
+./codex-zoo.sh
+```
+The script prompts for a request, runs Codex with the Zoo MCP server, and saves a JSONL transcript (including token usage) to `codex-run-<timestamp>.jsonl`.
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request on the [GitHub repository](https://github.com/KittyCAD/zoo-mcp)
