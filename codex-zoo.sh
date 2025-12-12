@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 printf "Enter prompt: "
 IFS= read -r USER_PROMPT
 
