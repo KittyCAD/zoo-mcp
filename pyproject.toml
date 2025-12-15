@@ -9,7 +9,7 @@ requires-python = ">=3.11, <3.14"
 dependencies = [
     "aiofiles~=25.1",
     "kittycad<=2.0",
-    "mcp[cli]<2.0",
+    "mcp[cli]>1.23.0,<2.0",
     "pillow>=11.3,<13.0",
     "truststore~=0.10",
     "zoo-kcl>=0.3.116",
