@@ -11,7 +11,7 @@
 - `uv run mcp dev src/zoo_mcp/server.py` - Run server with MCP Inspector for testing
 
 ### Testing and Quality
-- `uv run pytest` - Run all tests
+- `uv run -n auto pytest` - Run all tests
 - `uv run pytest tests/test_server.py` - Run specific test file
 - `uvx ruff check` - Run linter
 - `uvx ruff format` - Format code
