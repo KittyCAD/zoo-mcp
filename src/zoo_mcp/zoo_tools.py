@@ -53,6 +53,44 @@ from zoo_mcp import ZooMCPException, kittycad_client, logger
 from zoo_mcp.utils.image_utils import create_image_collage
 
 
+def _check_kcl_code_or_path(
+    kcl_code: str | None,
+    kcl_path: Path | str | None,
+) -> tuple[str | None, Path | str | None]:
+    """Check if either kcl_code or kcl_path is provided. If both are provided, kcl_code is used.
+
+    Args:
+        kcl_code (str | None): KCL code
+
+    Returns:
+        tuple[str | None, Path | str | None]: The values of kcl_code and kcl_path
+    """
+
+    # default to using the code if both are provided
+    if kcl_code and kcl_path:
+        logger.warning("Both code and kcl_path provided, using code")
+        kcl_path = None
+
+    if kcl_path:
+        kcl_path = Path(kcl_path)
+        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
+            logger.error("The provided kcl_path is not a .kcl file")
+            raise ZooMCPException("The provided kcl_path is not a .kcl file")
+        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
+            logger.error(
+                "The provided kcl_path directory does not contain a main.kcl file"
+            )
+            raise ZooMCPException(
+                "The provided kcl_path does not contain a main.kcl file"
+            )
+
+    if not kcl_code and not kcl_path:
+        logger.error("Neither code nor kcl_path provided")
+        raise ZooMCPException("Neither code nor kcl_path provided")
+
+    return kcl_code, kcl_path
+
+
 class KCLExportFormat(Enum):
     formats = {
         "fbx": kcl.FileExportFormat.Fbx,
@@ -445,6 +483,35 @@ async def zoo_convert_cad_file(
     return export_path
 
 
+async def zoo_execute_kcl(
+    kcl_code: str | None = None,
+    kcl_path: Path | str | None = None,
+) -> bool:
+    """Execute KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): KCL code
+        kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+
+    Returns:
+        bool: Returns True if the KCL code executed successfully, False otherwise.
+    """
+    logger.info("Executing KCL code")
+
+    kcl_code, kcl_path = _check_kcl_code_or_path(kcl_code, kcl_path)
+
+    try:
+        if kcl_code:
+            await kcl.execute_code(kcl_code)
+        else:
+            await kcl.execute(str(kcl_path))
+        logger.info("KCL code executed successfully")
+        return True
+    except Exception as e:
+        logger.info("Failed to execute KCL code: %s", e)
+        return False
+
+
 async def zoo_export_kcl(
     kcl_code: str | None = None,
     kcl_path: Path | str | None = None,
@@ -465,27 +532,7 @@ async def zoo_export_kcl(
 
     logger.info("Exporting KCL to Step")
 
-    # default to using the code if both are provided
-    if kcl_code and kcl_path:
-        logger.warning("Both code and kcl_path provided, using code")
-        kcl_path = None
-
-    if kcl_path:
-        kcl_path = Path(kcl_path)
-        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
-            logger.error("The provided kcl_path is not a .kcl file")
-            raise ZooMCPException("The provided kcl_path is not a .kcl file")
-        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
-            logger.error(
-                "The provided kcl_path directory does not contain a main.kcl file"
-            )
-            raise ZooMCPException(
-                "The provided kcl_path does not contain a main.kcl file"
-            )
-
-    if not kcl_code and not kcl_path:
-        logger.error("Neither code nor kcl_path provided")
-        raise ZooMCPException("Neither code nor kcl_path provided")
+    kcl_code, kcl_path = _check_kcl_code_or_path(kcl_code, kcl_path)
 
     # check the export format
     if not export_format:
@@ -561,27 +608,7 @@ def zoo_format_kcl(
 
     logger.info("Formatting the KCL")
 
-    # default to using the code if both are provided
-    if kcl_code and kcl_path:
-        logger.warning("Both code and kcl_path provided, using code")
-        kcl_path = None
-
-    if kcl_path:
-        kcl_path = Path(kcl_path)
-        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
-            logger.error("The provided kcl_path is not a .kcl file")
-            raise ZooMCPException("The provided kcl_path is not a .kcl file")
-        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
-            logger.error(
-                "The provided kcl_path directory does not contain a main.kcl file"
-            )
-            raise ZooMCPException(
-                "The provided kcl_path does not contain a main.kcl file"
-            )
-
-    if not kcl_code and not kcl_path:
-        logger.error("Neither code nor kcl_path provided")
-        raise ZooMCPException("Neither code nor kcl_path provided")
+    kcl_code, kcl_path = _check_kcl_code_or_path(kcl_code, kcl_path)
 
     try:
         if kcl_code:
@@ -612,27 +639,7 @@ def zoo_lint_and_fix_kcl(
 
     logger.info("Linting and fixing the KCL")
 
-    # default to using the code if both are provided
-    if kcl_code and kcl_path:
-        logger.warning("Both code and kcl_path provided, using code")
-        kcl_path = None
-
-    if kcl_path:
-        kcl_path = Path(kcl_path)
-        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
-            logger.error("The provided kcl_path is not a .kcl file")
-            raise ZooMCPException("The provided kcl_path is not a .kcl file")
-        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
-            logger.error(
-                "The provided kcl_path directory does not contain a main.kcl file"
-            )
-            raise ZooMCPException(
-                "The provided kcl_path does not contain a main.kcl file"
-            )
-
-    if not kcl_code and not kcl_path:
-        logger.error("Neither code nor kcl_path provided")
-        raise ZooMCPException("Neither code nor kcl_path provided")
+    kcl_code, kcl_path = _check_kcl_code_or_path(kcl_code, kcl_path)
 
     try:
         if kcl_code:
@@ -668,6 +675,35 @@ def zoo_lint_and_fix_kcl(
     except Exception as e:
         logger.error(e)
         raise ZooMCPException(f"Failed to lint and fix the KCL: {e}")
+
+
+async def zoo_mock_execute_kcl(
+    kcl_code: str | None = None,
+    kcl_path: Path | str | None = None,
+) -> bool:
+    """Mock execute KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): KCL code
+        kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+
+    Returns:
+        bool: Returns True if the KCL code mock executed successfully, False otherwise.
+    """
+    logger.info("Executing KCL code")
+
+    kcl_code, kcl_path = _check_kcl_code_or_path(kcl_code, kcl_path)
+
+    try:
+        if kcl_code:
+            await kcl.mock_execute_code(kcl_code)
+        else:
+            await kcl.mock_execute(str(kcl_path))
+        logger.info("KCL mock executed successfully")
+        return True
+    except Exception as e:
+        logger.info("Failed to mock execute KCL code: %s", e)
+        return False
 
 
 def zoo_multiview_snapshot_of_cad(
@@ -851,27 +887,7 @@ async def zoo_multiview_snapshot_of_kcl(
 
     logger.info("Taking a multiview snapshot of KCL")
 
-    # default to using the code if both are provided
-    if kcl_code and kcl_path:
-        logger.warning("Both code and kcl_path provided, using code")
-        kcl_path = None
-
-    if kcl_path:
-        kcl_path = Path(kcl_path)
-        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
-            logger.error("The provided kcl_path is not a .kcl file")
-            raise ZooMCPException("The provided kcl_path is not a .kcl file")
-        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
-            logger.error(
-                "The provided kcl_path directory does not contain a main.kcl file"
-            )
-            raise ZooMCPException(
-                "The provided kcl_path does not contain a main.kcl file"
-            )
-
-    if not kcl_code and not kcl_path:
-        logger.error("Neither code nor kcl_path provided")
-        raise ZooMCPException("Neither code nor kcl_path provided")
+    kcl_code, kcl_path = _check_kcl_code_or_path(kcl_code, kcl_path)
 
     try:
         # None in the camera list means isometric view
@@ -1077,27 +1093,7 @@ async def zoo_snapshot_of_kcl(
 
     logger.info("Taking a snapshot of KCL")
 
-    # default to using the code if both are provided
-    if kcl_code and kcl_path:
-        logger.warning("Both code and kcl_path provided, using code")
-        kcl_path = None
-
-    if kcl_path:
-        kcl_path = Path(kcl_path)
-        if kcl_path.is_file() and kcl_path.suffix != ".kcl":
-            logger.error("The provided kcl_path is not a .kcl file")
-            raise ZooMCPException("The provided kcl_path is not a .kcl file")
-        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
-            logger.error(
-                "The provided kcl_path directory does not contain a main.kcl file"
-            )
-            raise ZooMCPException(
-                "The provided kcl_path does not contain a main.kcl file"
-            )
-
-    if not kcl_code and not kcl_path:
-        logger.error("Neither code nor kcl_path provided")
-        raise ZooMCPException("Neither code nor kcl_path provided")
+    kcl_code, kcl_path = _check_kcl_code_or_path(kcl_code, kcl_path)
 
     view = kcl.SnapshotOptions(camera=camera, padding=padding)
 

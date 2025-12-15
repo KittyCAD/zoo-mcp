@@ -196,6 +196,36 @@ async def test_convert_cad_file_error(empty_step: str):
 
 
 @pytest.mark.asyncio
+async def test_execute_kcl(cube_kcl: str):
+    response = await mcp.call_tool(
+        "execute_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert result is True
+
+
+@pytest.mark.asyncio
+async def test_execute_kcl_error():
+    response = await mcp.call_tool(
+        "execute_kcl",
+        arguments={
+            "kcl_code": "asdf = asdf",
+            "kcl_path": None,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert result is False
+
+
+@pytest.mark.asyncio
 async def test_export_kcl(cube_kcl: str):
     response = await mcp.call_tool(
         "export_kcl",
@@ -324,6 +354,36 @@ async def test_lint_and_fix_kcl_error(cube_stl: str):
     assert isinstance(response[1], dict)
     fixed_code_msg, _ = response[1]["result"]
     assert "error linting and fixing" in fixed_code_msg
+
+
+@pytest.mark.asyncio
+async def test_mock_execute_kcl(cube_kcl: str):
+    response = await mcp.call_tool(
+        "mock_execute_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert result is True
+
+
+@pytest.mark.asyncio
+async def test_mock_execute_kcl_error():
+    response = await mcp.call_tool(
+        "mock_execute_kcl",
+        arguments={
+            "kcl_code": "asdf = asdf",
+            "kcl_path": None,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert result is False
 
 
 @pytest.mark.asyncio
