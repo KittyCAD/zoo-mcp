@@ -1,9 +1,22 @@
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING, Protocol, cast
 from uuid import uuid4
 
 import aiofiles
 import kcl
+
+if TYPE_CHECKING:
+
+    class FixedLintsProtocol(Protocol):
+        """Protocol for kcl.FixedLints - the stub file is missing these attributes."""
+
+        @property
+        def new_code(self) -> str: ...
+        @property
+        def unfixed_lints(self) -> list[kcl.Discovered]: ...
+
+
 from kittycad.models import (
     Axis,
     AxisDirectionPair,
@@ -643,30 +656,39 @@ def zoo_lint_and_fix_kcl(
 
     try:
         if kcl_code:
-            linted_kcl = kcl.lint_and_fix_families(
-                kcl_code, [kcl.FindingFamily.Correctness, kcl.FindingFamily.Simplify]
+            linted_kcl = cast(
+                "FixedLintsProtocol",
+                kcl.lint_and_fix_families(
+                    kcl_code,
+                    [kcl.FindingFamily.Correctness, kcl.FindingFamily.Simplify],
+                ),
             )
-            if len(linted_kcl.unfixed_lints) > 0:  # ty: ignore[unresolved-attribute]
+            if len(linted_kcl.unfixed_lints) > 0:
                 unfixed_lints = [
                     f"{lint.description}, {lint.finding.description}"
-                    for lint in linted_kcl.unfixed_lints  # ty: ignore[unresolved-attribute]
+                    for lint in linted_kcl.unfixed_lints
                 ]
             else:
                 unfixed_lints = ["All lints fixed"]
-            return linted_kcl.new_code, unfixed_lints  # ty: ignore[unresolved-attribute]
+            return linted_kcl.new_code, unfixed_lints
         else:
+            # _check_kcl_code_or_path ensures kcl_path is a Path when kcl_code is None
+            kcl_path_resolved = cast(Path, kcl_path)
             unfixed_lints = []
-            for kcl_file in kcl_path.rglob("*.kcl"):  # ty: ignore[possibly-missing-attribute]
-                linted_kcl = kcl.lint_and_fix_families(
-                    kcl_file.read_text(),
-                    [kcl.FindingFamily.Correctness, kcl.FindingFamily.Simplify],
+            for kcl_file in kcl_path_resolved.rglob("*.kcl"):
+                linted_kcl = cast(
+                    "FixedLintsProtocol",
+                    kcl.lint_and_fix_families(
+                        kcl_file.read_text(),
+                        [kcl.FindingFamily.Correctness, kcl.FindingFamily.Simplify],
+                    ),
                 )
-                kcl_file.write_text(linted_kcl.new_code)  # ty: ignore[unresolved-attribute]
-                if len(linted_kcl.unfixed_lints) > 0:  # ty: ignore[unresolved-attribute]
+                kcl_file.write_text(linted_kcl.new_code)
+                if len(linted_kcl.unfixed_lints) > 0:
                     unfixed_lints.extend(
                         [
                             f"In file {kcl_file.name}, {lint.description}, {lint.finding.description}"
-                            for lint in linted_kcl.unfixed_lints  # ty: ignore[unresolved-attribute]
+                            for lint in linted_kcl.unfixed_lints
                         ]
                     )
                 else:
@@ -917,19 +939,30 @@ async def zoo_multiview_snapshot_of_kcl(
         ]
 
         if kcl_code:
-            jpeg_contents_list = await kcl.execute_code_and_snapshot_views(
-                kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=views
+            # The stub says list[list[int]] but it actually returns list[bytes]
+            jpeg_contents_list: list[bytes] = cast(
+                list[bytes],
+                cast(
+                    object,
+                    await kcl.execute_code_and_snapshot_views(
+                        kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=views
+                    ),
+                ),
             )
         else:
             assert isinstance(kcl_path, Path)
-            jpeg_contents_list = await kcl.execute_and_snapshot_views(
-                str(kcl_path), kcl.ImageFormat.Jpeg, snapshot_options=views
+            # The stub says list[list[int]] but it actually returns list[bytes]
+            jpeg_contents_list = cast(
+                list[bytes],
+                cast(
+                    object,
+                    await kcl.execute_and_snapshot_views(
+                        str(kcl_path), kcl.ImageFormat.Jpeg, snapshot_options=views
+                    ),
+                ),
             )
 
-        assert isinstance(jpeg_contents_list, list)
-        for byte_obj in jpeg_contents_list:
-            assert isinstance(byte_obj, bytes)
-        collage = create_image_collage(jpeg_contents_list)  # ty: ignore[invalid-argument-type]
+        collage = create_image_collage(jpeg_contents_list)
 
         return collage
 
@@ -1098,17 +1131,27 @@ async def zoo_snapshot_of_kcl(
     view = kcl.SnapshotOptions(camera=camera, padding=padding)
 
     if kcl_code:
-        jpeg_contents_list = await kcl.execute_code_and_snapshot_views(
-            kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=[view]
+        # The stub says list[list[int]] but it actually returns list[bytes]
+        jpeg_contents_list: list[bytes] = cast(
+            list[bytes],
+            cast(
+                object,
+                await kcl.execute_code_and_snapshot_views(
+                    kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=[view]
+                ),
+            ),
         )
     else:
         assert isinstance(kcl_path, Path)
-        jpeg_contents_list = await kcl.execute_and_snapshot_views(
-            str(kcl_path), kcl.ImageFormat.Jpeg, snapshot_options=[view]
+        # The stub says list[list[int]] but it actually returns list[bytes]
+        jpeg_contents_list = cast(
+            list[bytes],
+            cast(
+                object,
+                await kcl.execute_and_snapshot_views(
+                    str(kcl_path), kcl.ImageFormat.Jpeg, snapshot_options=[view]
+                ),
+            ),
         )
 
-    assert isinstance(jpeg_contents_list, list)
-    for byte_obj in jpeg_contents_list:
-        assert isinstance(byte_obj, bytes)
-
-    return jpeg_contents_list[0]  # ty: ignore[invalid-return-type]
+    return jpeg_contents_list[0]
