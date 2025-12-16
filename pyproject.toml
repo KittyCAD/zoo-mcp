@@ -4,15 +4,15 @@ build-backend = "uv_build"
 
 [project]
 name = "zoo_mcp"
-version = "0.6.4"
+version = "0.7.0"
 requires-python = ">=3.11, <3.14"
 dependencies = [
     "aiofiles~=25.1",
     "kittycad<=2.0",
-    "mcp[cli]<2.0",
+    "mcp[cli]>1.23.0,<2.0",
     "pillow>=11.3,<13.0",
     "truststore~=0.10",
-    "zoo-kcl>=0.3.115",
+    "zoo-kcl>=0.3.116",
 ]
 authors = [
     { name = "Ryan Barton", email = "ryan@zoo.dev" },
@@ -62,7 +62,7 @@ dev = [
     "pytest-asyncio==1.3.0",
     "pytest-rerunfailures==16.1",
     "pytest-xdist==3.8.0",
-    "ruff==0.14.8",
-    "ty==0.0.1a32",
-    "uv-build==0.9.16",
+    "ruff==0.14.9",
+    "ty==0.0.1a29",
+    "uv-build==0.9.17",
 ]

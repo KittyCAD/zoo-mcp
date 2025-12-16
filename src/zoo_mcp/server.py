@@ -14,9 +14,11 @@ from zoo_mcp.zoo_tools import (
     zoo_calculate_surface_area,
     zoo_calculate_volume,
     zoo_convert_cad_file,
+    zoo_execute_kcl,
     zoo_export_kcl,
     zoo_format_kcl,
     zoo_lint_and_fix_kcl,
+    zoo_mock_execute_kcl,
     zoo_multiview_snapshot_of_cad,
     zoo_multiview_snapshot_of_kcl,
     zoo_snapshot_of_cad,
@@ -155,6 +157,29 @@ async def convert_cad_file(
 
 
 @mcp.tool()
+async def execute_kcl(
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
+) -> tuple[bool, str]:
+    """Execute KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): The KCL code to execute.
+        kcl_path (str | None): The path to a KCL file to execute. The path should point to a .kcl file or a directory containing a main.kcl file.
+
+    Returns:
+        tuple(bool, str): Returns True if the KCL code executed successfully and a success message, False otherwise and the error message.
+    """
+
+    logger.info("execute_kcl tool called")
+
+    try:
+        return await zoo_execute_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
+    except Exception as e:
+        return False, f"Failed to execute KCL code: {e}"
+
+
+@mcp.tool()
 async def export_kcl(
     kcl_code: str | None = None,
     kcl_path: str | None = None,
@@ -240,6 +265,29 @@ async def lint_and_fix_kcl(
             return f"Successfully linted and fixed KCL code at: {kcl_path}", lints
     except Exception as e:
         return f"There was an error linting and fixing the KCL: {e}", []
+
+
+@mcp.tool()
+async def mock_execute_kcl(
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
+) -> tuple[bool, str]:
+    """Mock execute KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): The KCL code to mock execute.
+        kcl_path (str | None): The path to a KCL file to mock execute. The path should point to a .kcl file or a directory containing a main.kcl file.
+
+    Returns:
+        tuple(bool, str): Returns True if the KCL code executed successfully and a success message, False otherwise and the error message.
+    """
+
+    logger.info("mock_execute_kcl tool called")
+
+    try:
+        return await zoo_mock_execute_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
+    except Exception as e:
+        return False, f"Failed to mock execute KCL code: {e}"
 
 
 @mcp.tool()

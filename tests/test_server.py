@@ -4,7 +4,9 @@ from pathlib import Path
 import pytest
 from mcp.types import ImageContent
 
+from zoo_mcp import ZooMCPException
 from zoo_mcp.server import mcp
+from zoo_mcp.zoo_tools import _check_kcl_code_or_path
 
 
 @pytest.fixture
@@ -196,6 +198,40 @@ async def test_convert_cad_file_error(empty_step: str):
 
 
 @pytest.mark.asyncio
+async def test_execute_kcl(cube_kcl: str):
+    response = await mcp.call_tool(
+        "execute_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, (tuple, list))
+    assert result[0] is True
+    assert "KCL code executed successfully" in result[1]
+
+
+@pytest.mark.asyncio
+async def test_execute_kcl_error():
+    response = await mcp.call_tool(
+        "execute_kcl",
+        arguments={
+            "kcl_code": "asdf = asdf",
+            "kcl_path": None,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, (tuple, list))
+    assert result[0] is False
+    assert "Failed to execute KCL code" in result[1]
+
+
+@pytest.mark.asyncio
 async def test_export_kcl(cube_kcl: str):
     response = await mcp.call_tool(
         "export_kcl",
@@ -324,6 +360,40 @@ async def test_lint_and_fix_kcl_error(cube_stl: str):
     assert isinstance(response[1], dict)
     fixed_code_msg, _ = response[1]["result"]
     assert "error linting and fixing" in fixed_code_msg
+
+
+@pytest.mark.asyncio
+async def test_mock_execute_kcl(cube_kcl: str):
+    response = await mcp.call_tool(
+        "mock_execute_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, (tuple, list))
+    assert result[0] is True
+    assert "KCL code mock executed successfully" in result[1]
+
+
+@pytest.mark.asyncio
+async def test_mock_execute_kcl_error():
+    response = await mcp.call_tool(
+        "mock_execute_kcl",
+        arguments={
+            "kcl_code": "asdf = asdf",
+            "kcl_path": None,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, (tuple, list))
+    assert result[0] is False
+    assert "Failed to mock execute KCL code" in result[1]
 
 
 @pytest.mark.asyncio
@@ -656,3 +726,64 @@ async def test_edit_kcl_project_error(kcl_project: str):
     result = response[1]["result"]
     assert isinstance(result, str)
     assert "400 Bad Request" in result
+
+
+def test_check_kcl_code_or_path_with_code_only():
+    """Test that providing only kcl_code works without error."""
+    _check_kcl_code_or_path(kcl_code="some kcl code", kcl_path=None)
+
+
+def test_check_kcl_code_or_path_with_kcl_file(cube_kcl: str):
+    """Test that providing a valid .kcl file path works without error."""
+    _check_kcl_code_or_path(kcl_code=None, kcl_path=cube_kcl)
+
+
+def test_check_kcl_code_or_path_with_project_dir(kcl_project: str):
+    """Test that providing a directory with main.kcl works without error."""
+    _check_kcl_code_or_path(kcl_code=None, kcl_path=kcl_project)
+
+
+def test_check_kcl_code_or_path_with_both(cube_kcl: str, caplog):
+    """Test that providing both code and path uses code (logs warning)."""
+    import logging
+
+    caplog.set_level(logging.WARNING)
+    # Should not raise, but should log a warning
+    _check_kcl_code_or_path(kcl_code="some kcl code", kcl_path=cube_kcl)
+    assert "Both code and kcl_path provided, using code" in caplog.text
+
+
+def test_check_kcl_code_or_path_neither_provided():
+    """Test that providing neither code nor path raises an exception."""
+    with pytest.raises(ZooMCPException) as exc_info:
+        _check_kcl_code_or_path(kcl_code=None, kcl_path=None)
+    assert "Neither code nor kcl_path provided" in str(exc_info.value)
+
+
+def test_check_kcl_code_or_path_empty_strings():
+    """Test that providing empty strings for both raises an exception."""
+    with pytest.raises(ZooMCPException) as exc_info:
+        _check_kcl_code_or_path(kcl_code="", kcl_path="")
+    assert "Neither code nor kcl_path provided" in str(exc_info.value)
+
+
+def test_check_kcl_code_or_path_non_kcl_file(cube_stl: str):
+    """Test that providing a non-.kcl file raises an exception."""
+    with pytest.raises(ZooMCPException) as exc_info:
+        _check_kcl_code_or_path(kcl_code=None, kcl_path=cube_stl)
+    assert "not a .kcl file" in str(exc_info.value)
+
+
+def test_check_kcl_code_or_path_dir_without_main_kcl(tmp_path):
+    """Test that providing a directory without main.kcl raises an exception."""
+    # Create an empty temp directory (no main.kcl)
+    with pytest.raises(ZooMCPException) as exc_info:
+        _check_kcl_code_or_path(kcl_code=None, kcl_path=str(tmp_path))
+    assert "does not contain a main.kcl file" in str(exc_info.value)
+
+
+def test_check_kcl_code_or_path_nonexistent_path():
+    """Test that providing a nonexistent path raises an exception."""
+    with pytest.raises(ZooMCPException) as exc_info:
+        _check_kcl_code_or_path(kcl_code=None, kcl_path="/nonexistent/path/to/file.kcl")
+    assert "does not exist" in str(exc_info.value)

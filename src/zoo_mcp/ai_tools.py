@@ -2,7 +2,6 @@ import asyncio
 import time
 from pathlib import Path
 
-import websockets
 from kittycad.models import (
     ApiCallStatus,
     FileExportFormat,
@@ -27,6 +26,7 @@ from kittycad.models.text_to_cad_response import (
     OptionTextToCad,
     OptionTextToCadMultiFileIteration,
 )
+from websockets.exceptions import ConnectionClosedError
 
 from zoo_mcp import ZooMCPException, kittycad_client, logger
 
@@ -100,7 +100,7 @@ def log_websocket_message(conn_id: str) -> bool:
                     logger.info("Text-To-CAD reasoning complete.")
                     return True
 
-            except websockets.exceptions.ConnectionClosedError as e:  # ty: ignore[unresolved-attribute]
+            except ConnectionClosedError as e:
                 logger.info(
                     "Text To CAD could still be running but the websocket connection closed with error: %s",
                     e,
