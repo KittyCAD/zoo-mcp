@@ -160,7 +160,7 @@ async def convert_cad_file(
 async def execute_kcl(
     kcl_code: str | None = None,
     kcl_path: str | None = None,
-) -> bool:
+) -> tuple[bool, str]:
     """Execute KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
@@ -168,17 +168,15 @@ async def execute_kcl(
         kcl_path (str | None): The path to a KCL file to execute. The path should point to a .kcl file or a directory containing a main.kcl file.
 
     Returns:
-        bool: True if the KCL code executed successfully, False otherwise.
+        tuple(bool, str): Returns True if the KCL code executed successfully and a success message, False otherwise and the error message.
     """
 
     logger.info("execute_kcl tool called")
 
     try:
-        result = await zoo_execute_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
-        return result
+        return await zoo_execute_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
     except Exception as e:
-        logger.error(f"Failed to execute KCL code: {e}")
-        return False
+        return False, f"Failed to execute KCL code: {e}"
 
 
 @mcp.tool()
@@ -273,7 +271,7 @@ async def lint_and_fix_kcl(
 async def mock_execute_kcl(
     kcl_code: str | None = None,
     kcl_path: str | None = None,
-) -> bool:
+) -> tuple[bool, str]:
     """Mock execute KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
     Args:
@@ -281,17 +279,15 @@ async def mock_execute_kcl(
         kcl_path (str | None): The path to a KCL file to mock execute. The path should point to a .kcl file or a directory containing a main.kcl file.
 
     Returns:
-        bool: True if the KCL code executed successfully, False otherwise.
+        tuple(bool, str): Returns True if the KCL code executed successfully and a success message, False otherwise and the error message.
     """
 
     logger.info("mock_execute_kcl tool called")
 
     try:
-        result = await zoo_mock_execute_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
-        return result
+        return await zoo_mock_execute_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
     except Exception as e:
-        logger.error(f"Failed to mock execute KCL code: {e}")
-        return False
+        return False, f"Failed to mock execute KCL code: {e}"
 
 
 @mcp.tool()
