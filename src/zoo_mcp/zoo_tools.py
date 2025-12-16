@@ -967,7 +967,9 @@ async def zoo_multiview_snapshot_of_kcl(
                 cast(
                     object,
                     await kcl.execute_and_snapshot_views(
-                        str(kcl_path_resolved), kcl.ImageFormat.Jpeg, snapshot_options=views
+                        str(kcl_path_resolved),
+                        kcl.ImageFormat.Jpeg,
+                        snapshot_options=views,
                     ),
                 ),
             )
@@ -1161,7 +1163,9 @@ async def zoo_snapshot_of_kcl(
             cast(
                 object,
                 await kcl.execute_and_snapshot_views(
-                    str(kcl_path_resolved), kcl.ImageFormat.Jpeg, snapshot_options=[view]
+                    str(kcl_path_resolved),
+                    kcl.ImageFormat.Jpeg,
+                    snapshot_options=[view],
                 ),
             ),
         )
