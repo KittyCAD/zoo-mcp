@@ -2,6 +2,8 @@
 
 An [MCP server](https://modelcontextprotocol.io/docs/getting-started/intro) housing various Zoo built utilities
 
+<!-- mcp-name: io.github.KittyCAD/zoo-mcp -->
+
 ## Prerequisites
 
 1. An API key for Zoo, get one [here](https://zoo.dev/account)
