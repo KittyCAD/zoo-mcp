@@ -6,6 +6,11 @@ from mcp.types import ImageContent
 from zoo_mcp import ZooMCPException, logger
 from zoo_mcp.ai_tools import edit_kcl_project as _edit_kcl_project
 from zoo_mcp.ai_tools import text_to_cad as _text_to_cad
+from zoo_mcp.kcl_docs import (
+    get_doc_content,
+    list_available_docs,
+    search_docs,
+)
 from zoo_mcp.utils.image_utils import encode_image
 from zoo_mcp.zoo_tools import (
     CameraView,
@@ -547,6 +552,71 @@ async def edit_kcl_project(
         )
     except Exception as e:
         return f"There was an error modifying the KCL project from text: {e}"
+
+
+@mcp.tool()
+async def list_kcl_docs() -> dict:
+    """List all available KCL documentation topics organized by category.
+
+    Returns a dictionary with the following categories:
+    - kcl-lang: KCL language documentation (syntax, types, functions, etc.)
+    - kcl-std-functions: Standard library function documentation
+    - kcl-std-types: Standard library type documentation
+    - kcl-std-consts: Standard library constants documentation
+    - kcl-std-modules: Standard library module documentation
+
+    Each category contains a list of documentation file paths that can be
+    retrieved using get_kcl_doc().
+
+    Returns:
+        dict: Categories mapped to lists of available documentation paths.
+    """
+    logger.info("list_kcl_docs tool called")
+    return list_available_docs()
+
+
+@mcp.tool()
+async def search_kcl_docs(query: str, max_results: int = 5) -> list[dict]:
+    """Search KCL documentation by keyword.
+
+    Searches across all KCL language and standard library documentation
+    for the given query. Returns relevant excerpts with surrounding context.
+
+    Args:
+        query (str): The search query (case-insensitive).
+        max_results (int): Maximum number of results to return (default: 5).
+
+    Returns:
+        list[dict]: List of search results, each containing:
+            - path: The documentation file path
+            - title: The document title (from first heading)
+            - excerpt: A relevant excerpt with the match highlighted in context
+            - match_count: Number of times the query appears in the document
+    """
+    logger.info("search_kcl_docs tool called with query: %s", query)
+    return search_docs(query, max_results)
+
+
+@mcp.tool()
+async def get_kcl_doc(doc_path: str) -> str:
+    """Get the full content of a specific KCL documentation file.
+
+    Use list_kcl_docs() to see available documentation paths, or
+    search_kcl_docs() to find relevant documentation by keyword.
+
+    Args:
+        doc_path (str): The path to the documentation file
+            (e.g., "docs/kcl-lang/functions.md" or "docs/kcl-std/functions/extrude.md")
+
+    Returns:
+        str: The full Markdown content of the documentation file,
+            or an error message if not found.
+    """
+    logger.info("get_kcl_doc tool called for path: %s", doc_path)
+    content = get_doc_content(doc_path)
+    if content is None:
+        return f"Documentation not found: {doc_path}. Use list_kcl_docs() to see available paths."
+    return content
 
 
 def main():
