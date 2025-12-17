@@ -764,9 +764,9 @@ async def test_search_kcl_docs(live_docs_cache):
 
     # The extrude function doc should be in the results
     paths = [r["path"] for r in result]
-    assert any(
-        "extrude" in p.lower() for p in paths
-    ), "Should find extrude-related docs"
+    assert any("extrude" in p.lower() for p in paths), (
+        "Should find extrude-related docs"
+    )
 
 
 @pytest.mark.xdist_group(name="docs")
