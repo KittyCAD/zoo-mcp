@@ -3,6 +3,7 @@
 A lightweight service that enables AI assistants to execute Zoo commands through the Model Context Protocol (MCP).
 """
 
+import asyncio
 import logging
 import ssl
 import sys
@@ -37,3 +38,17 @@ kittycad_client.websocket_recv_timeout = 300
 
 httpx_logger = logging.getLogger("httpx")
 httpx_logger.setLevel(logging.WARNING)
+
+
+def _initialize_kcl_docs() -> None:
+    """Initialize KCL documentation cache at module load time."""
+    from zoo_mcp.kcl_docs import initialize_docs_cache
+
+    try:
+        asyncio.run(initialize_docs_cache())
+    except Exception as e:
+        logger.warning(f"Failed to initialize KCL docs cache: {e}")
+
+
+# Initialize docs cache when module is imported
+_initialize_kcl_docs()
