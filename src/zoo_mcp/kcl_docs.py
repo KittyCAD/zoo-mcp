@@ -19,7 +19,7 @@ RAW_CONTENT_BASE = "https://raw.githubusercontent.com/KittyCAD/modeling-app/main
 
 
 @dataclass
-class DocsCache:
+class KCLDocs:
     """Container for documentation data."""
 
     docs: dict[str, str] = field(default_factory=dict)
@@ -33,10 +33,10 @@ class DocsCache:
         }
     )
 
-    _instance: ClassVar["DocsCache | None"] = None
+    _instance: ClassVar["KCLDocs | None"] = None
 
     @classmethod
-    def get(cls) -> "DocsCache":
+    def get(cls) -> "KCLDocs":
         """Get the cached docs instance, or empty cache if not initialized."""
         return cls._instance if cls._instance is not None else cls()
 
@@ -122,9 +122,9 @@ async def _fetch_doc_content(
         return path, None
 
 
-async def _fetch_docs_from_github() -> DocsCache:
-    """Fetch all docs from GitHub and return a DocsCache."""
-    docs = DocsCache()
+async def _fetch_docs_from_github() -> KCLDocs:
+    """Fetch all docs from GitHub and return a KCLDocs."""
+    docs = KCLDocs()
 
     logger.info("Fetching KCL documentation from GitHub...")
 
@@ -175,7 +175,7 @@ async def _fetch_docs_from_github() -> DocsCache:
 
 async def initialize_docs_cache() -> None:
     """Initialize the docs cache from GitHub."""
-    await DocsCache.initialize()
+    await KCLDocs.initialize()
 
 
 def list_available_docs() -> dict[str, list[str]]:
@@ -194,7 +194,7 @@ def list_available_docs() -> dict[str, list[str]]:
     Returns:
         dict: Categories mapped to lists of available documentation paths.
     """
-    return DocsCache.get().index
+    return KCLDocs.get().index
 
 
 def search_docs(query: str, max_results: int = 5) -> list[dict]:
@@ -222,7 +222,7 @@ def search_docs(query: str, max_results: int = 5) -> list[dict]:
     query_lower = query.lower()
     results: list[dict] = []
 
-    for path, content in DocsCache.get().docs.items():
+    for path, content in KCLDocs.get().docs.items():
         content_lower = content.lower()
 
         # Count matches
@@ -265,4 +265,4 @@ def get_doc_content(doc_path: str) -> str | None:
     if ".." in doc_path or not doc_path.startswith("docs/"):
         return None
 
-    return DocsCache.get().docs.get(doc_path)
+    return KCLDocs.get().docs.get(doc_path)

@@ -6,7 +6,7 @@ import pytest
 import pytest_asyncio
 from mcp.types import ImageContent, TextContent
 
-from zoo_mcp.kcl_docs import DocsCache
+from zoo_mcp.kcl_docs import KCLDocs
 from zoo_mcp.server import mcp
 
 
@@ -701,16 +701,16 @@ async def live_docs_cache():
     providing a more realistic test of the documentation system.
     """
     # Reset singleton to ensure fresh initialization in this worker
-    DocsCache._instance = None
+    KCLDocs._instance = None
 
     # Initialize the docs cache from GitHub
-    await DocsCache.initialize()
+    await KCLDocs.initialize()
 
     # Verify docs were fetched
-    assert DocsCache._instance is not None, "Docs cache should be initialized"
-    assert len(DocsCache._instance.docs) > 0, "Should have fetched some docs"
+    assert KCLDocs._instance is not None, "Docs cache should be initialized"
+    assert len(KCLDocs._instance.docs) > 0, "Should have fetched some docs"
 
-    yield DocsCache._instance
+    yield KCLDocs._instance
 
 
 @pytest.mark.xdist_group(name="docs")
