@@ -1,48 +1,13 @@
+import json
 from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
-from mcp.types import ImageContent
+import pytest_asyncio
+from mcp.types import ImageContent, TextContent
 
-from zoo_mcp import ZooMCPException
+from zoo_mcp.kcl_docs import DocsCache
 from zoo_mcp.server import mcp
-from zoo_mcp.zoo_tools import _check_kcl_code_or_path
-
-
-@pytest.fixture
-def cube_kcl():
-    test_file = Path(__file__).parent / "data" / "cube.kcl"
-    yield f"{test_file.resolve()}"
-
-
-@pytest.fixture
-def cube_stl():
-    test_file = Path(__file__).parent / "data" / "cube.stl"
-    yield f"{test_file.resolve()}"
-
-
-@pytest.fixture
-def empty_kcl():
-    test_file = Path(__file__).parent / "data" / "empty.kcl"
-    yield f"{test_file.resolve()}"
-
-
-@pytest.fixture
-def empty_step():
-    test_file = Path(__file__).parent / "data" / "empty.step"
-    yield f"{test_file.resolve()}"
-
-
-@pytest.fixture
-def kcl_project():
-    project_path = Path(__file__).parent / "data" / "test_kcl_project"
-    yield f"{project_path.resolve()}"
-
-
-@pytest.fixture
-def box_with_linter_errors():
-    test_file = Path(__file__).parent / "data" / "box_with_linter_errors.kcl"
-    yield f"{test_file.resolve()}"
 
 
 @pytest.mark.asyncio
@@ -728,62 +693,210 @@ async def test_edit_kcl_project_error(kcl_project: str):
     assert "400 Bad Request" in result
 
 
-def test_check_kcl_code_or_path_with_code_only():
-    """Test that providing only kcl_code works without error."""
-    _check_kcl_code_or_path(kcl_code="some kcl code", kcl_path=None)
+@pytest_asyncio.fixture(scope="module")
+async def live_docs_cache():
+    """Initialize documentation cache from live GitHub data.
+
+    This fixture fetches real documentation from GitHub once per test module,
+    providing a more realistic test of the documentation system.
+    """
+    # Reset singleton to ensure fresh initialization in this worker
+    DocsCache._instance = None
+
+    # Initialize the docs cache from GitHub
+    await DocsCache.initialize()
+
+    # Verify docs were fetched
+    assert DocsCache._instance is not None, "Docs cache should be initialized"
+    assert len(DocsCache._instance.docs) > 0, "Should have fetched some docs"
+
+    yield DocsCache._instance
 
 
-def test_check_kcl_code_or_path_with_kcl_file(cube_kcl: str):
-    """Test that providing a valid .kcl file path works without error."""
-    _check_kcl_code_or_path(kcl_code=None, kcl_path=cube_kcl)
+@pytest.mark.xdist_group(name="docs")
+@pytest.mark.asyncio
+async def test_list_kcl_docs(live_docs_cache):
+    """Test that list_kcl_docs returns categorized documentation."""
+    response = await mcp.call_tool("list_kcl_docs", arguments={})
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+    assert isinstance(response[0], TextContent)
+    result = json.loads(response[0].text)
+
+    assert isinstance(result, dict)
+    # Check all expected categories exist
+    assert "kcl-lang" in result
+    assert "kcl-std-functions" in result
+    assert "kcl-std-types" in result
+    assert "kcl-std-consts" in result
+    assert "kcl-std-modules" in result
+
+    # Verify we have docs in each major category
+    assert len(result["kcl-lang"]) > 0, "Should have KCL language docs"
+    assert len(result["kcl-std-functions"]) > 0, "Should have std function docs"
+    assert len(result["kcl-std-types"]) > 0, "Should have std type docs"
 
 
-def test_check_kcl_code_or_path_with_project_dir(kcl_project: str):
-    """Test that providing a directory with main.kcl works without error."""
-    _check_kcl_code_or_path(kcl_code=None, kcl_path=kcl_project)
+@pytest.mark.xdist_group(name="docs")
+@pytest.mark.asyncio
+async def test_search_kcl_docs(live_docs_cache):
+    """Test that search_kcl_docs returns relevant excerpts for 'extrude'."""
+    response = await mcp.call_tool(
+        "search_kcl_docs", arguments={"query": "extrude", "max_results": 5}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    # FastMCP returns list results as [list_of_TextContent]
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) > 0, "Should find results for 'extrude'"
+
+    # Parse all results
+    result = [json.loads(tc.text) for tc in inner_list]
+
+    # Check result structure
+    first_result = result[0]
+    assert "path" in first_result
+    assert "title" in first_result
+    assert "excerpt" in first_result
+    assert "match_count" in first_result
+
+    # The extrude function doc should be in the results
+    paths = [r["path"] for r in result]
+    assert any(
+        "extrude" in p.lower() for p in paths
+    ), "Should find extrude-related docs"
 
 
-def test_check_kcl_code_or_path_with_both(cube_kcl: str, caplog):
-    """Test that providing both code and path uses code (logs warning)."""
-    import logging
+@pytest.mark.xdist_group(name="docs")
+@pytest.mark.asyncio
+async def test_search_kcl_docs_sketch(live_docs_cache):
+    """Test searching for 'sketch' returns relevant results."""
+    response = await mcp.call_tool(
+        "search_kcl_docs", arguments={"query": "sketch", "max_results": 10}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
 
-    caplog.set_level(logging.WARNING)
-    # Should not raise, but should log a warning
-    _check_kcl_code_or_path(kcl_code="some kcl code", kcl_path=cube_kcl)
-    assert "Both code and kcl_path provided, using code" in caplog.text
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) > 0, "Should find results for 'sketch'"
 
+    result = [json.loads(tc.text) for tc in inner_list]
 
-def test_check_kcl_code_or_path_neither_provided():
-    """Test that providing neither code nor path raises an exception."""
-    with pytest.raises(ZooMCPException) as exc_info:
-        _check_kcl_code_or_path(kcl_code=None, kcl_path=None)
-    assert "Neither code nor kcl_path provided" in str(exc_info.value)
-
-
-def test_check_kcl_code_or_path_empty_strings():
-    """Test that providing empty strings for both raises an exception."""
-    with pytest.raises(ZooMCPException) as exc_info:
-        _check_kcl_code_or_path(kcl_code="", kcl_path="")
-    assert "Neither code nor kcl_path provided" in str(exc_info.value)
+    # Should find sketch-related docs
+    all_text = " ".join([r["title"] + r["excerpt"] for r in result]).lower()
+    assert "sketch" in all_text, "Results should contain 'sketch'"
 
 
-def test_check_kcl_code_or_path_non_kcl_file(cube_stl: str):
-    """Test that providing a non-.kcl file raises an exception."""
-    with pytest.raises(ZooMCPException) as exc_info:
-        _check_kcl_code_or_path(kcl_code=None, kcl_path=cube_stl)
-    assert "not a .kcl file" in str(exc_info.value)
+@pytest.mark.xdist_group(name="docs")
+@pytest.mark.asyncio
+async def test_search_kcl_docs_no_results(live_docs_cache):
+    """Test that search_kcl_docs handles queries with no matches."""
+    response = await mcp.call_tool(
+        "search_kcl_docs",
+        arguments={"query": "xyznonexistentterm12345abc", "max_results": 5},
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) == 0, "Should find no results for gibberish query"
 
 
-def test_check_kcl_code_or_path_dir_without_main_kcl(tmp_path):
-    """Test that providing a directory without main.kcl raises an exception."""
-    # Create an empty temp directory (no main.kcl)
-    with pytest.raises(ZooMCPException) as exc_info:
-        _check_kcl_code_or_path(kcl_code=None, kcl_path=str(tmp_path))
-    assert "does not contain a main.kcl file" in str(exc_info.value)
+@pytest.mark.xdist_group(name="docs")
+@pytest.mark.asyncio
+async def test_search_kcl_docs_empty_query(live_docs_cache):
+    """Test that search_kcl_docs handles empty queries."""
+    response = await mcp.call_tool(
+        "search_kcl_docs", arguments={"query": "", "max_results": 5}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) == 1
+
+    result = json.loads(inner_list[0].text)
+    assert "error" in result
 
 
-def test_check_kcl_code_or_path_nonexistent_path():
-    """Test that providing a nonexistent path raises an exception."""
-    with pytest.raises(ZooMCPException) as exc_info:
-        _check_kcl_code_or_path(kcl_code=None, kcl_path="/nonexistent/path/to/file.kcl")
-    assert "does not exist" in str(exc_info.value)
+@pytest.mark.xdist_group(name="docs")
+@pytest.mark.asyncio
+async def test_get_kcl_doc_functions(live_docs_cache):
+    """Test that get_kcl_doc retrieves the functions documentation."""
+    response = await mcp.call_tool(
+        "get_kcl_doc", arguments={"doc_path": "docs/kcl-lang/functions.md"}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) == 1
+
+    result = inner_list[0].text
+    assert isinstance(result, str)
+    # Should contain content about functions
+    assert "function" in result.lower(), "Should mention functions"
+    assert len(result) > 100, "Should have substantial content"
+
+
+@pytest.mark.xdist_group(name="docs")
+@pytest.mark.asyncio
+async def test_get_kcl_doc_extrude(live_docs_cache):
+    """Test that get_kcl_doc retrieves the extrude function documentation."""
+    response = await mcp.call_tool(
+        "get_kcl_doc", arguments={"doc_path": "docs/kcl-std/functions/extrude.md"}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) == 1
+
+    result = inner_list[0].text
+    assert isinstance(result, str)
+    assert "extrude" in result.lower(), "Should mention extrude"
+
+
+@pytest.mark.xdist_group(name="docs")
+@pytest.mark.asyncio
+async def test_get_kcl_doc_not_found(live_docs_cache):
+    """Test that get_kcl_doc handles missing documentation."""
+    response = await mcp.call_tool(
+        "get_kcl_doc", arguments={"doc_path": "docs/nonexistent/fake.md"}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) == 1
+
+    result = inner_list[0].text
+    assert isinstance(result, str)
+    assert "Documentation not found" in result
+
+
+@pytest.mark.xdist_group(name="docs")
+@pytest.mark.asyncio
+async def test_get_kcl_doc_path_traversal(live_docs_cache):
+    """Test that get_kcl_doc rejects path traversal attempts."""
+    response = await mcp.call_tool(
+        "get_kcl_doc", arguments={"doc_path": "../../../etc/passwd"}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) == 1
+
+    result = inner_list[0].text
+    assert isinstance(result, str)
+    assert "Documentation not found" in result
