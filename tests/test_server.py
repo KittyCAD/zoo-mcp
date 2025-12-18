@@ -638,7 +638,7 @@ async def test_text_to_cad_success(caplog):
 
     kittycad_client.headers["Cache-Control"] = "no-cache"
 
-    prompt = "Create a 10x10x10 cube."
+    prompt = "Create a cube centered at the origin with side length 10mm."
     response = await mcp.call_tool("text_to_cad", arguments={"prompt": prompt})
     assert isinstance(response, Sequence)
     assert isinstance(response[1], dict)
