@@ -11,6 +11,12 @@ from zoo_mcp.kcl_docs import (
     list_available_docs,
     search_docs,
 )
+from zoo_mcp.kcl_samples import (
+    SampleData,
+    get_sample_content,
+    list_available_samples,
+    search_samples,
+)
 from zoo_mcp.utils.image_utils import encode_image
 from zoo_mcp.zoo_tools import (
     CameraView,
@@ -617,6 +623,80 @@ async def get_kcl_doc(doc_path: str) -> str:
     if content is None:
         return f"Documentation not found: {doc_path}. Use list_kcl_docs() to see available paths."
     return content
+
+
+@mcp.tool()
+async def list_kcl_samples() -> list[dict]:
+    """List all available KCL sample projects.
+
+    Returns a list of all available KCL code samples from the Zoo samples
+    repository. Each sample demonstrates a specific CAD modeling technique
+    or creates a particular 3D model.
+
+    Returns:
+        list[dict]: List of sample information, each containing:
+            - name: The sample directory name (use with get_kcl_sample)
+            - title: Human-readable title
+            - description: Brief description of what the sample creates
+            - multipleFiles: Whether the sample contains multiple KCL files
+    """
+    logger.info("list_kcl_samples tool called")
+    return list_available_samples()
+
+
+@mcp.tool()
+async def search_kcl_samples(query: str, max_results: int = 5) -> list[dict]:
+    """Search KCL samples by keyword.
+
+    Searches across all KCL sample titles and descriptions
+    for the given query. Returns matching samples ranked by relevance.
+
+    Args:
+        query (str): The search query (case-insensitive).
+        max_results (int): Maximum number of results to return (default: 5).
+
+    Returns:
+        list[dict]: List of search results, each containing:
+            - name: The sample directory name (use with get_kcl_sample)
+            - title: Human-readable title
+            - description: Brief description of the sample
+            - multipleFiles: Whether the sample contains multiple KCL files
+            - match_count: Number of times the query appears in title/description
+            - excerpt: A relevant excerpt with the match in context
+    """
+    logger.info("search_kcl_samples tool called with query: %s", query)
+    return search_samples(query, max_results)
+
+
+@mcp.tool()
+async def get_kcl_sample(sample_name: str) -> SampleData | str:
+    """Get the full content of a specific KCL sample including all files.
+
+    Retrieves all KCL files that make up a sample project. Some samples
+    consist of a single main.kcl file, while others have multiple files
+    (e.g., parameters.kcl, components, etc.).
+
+    Use list_kcl_samples() to see available sample names, or
+    search_kcl_samples() to find samples by keyword.
+
+    Args:
+        sample_name (str): The sample directory name
+            (e.g., "ball-bearing", "axial-fan", "gear")
+
+    Returns:
+        SampleData | str: A SampleData dictionary containing:
+            - name: The sample directory name
+            - title: Human-readable title
+            - description: Brief description
+            - multipleFiles: Whether the sample contains multiple files
+            - files: List of SampleFile dictionaries, each with 'filename' and 'content'
+        Returns an error message string if the sample is not found.
+    """
+    logger.info("get_kcl_sample tool called for sample: %s", sample_name)
+    sample = await get_sample_content(sample_name)
+    if sample is None:
+        return f"Sample not found: {sample_name}. Use list_kcl_samples() to see available samples."
+    return sample
 
 
 def main():

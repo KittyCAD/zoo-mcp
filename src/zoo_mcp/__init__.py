@@ -50,5 +50,16 @@ def _initialize_kcl_docs() -> None:
         logger.warning(f"Failed to initialize KCL docs cache: {e}")
 
 
-# Initialize docs cache when module is imported
+def _initialize_kcl_samples() -> None:
+    """Initialize KCL samples cache at module load time."""
+    from zoo_mcp.kcl_samples import initialize_samples_cache
+
+    try:
+        asyncio.run(initialize_samples_cache())
+    except Exception as e:
+        logger.warning(f"Failed to initialize KCL samples cache: {e}")
+
+
+# Initialize caches when module is imported
 _initialize_kcl_docs()
+_initialize_kcl_samples()

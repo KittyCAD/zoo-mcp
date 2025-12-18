@@ -7,6 +7,7 @@ import pytest_asyncio
 from mcp.types import ImageContent, TextContent
 
 from zoo_mcp.kcl_docs import KCLDocs
+from zoo_mcp.kcl_samples import KCLSamples
 from zoo_mcp.server import mcp
 
 
@@ -900,3 +901,213 @@ async def test_get_kcl_doc_path_traversal(live_docs_cache):
     result = inner_list[0].text
     assert isinstance(result, str)
     assert "Documentation not found" in result
+
+
+@pytest_asyncio.fixture(scope="module")
+async def live_samples_cache():
+    """Initialize samples cache from live GitHub data.
+
+    This fixture fetches the real samples manifest from GitHub once per test module,
+    providing a more realistic test of the samples system.
+    """
+    # Reset singleton to ensure fresh initialization in this worker
+    KCLSamples._instance = None
+
+    # Initialize the samples cache from GitHub
+    await KCLSamples.initialize()
+
+    # Verify manifest was fetched
+    assert KCLSamples._instance is not None, "Samples cache should be initialized"
+    assert len(KCLSamples._instance.manifest) > 0, "Should have fetched manifest"
+
+    yield KCLSamples._instance
+
+
+@pytest.mark.xdist_group(name="samples")
+@pytest.mark.asyncio
+async def test_list_kcl_samples(live_samples_cache):
+    """Test that list_kcl_samples returns sample information."""
+    response = await mcp.call_tool("list_kcl_samples", arguments={})
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) > 100, "Should have many samples"
+
+    # Parse first result and check structure
+    first_result = json.loads(inner_list[0].text)
+    assert "name" in first_result
+    assert "title" in first_result
+    assert "description" in first_result
+    assert "multipleFiles" in first_result
+
+
+@pytest.mark.xdist_group(name="samples")
+@pytest.mark.asyncio
+async def test_search_kcl_samples_gear(live_samples_cache):
+    """Test searching for 'gear' returns relevant results."""
+    response = await mcp.call_tool(
+        "search_kcl_samples", arguments={"query": "gear", "max_results": 5}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) > 0, "Should find results for 'gear'"
+
+    result = [json.loads(tc.text) for tc in inner_list]
+
+    # Check result structure
+    first_result = result[0]
+    assert "name" in first_result
+    assert "title" in first_result
+    assert "description" in first_result
+    assert "match_count" in first_result
+    assert "excerpt" in first_result
+
+    # Should find gear-related samples
+    all_text = " ".join([r["title"] + r["description"] for r in result]).lower()
+    assert "gear" in all_text, "Results should contain 'gear'"
+
+
+@pytest.mark.xdist_group(name="samples")
+@pytest.mark.asyncio
+async def test_search_kcl_samples_bearing(live_samples_cache):
+    """Test searching for 'bearing' returns relevant results."""
+    response = await mcp.call_tool(
+        "search_kcl_samples", arguments={"query": "bearing", "max_results": 5}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) > 0, "Should find results for 'bearing'"
+
+    result = [json.loads(tc.text) for tc in inner_list]
+
+    # Should find bearing-related samples
+    names = [r["name"] for r in result]
+    assert any("bearing" in n for n in names), "Should find bearing samples"
+
+
+@pytest.mark.xdist_group(name="samples")
+@pytest.mark.asyncio
+async def test_search_kcl_samples_no_results(live_samples_cache):
+    """Test that search_kcl_samples handles queries with no matches."""
+    response = await mcp.call_tool(
+        "search_kcl_samples",
+        arguments={"query": "xyznonexistentterm12345abc", "max_results": 5},
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) == 0, "Should find no results for gibberish query"
+
+
+@pytest.mark.xdist_group(name="samples")
+@pytest.mark.asyncio
+async def test_search_kcl_samples_empty_query(live_samples_cache):
+    """Test that search_kcl_samples handles empty queries."""
+    response = await mcp.call_tool(
+        "search_kcl_samples", arguments={"query": "", "max_results": 5}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) == 1
+
+    result = json.loads(inner_list[0].text)
+    assert "error" in result
+
+
+@pytest.mark.xdist_group(name="samples")
+@pytest.mark.asyncio
+async def test_get_kcl_sample_single_file(live_samples_cache):
+    """Test that get_kcl_sample retrieves a single-file sample."""
+    response = await mcp.call_tool(
+        "get_kcl_sample", arguments={"sample_name": "ball-bearing"}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+
+    assert isinstance(result, dict)
+    assert result["name"] == "ball-bearing"
+    assert "title" in result
+    assert "description" in result
+    assert "files" in result
+    assert len(result["files"]) >= 1
+
+    # Check file structure
+    main_file = next((f for f in result["files"] if f["filename"] == "main.kcl"), None)
+    assert main_file is not None, "Should have main.kcl"
+    assert len(main_file["content"]) > 0, "Should have content"
+
+
+@pytest.mark.xdist_group(name="samples")
+@pytest.mark.asyncio
+async def test_get_kcl_sample_multi_file(live_samples_cache):
+    """Test that get_kcl_sample retrieves a multi-file sample."""
+    response = await mcp.call_tool(
+        "get_kcl_sample", arguments={"sample_name": "axial-fan"}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+
+    assert isinstance(result, dict)
+    assert result["name"] == "axial-fan"
+    assert result["multipleFiles"] is True
+    assert len(result["files"]) > 1, "Should have multiple files"
+
+    # Check expected files exist
+    filenames = [f["filename"] for f in result["files"]]
+    assert "main.kcl" in filenames
+    assert "parameters.kcl" in filenames or "fan.kcl" in filenames
+
+
+@pytest.mark.xdist_group(name="samples")
+@pytest.mark.asyncio
+async def test_get_kcl_sample_not_found(live_samples_cache):
+    """Test that get_kcl_sample handles missing samples."""
+    response = await mcp.call_tool(
+        "get_kcl_sample", arguments={"sample_name": "nonexistent-sample-xyz"}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) == 1
+
+    result = inner_list[0].text
+    assert isinstance(result, str)
+    assert "Sample not found" in result
+
+
+@pytest.mark.xdist_group(name="samples")
+@pytest.mark.asyncio
+async def test_get_kcl_sample_path_traversal(live_samples_cache):
+    """Test that get_kcl_sample rejects path traversal attempts."""
+    response = await mcp.call_tool(
+        "get_kcl_sample", arguments={"sample_name": "../../../etc/passwd"}
+    )
+    assert isinstance(response, Sequence)
+    assert len(response) > 0
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) == 1
+
+    result = inner_list[0].text
+    assert isinstance(result, str)
+    assert "Sample not found" in result
