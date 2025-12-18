@@ -787,3 +787,127 @@ def test_check_kcl_code_or_path_nonexistent_path():
     with pytest.raises(ZooMCPException) as exc_info:
         _check_kcl_code_or_path(kcl_code=None, kcl_path="/nonexistent/path/to/file.kcl")
     assert "does not exist" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_save_image(cube_stl: str, tmp_path):
+    """Test saving an image to disk."""
+    # First get an image from snapshot_of_cad
+    snapshot_response = await mcp.call_tool(
+        "snapshot_of_cad",
+        arguments={
+            "input_file": cube_stl,
+            "camera_view": "isometric",
+        },
+    )
+    assert isinstance(snapshot_response, Sequence)
+    assert isinstance(snapshot_response[0], list)
+    image = snapshot_response[0][0]
+    assert isinstance(image, ImageContent)
+
+    # Now save the image to disk
+    output_path = tmp_path / "test_image.png"
+    response = await mcp.call_tool(
+        "save_image",
+        arguments={
+            "image": image.model_dump(),
+            "output_path": str(output_path),
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert Path(result).exists()
+    assert Path(result).stat().st_size > 0
+
+
+@pytest.mark.asyncio
+async def test_save_image_to_directory(cube_stl: str, tmp_path):
+    """Test saving an image to a directory creates image.png."""
+    # First get an image from snapshot_of_cad
+    snapshot_response = await mcp.call_tool(
+        "snapshot_of_cad",
+        arguments={
+            "input_file": cube_stl,
+            "camera_view": "isometric",
+        },
+    )
+    assert isinstance(snapshot_response, Sequence)
+    assert isinstance(snapshot_response[0], list)
+    image = snapshot_response[0][0]
+
+    # Save to directory
+    response = await mcp.call_tool(
+        "save_image",
+        arguments={
+            "image": image.model_dump(),
+            "output_path": str(tmp_path),
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert Path(result).exists()
+    assert Path(result).name == "image.png"
+    assert Path(result).stat().st_size > 0
+
+
+@pytest.mark.asyncio
+async def test_save_image_creates_parent_dirs(cube_stl: str, tmp_path):
+    """Test that save_image creates parent directories if they don't exist."""
+    # First get an image from snapshot_of_cad
+    snapshot_response = await mcp.call_tool(
+        "snapshot_of_cad",
+        arguments={
+            "input_file": cube_stl,
+            "camera_view": "isometric",
+        },
+    )
+    assert isinstance(snapshot_response, Sequence)
+    assert isinstance(snapshot_response[0], list)
+    image = snapshot_response[0][0]
+
+    # Save to a nested path that doesn't exist
+    output_path = tmp_path / "nested" / "dirs" / "test_image.png"
+    response = await mcp.call_tool(
+        "save_image",
+        arguments={
+            "image": image.model_dump(),
+            "output_path": str(output_path),
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert Path(result).exists()
+    assert Path(result).stat().st_size > 0
+
+
+@pytest.mark.asyncio
+async def test_save_image_to_temp_file(cube_stl: str):
+    """Test that save_image creates a temp file when no path is provided."""
+    # First get an image from snapshot_of_cad
+    snapshot_response = await mcp.call_tool(
+        "snapshot_of_cad",
+        arguments={
+            "input_file": cube_stl,
+            "camera_view": "isometric",
+        },
+    )
+    assert isinstance(snapshot_response, Sequence)
+    assert isinstance(snapshot_response[0], list)
+    image = snapshot_response[0][0]
+
+    # Save without specifying a path
+    response = await mcp.call_tool(
+        "save_image",
+        arguments={
+            "image": image.model_dump(),
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert Path(result).exists()
+    assert Path(result).suffix == ".png"
+    assert Path(result).stat().st_size > 0
