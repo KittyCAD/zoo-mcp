@@ -657,7 +657,7 @@ async def test_edit_kcl_project_success(kcl_project: str, caplog):
 
     kittycad_client.headers["Cache-Control"] = "no-cache"
 
-    prompt = "make the bench longer"
+    prompt = "make the bench length 60mm"
     response = await mcp.call_tool(
         "edit_kcl_project",
         arguments={
