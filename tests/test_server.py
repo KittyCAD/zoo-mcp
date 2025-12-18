@@ -721,8 +721,12 @@ async def test_list_kcl_docs(live_docs_cache):
     response = await mcp.call_tool("list_kcl_docs", arguments={})
     assert isinstance(response, Sequence)
     assert len(response) > 0
-    assert isinstance(response[0], TextContent)
-    result = json.loads(response[0].text)
+
+    inner_list = response[0]
+    assert isinstance(inner_list, list)
+    assert len(inner_list) == 1
+    assert isinstance(inner_list[0], TextContent)
+    result = json.loads(inner_list[0].text)
 
     assert isinstance(result, dict)
     # Check all expected categories exist
