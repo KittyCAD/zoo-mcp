@@ -6,7 +6,7 @@ from mcp.types import ImageContent
 from zoo_mcp import ZooMCPException, logger
 from zoo_mcp.ai_tools import edit_kcl_project as _edit_kcl_project
 from zoo_mcp.ai_tools import text_to_cad as _text_to_cad
-from zoo_mcp.utils.image_utils import encode_image
+from zoo_mcp.utils.image_utils import encode_image, save_image_to_disk
 from zoo_mcp.zoo_tools import (
     CameraView,
     zoo_calculate_center_of_mass,
@@ -547,6 +547,30 @@ async def edit_kcl_project(
         )
     except Exception as e:
         return f"There was an error modifying the KCL project from text: {e}"
+
+
+@mcp.tool()
+async def save_image(
+    image: ImageContent,
+    output_path: str | None = None,
+) -> str:
+    """Save an ImageContent object to disk. This allows a human to review images locally that an LLM has requested.
+
+    Args:
+        image (ImageContent): The ImageContent object to save. This is typically returned by snapshot tools like snapshot_of_kcl, snapshot_of_cad, multiview_snapshot_of_kcl, or multiview_snapshot_of_cad.
+        output_path (str | None): The path where the image should be saved. Can be a file path (e.g., '/path/to/image.png') or a directory (e.g., '/path/to/dir'). If a directory is provided, the file will be named 'image.png'. If not provided, a temporary file will be created.
+
+    Returns:
+        str: The absolute path to the saved image file, or an error message if the operation fails.
+    """
+
+    logger.info("save_image tool called with output_path: %s", output_path)
+
+    try:
+        saved_path = save_image_to_disk(image=image, output_path=output_path)
+        return saved_path
+    except Exception as e:
+        return f"There was an error saving the image: {e}"
 
 
 def main():
