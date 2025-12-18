@@ -631,7 +631,6 @@ async def test_text_to_cad_failure():
 @pytest.mark.asyncio
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
 async def test_text_to_cad_success():
-
     from zoo_mcp import kittycad_client
 
     kittycad_client.headers["Cache-Control"] = "no-cache"
@@ -647,7 +646,6 @@ async def test_text_to_cad_success():
 @pytest.mark.asyncio
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
 async def test_edit_kcl_project_success(kcl_project: str):
-
     from zoo_mcp import kittycad_client
 
     kittycad_client.headers["Cache-Control"] = "no-cache"
