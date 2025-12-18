@@ -1,4 +1,7 @@
+import base64
 import io
+import tempfile
+from pathlib import Path
 
 from mcp.server.fastmcp.utilities.types import Image
 from mcp.types import ImageContent
@@ -59,3 +62,39 @@ def encode_image(img_bytes: bytes) -> ImageContent:
     """
     img_obj = Image(data=img_bytes, format="jpeg")
     return img_obj.to_image_content()
+
+
+def save_image_to_disk(image: ImageContent, output_path: str | None = None) -> str:
+    """
+    Saves an ImageContent object to disk.
+
+    Args:
+        image: The ImageContent object containing base64-encoded image data.
+        output_path: The path where the image should be saved. If a directory is
+            provided, a file named 'image.png' will be created in that directory.
+            If None, a temporary file will be created.
+
+    Returns:
+        str: The absolute path to the saved image file.
+    """
+    if output_path is None:
+        # Create a temporary file
+        _, temp_path = tempfile.mkstemp(suffix=".png")
+        path = Path(temp_path)
+    else:
+        path = Path(output_path)
+
+        # If path is a directory, create a default filename
+        if path.is_dir():
+            path = path / "image.png"
+
+        # Ensure parent directory exists
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Decode base64 data
+    image_data = base64.b64decode(image.data)
+
+    # Write to disk
+    path.write_bytes(image_data)
+
+    return str(path.resolve())
