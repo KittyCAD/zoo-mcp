@@ -6,6 +6,17 @@ from mcp.types import ImageContent
 from zoo_mcp import ZooMCPException, logger
 from zoo_mcp.ai_tools import edit_kcl_project as _edit_kcl_project
 from zoo_mcp.ai_tools import text_to_cad as _text_to_cad
+from zoo_mcp.kcl_docs import (
+    get_doc_content,
+    list_available_docs,
+    search_docs,
+)
+from zoo_mcp.kcl_samples import (
+    SampleData,
+    get_sample_content,
+    list_available_samples,
+    search_samples,
+)
 from zoo_mcp.utils.image_utils import encode_image, save_image_to_disk
 from zoo_mcp.zoo_tools import (
     CameraView,
@@ -571,6 +582,173 @@ async def save_image(
         return saved_path
     except Exception as e:
         return f"There was an error saving the image: {e}"
+
+
+@mcp.tool()
+async def list_kcl_docs() -> dict | str:
+    """List all available KCL documentation topics organized by category.
+
+    Returns a dictionary with the following categories:
+    - kcl-lang: KCL language documentation (syntax, types, functions, etc.)
+    - kcl-std-functions: Standard library function documentation
+    - kcl-std-types: Standard library type documentation
+    - kcl-std-consts: Standard library constants documentation
+    - kcl-std-modules: Standard library module documentation
+
+    Each category contains a list of documentation file paths that can be
+    retrieved using get_kcl_doc().
+
+    Returns:
+        dict | str: Categories mapped to lists of available documentation paths.
+        If there was an error, returns an error message string.
+    """
+    logger.info("list_kcl_docs tool called")
+    try:
+        return list_available_docs()
+    except Exception as e:
+        logger.error("list_kcl_docs tool called with error: %s", e)
+        return f"There was an error listing KCL documentation: {e}"
+
+
+@mcp.tool()
+async def search_kcl_docs(query: str, max_results: int = 5) -> list[dict] | str:
+    """Search KCL documentation by keyword.
+
+    Searches across all KCL language and standard library documentation
+    for the given query. Returns relevant excerpts with surrounding context.
+
+    Args:
+        query (str): The search query (case-insensitive).
+        max_results (int): Maximum number of results to return (default: 5).
+
+    Returns:
+        list[dict] | str: List of search results, each containing:
+            - path: The documentation file path
+            - title: The document title (from first heading)
+            - excerpt: A relevant excerpt with the match highlighted in context
+            - match_count: Number of times the query appears in the document
+            If there was an error, returns an error message string.
+    """
+    logger.info("search_kcl_docs tool called with query: %s", query)
+    try:
+        return search_docs(query, max_results)
+    except Exception as e:
+        logger.error("search_kcl_docs tool called with error: %s", e)
+        return f"There was an error searching KCL documentation: {e}"
+
+
+@mcp.tool()
+async def get_kcl_doc(doc_path: str) -> str:
+    """Get the full content of a specific KCL documentation file.
+
+    Use list_kcl_docs() to see available documentation paths, or
+    search_kcl_docs() to find relevant documentation by keyword.
+
+    Args:
+        doc_path (str): The path to the documentation file
+            (e.g., "docs/kcl-lang/functions.md" or "docs/kcl-std/functions/extrude.md")
+
+    Returns:
+        str: The full Markdown content of the documentation file,
+            or an error message if not found. If there was an error, returns an error message string.
+    """
+    logger.info("get_kcl_doc tool called for path: %s", doc_path)
+    try:
+        content = get_doc_content(doc_path)
+        if content is None:
+            return f"Documentation not found: {doc_path}. Use list_kcl_docs() to see available paths."
+        return content
+    except Exception as e:
+        logger.error("get_kcl_doc tool called with error: %s", e)
+        return f"There was an error retrieving KCL documentation: {e}"
+
+
+@mcp.tool()
+async def list_kcl_samples() -> list[dict] | str:
+    """List all available KCL sample projects.
+
+    Returns a list of all available KCL code samples from the Zoo samples
+    repository. Each sample demonstrates a specific CAD modeling technique
+    or creates a particular 3D model.
+
+    Returns:
+        list[dict] | str: List of sample information, each containing:
+            - name: The sample directory name (use with get_kcl_sample)
+            - title: Human-readable title
+            - description: Brief description of what the sample creates
+            - multipleFiles: Whether the sample contains multiple KCL files
+            If there was an error, returns an error message string.
+    """
+    logger.info("list_kcl_samples tool called")
+    try:
+        return list_available_samples()
+    except Exception as e:
+        logger.error("list_kcl_samples tool called with error: %s", e)
+        return f"There was an error listing KCL samples: {e}"
+
+
+@mcp.tool()
+async def search_kcl_samples(query: str, max_results: int = 5) -> list[dict] | str:
+    """Search KCL samples by keyword.
+
+    Searches across all KCL sample titles and descriptions
+    for the given query. Returns matching samples ranked by relevance.
+
+    Args:
+        query (str): The search query (case-insensitive).
+        max_results (int): Maximum number of results to return (default: 5).
+
+    Returns:
+        list[dict] | str: List of search results, each containing:
+            - name: The sample directory name (use with get_kcl_sample)
+            - title: Human-readable title
+            - description: Brief description of the sample
+            - multipleFiles: Whether the sample contains multiple KCL files
+            - match_count: Number of times the query appears in title/description
+            - excerpt: A relevant excerpt with the match in context
+            If there was an error, returns an error message string.
+    """
+    logger.info("search_kcl_samples tool called with query: %s", query)
+    try:
+        return search_samples(query, max_results)
+    except Exception as e:
+        logger.error("search_kcl_samples tool called with error: %s", e)
+        return f"There was an error searching KCL samples: {e}"
+
+
+@mcp.tool()
+async def get_kcl_sample(sample_name: str) -> SampleData | str:
+    """Get the full content of a specific KCL sample including all files.
+
+    Retrieves all KCL files that make up a sample project. Some samples
+    consist of a single main.kcl file, while others have multiple files
+    (e.g., parameters.kcl, components, etc.).
+
+    Use list_kcl_samples() to see available sample names, or
+    search_kcl_samples() to find samples by keyword.
+
+    Args:
+        sample_name (str): The sample directory name
+            (e.g., "ball-bearing", "axial-fan", "gear")
+
+    Returns:
+        SampleData | str: A SampleData dictionary containing:
+            - name: The sample directory name
+            - title: Human-readable title
+            - description: Brief description
+            - multipleFiles: Whether the sample contains multiple files
+            - files: List of SampleFile dictionaries, each with 'filename' and 'content'
+        Returns an error message string if the sample is not found. If there was an error, returns an error message string.
+    """
+    logger.info("get_kcl_sample tool called for sample: %s", sample_name)
+    try:
+        sample = await get_sample_content(sample_name)
+        if sample is None:
+            return f"Sample not found: {sample_name}. Use list_kcl_samples() to see available samples."
+        return sample
+    except Exception as e:
+        logger.error("get_kcl_sample tool called with error: %s", e)
+        return f"There was an error retrieving KCL sample: {e}"
 
 
 def main():
