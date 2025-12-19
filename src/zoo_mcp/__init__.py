@@ -45,7 +45,13 @@ def _initialize_kcl_docs() -> None:
     from zoo_mcp.kcl_docs import initialize_docs_cache
 
     try:
-        asyncio.run(initialize_docs_cache())
+        try:
+            loop = asyncio.get_running_loop()
+            # Already in an event loop, schedule the task
+            loop.create_task(initialize_docs_cache())
+        except RuntimeError:
+            # No running loop, use asyncio.run()
+            asyncio.run(initialize_docs_cache())
     except Exception as e:
         logger.warning(f"Failed to initialize KCL docs cache: {e}")
 
@@ -55,7 +61,13 @@ def _initialize_kcl_samples() -> None:
     from zoo_mcp.kcl_samples import initialize_samples_cache
 
     try:
-        asyncio.run(initialize_samples_cache())
+        try:
+            loop = asyncio.get_running_loop()
+            # Already in an event loop, schedule the task
+            loop.create_task(initialize_samples_cache())
+        except RuntimeError:
+            # No running loop, use asyncio.run()
+            asyncio.run(initialize_samples_cache())
     except Exception as e:
         logger.warning(f"Failed to initialize KCL samples cache: {e}")
 
