@@ -69,6 +69,7 @@ from zoo_mcp.utils.image_utils import create_image_collage
 def _check_kcl_code_or_path(
     kcl_code: str | None,
     kcl_path: Path | str | None,
+    require_main_file: bool = True,
 ) -> None:
     """This is a helper function to check the provided kcl_code or kcl_path for various functions.
         If both are provided, kcl_code is used.
@@ -97,7 +98,7 @@ def _check_kcl_code_or_path(
         if kcl_path.is_file() and kcl_path.suffix != ".kcl":
             logger.error("The provided kcl_path is not a .kcl file")
             raise ZooMCPException("The provided kcl_path is not a .kcl file")
-        if kcl_path.is_dir() and not (kcl_path / "main.kcl").is_file():
+        if kcl_path.is_dir() and require_main_file and not (kcl_path / "main.kcl").is_file():
             logger.error(
                 "The provided kcl_path directory does not contain a main.kcl file"
             )
@@ -628,7 +629,7 @@ def zoo_format_kcl(
 
     logger.info("Formatting the KCL")
 
-    _check_kcl_code_or_path(kcl_code, kcl_path)
+    _check_kcl_code_or_path(kcl_code, kcl_path, require_main_file=False)
 
     try:
         if kcl_code:
@@ -659,7 +660,7 @@ def zoo_lint_and_fix_kcl(
 
     logger.info("Linting and fixing the KCL")
 
-    _check_kcl_code_or_path(kcl_code, kcl_path)
+    _check_kcl_code_or_path(kcl_code, kcl_path, require_main_file=False)
 
     try:
         if kcl_code:
