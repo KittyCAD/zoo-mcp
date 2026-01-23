@@ -80,6 +80,7 @@ def _check_kcl_code_or_path(
     Args:
         kcl_code (str | None): KCL code
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+        require_main_file (bool): Whether to require a main.kcl file in the directory if kcl_path is a directory. Default is True.
 
     Returns:
         None
