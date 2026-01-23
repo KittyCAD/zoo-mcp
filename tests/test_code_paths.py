@@ -58,6 +58,16 @@ def test_check_kcl_code_or_path_dir_without_main_kcl(tmp_path):
     assert "does not contain a main.kcl file" in str(exc_info.value)
 
 
+def test_check_kcl_code_or_path_dir_without_main_kcl_not_required(tmp_path):
+    """Test that providing a directory without main.kcl passes when require_main_file=False."""
+    # Create a temp directory with a .kcl file but no main.kcl
+    (tmp_path / "other.kcl").write_text("// some kcl code")
+    # Should not raise when require_main_file=False
+    _check_kcl_code_or_path(
+        kcl_code=None, kcl_path=str(tmp_path), require_main_file=False
+    )
+
+
 def test_check_kcl_code_or_path_nonexistent_path():
     """Test that providing a nonexistent path raises an exception."""
     with pytest.raises(ZooMCPException) as exc_info:
