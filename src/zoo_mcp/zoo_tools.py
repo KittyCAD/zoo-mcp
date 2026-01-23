@@ -617,7 +617,7 @@ def zoo_format_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
 ) -> str | None:
-    """Format KCL given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+    """Format KCL given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing .kcl files.
 
     Args:
         kcl_code (str | None): KCL code to format.
@@ -647,7 +647,7 @@ def zoo_lint_and_fix_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
 ) -> tuple[str | None, list[str]]:
-    """Lint and fix KCL given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+    """Lint and fix KCL given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing .kcl files.
 
     Args:
         kcl_code (str | None): KCL code to lint and fix.

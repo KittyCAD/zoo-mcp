@@ -228,7 +228,7 @@ async def format_kcl(
     kcl_code: str | None = None,
     kcl_path: str | None = None,
 ) -> str:
-    """Format KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+    """Format KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing .kcl files.
 
     Args:
         kcl_code (str | None): The KCL code to format.
@@ -255,7 +255,7 @@ async def lint_and_fix_kcl(
     kcl_code: str | None = None,
     kcl_path: str | None = None,
 ) -> tuple[str, list[str]]:
-    """Lint and fix KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+    """Lint and fix KCL code given a string of KCL code or a path to a KCL project. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing .kcl files.
 
     Args:
         kcl_code (str | None): The KCL code to lint and fix.
