@@ -63,7 +63,9 @@ def test_check_kcl_code_or_path_dir_without_main_kcl_not_required(tmp_path):
     # Create a temp directory with a .kcl file but no main.kcl
     (tmp_path / "other.kcl").write_text("// some kcl code")
     # Should not raise when require_main_file=False
-    _check_kcl_code_or_path(kcl_code=None, kcl_path=str(tmp_path), require_main_file=False)
+    _check_kcl_code_or_path(
+        kcl_code=None, kcl_path=str(tmp_path), require_main_file=False
+    )
 
 
 def test_check_kcl_code_or_path_nonexistent_path():

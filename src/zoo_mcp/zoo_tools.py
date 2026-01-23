@@ -98,7 +98,11 @@ def _check_kcl_code_or_path(
         if kcl_path.is_file() and kcl_path.suffix != ".kcl":
             logger.error("The provided kcl_path is not a .kcl file")
             raise ZooMCPException("The provided kcl_path is not a .kcl file")
-        if kcl_path.is_dir() and require_main_file and not (kcl_path / "main.kcl").is_file():
+        if (
+            kcl_path.is_dir()
+            and require_main_file
+            and not (kcl_path / "main.kcl").is_file()
+        ):
             logger.error(
                 "The provided kcl_path directory does not contain a main.kcl file"
             )
