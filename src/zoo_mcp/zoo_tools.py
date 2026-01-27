@@ -451,7 +451,7 @@ async def zoo_convert_cad_file(
 
     input_path = Path(input_path)
     input_ext = input_path.suffix.split(".")[1]
-    if input_ext not in [i.value for i in FileImportFormat]:
+    if input_ext not in [i.value for i in FileImportFormat] and input_ext != "stp":
         logger.error("The provided input path does not have a valid extension")
         raise ZooMCPException("The provided input path does not have a valid extension")
     logger.info("Converting the cad file %s", str(input_path.resolve()))
@@ -795,7 +795,7 @@ def zoo_multiview_snapshot_of_cad(
         import_id = ModelingCmdId(uuid4())
 
         input_ext = input_path.suffix.split(".")[1]
-        if input_ext not in [i.value for i in FileImportFormat]:
+        if input_ext not in [i.value for i in FileImportFormat] and input_ext != "stp":
             logger.error("The provided input path does not have a valid extension")
             raise ZooMCPException(
                 "The provided input path does not have a valid extension"
@@ -958,7 +958,7 @@ def zoo_multi_isometric_snapshot_of_cad(
         import_id = ModelingCmdId(uuid4())
 
         input_ext = input_path.suffix.split(".")[1]
-        if input_ext not in [i.value for i in FileImportFormat]:
+        if input_ext not in [i.value for i in FileImportFormat] and input_ext != "stp":
             logger.error("The provided input path does not have a valid extension")
             raise ZooMCPException(
                 "The provided input path does not have a valid extension"
@@ -1275,7 +1275,7 @@ def zoo_snapshot_of_cad(
         import_id = ModelingCmdId(uuid4())
 
         input_ext = input_path.suffix.split(".")[1]
-        if input_ext not in [i.value for i in FileImportFormat]:
+        if input_ext not in [i.value for i in FileImportFormat] and input_ext != "stp":
             logger.error("The provided input path does not have a valid extension")
             raise ZooMCPException(
                 "The provided input path does not have a valid extension"
