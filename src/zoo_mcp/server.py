@@ -440,7 +440,7 @@ async def snapshot_of_cad(
         input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         camera_view (dict | str): The camera to use for the snapshot.
 
-            1. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom', 'isometric' to set the camera to a predefined view.
+            1. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom', 'isometric', 'isometric_front_right', 'isometric_front_left', 'isometric_back_right', 'isometric_back_left' to set the camera to a predefined view.
 
             2. If a dict is provided, supply a dict with the following keys and values:
                "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
@@ -500,7 +500,7 @@ async def snapshot_of_kcl(
         kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
         camera_view (dict | str): The camera to use for the snapshot.
 
-            1. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom', 'isometric' to set the camera to a predefined view.
+            1. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom', 'isometric', 'isometric_front_right', 'isometric_front_left', 'isometric_back_right', 'isometric_back_left' to set the camera to a predefined view.
 
             2. If a dict is provided, supply a dict with the following keys and values:
                "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
