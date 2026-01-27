@@ -65,6 +65,8 @@ from kittycad.models.web_socket_request import OptionModelingCmdReq
 from zoo_mcp import ZooMCPException, kittycad_client, logger
 from zoo_mcp.utils.image_utils import create_image_collage
 
+SUPPORTED_EXTS = {x.value for x in FileImportFormat} | {"stp"}
+
 
 def _check_kcl_code_or_path(
     kcl_code: str | None,
@@ -137,6 +139,26 @@ class CameraView(Enum):
         "top": {"up": [0, 1, 0], "vantage": [0, 0, 1], "center": [0, 0, 0]},
         "bottom": {"up": [0, -1, 0], "vantage": [0, 0, -1], "center": [0, 0, 0]},
         "isometric": {"up": [0, 0, 1], "vantage": [1, -1, 1], "center": [0, 0, 0]},
+        "isometric_front_right": {
+            "up": [0, 0, 1],
+            "vantage": [1, -1, 1],
+            "center": [0, 0, 0],
+        },
+        "isometric_front_left": {
+            "up": [0, 0, 1],
+            "vantage": [-1, -1, 1],
+            "center": [0, 0, 0],
+        },
+        "isometric_back_right": {
+            "up": [0, 0, 1],
+            "vantage": [1, 1, -1],
+            "center": [0, 0, 0],
+        },
+        "isometric_back_left": {
+            "up": [0, 0, 1],
+            "vantage": [-1, 1, -1],
+            "center": [0, 0, 0],
+        },
     }
 
     @staticmethod
@@ -431,7 +453,7 @@ async def zoo_convert_cad_file(
 
     input_path = Path(input_path)
     input_ext = input_path.suffix.split(".")[1]
-    if input_ext not in [i.value for i in FileImportFormat]:
+    if input_ext not in SUPPORTED_EXTS:
         logger.error("The provided input path does not have a valid extension")
         raise ZooMCPException("The provided input path does not have a valid extension")
     logger.info("Converting the cad file %s", str(input_path.resolve()))
@@ -775,7 +797,7 @@ def zoo_multiview_snapshot_of_cad(
         import_id = ModelingCmdId(uuid4())
 
         input_ext = input_path.suffix.split(".")[1]
-        if input_ext not in [i.value for i in FileImportFormat]:
+        if input_ext not in SUPPORTED_EXTS:
             logger.error("The provided input path does not have a valid extension")
             raise ZooMCPException(
                 "The provided input path does not have a valid extension"
@@ -905,6 +927,237 @@ def zoo_multiview_snapshot_of_cad(
         return collage
 
 
+def zoo_multi_isometric_snapshot_of_cad(
+    input_path: Path | str,
+    padding: float = 0.2,
+) -> bytes:
+    """Save a multi-isometric snapshot of a CAD file showing 4 isometric views.
+
+    Args:
+        input_path (Path | str): Path to the CAD file to save a multi-isometric snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        padding (float): The padding to apply to the snapshot. Default is 0.2.
+
+    Returns:
+        bytes or None: The JPEG image contents if successful
+    """
+
+    input_path = Path(input_path)
+
+    # Connect to the websocket.
+    with (
+        kittycad_client.modeling.modeling_commands_ws(
+            fps=30,
+            post_effect=PostEffectType.SSAO,
+            show_grid=False,
+            unlocked_framerate=False,
+            video_res_height=1024,
+            video_res_width=1024,
+            webrtc=False,
+        ) as ws,
+        open(input_path, "rb") as data,
+    ):
+        # Import files request must be sent as binary, because the file contents might be binary.
+        import_id = ModelingCmdId(uuid4())
+
+        input_ext = input_path.suffix.split(".")[1]
+        if input_ext not in SUPPORTED_EXTS:
+            logger.error("The provided input path does not have a valid extension")
+            raise ZooMCPException(
+                "The provided input path does not have a valid extension"
+            )
+
+        input_format = _get_input_format(input_ext)
+        if input_format is None:
+            logger.error("The provided extension is not supported for import")
+            raise ZooMCPException("The provided extension is not supported for import")
+
+        ws.send_binary(
+            WebSocketRequest(
+                OptionModelingCmdReq(
+                    cmd=ModelingCmd(
+                        OptionImportFiles(
+                            files=[ImportFile(data=data.read(), path=str(input_path))],
+                            format=input_format,
+                        )
+                    ),
+                    cmd_id=ModelingCmdId(import_id),
+                )
+            )
+        )
+
+        # Wait for the import to succeed.
+        while True:
+            message = ws.recv().model_dump()
+            if message["request_id"] == import_id:
+                break
+        if message["success"] is not True:
+            logger.error("Failed to import CAD file")
+            raise ZooMCPException("Failed to import CAD file")
+        object_id = message["resp"]["data"]["modeling_response"]["data"]["object_id"]
+
+        # set camera to ortho
+        ortho_cam_id = ModelingCmdId(uuid4())
+        ws.send(
+            WebSocketRequest(
+                OptionModelingCmdReq(
+                    cmd=ModelingCmd(OptionDefaultCameraSetOrthographic()),
+                    cmd_id=ModelingCmdId(ortho_cam_id),
+                )
+            )
+        )
+
+        # Use 4 isometric views from different corners
+        views = [
+            CameraView.to_kittycad_camera(
+                CameraView.views.value["isometric_front_right"]
+            ),
+            CameraView.to_kittycad_camera(
+                CameraView.views.value["isometric_front_left"]
+            ),
+            CameraView.to_kittycad_camera(
+                CameraView.views.value["isometric_back_right"]
+            ),
+            CameraView.to_kittycad_camera(
+                CameraView.views.value["isometric_back_left"]
+            ),
+        ]
+
+        jpeg_contents_list = []
+
+        for view in views:
+            # change camera look at
+            camera_look_id = ModelingCmdId(uuid4())
+            ws.send(
+                WebSocketRequest(
+                    OptionModelingCmdReq(
+                        cmd=ModelingCmd(view),
+                        cmd_id=ModelingCmdId(camera_look_id),
+                    )
+                )
+            )
+
+            focus_id = ModelingCmdId(uuid4())
+            ws.send(
+                WebSocketRequest(
+                    OptionModelingCmdReq(
+                        cmd=ModelingCmd(
+                            OptionZoomToFit(object_ids=[object_id], padding=padding)
+                        ),
+                        cmd_id=ModelingCmdId(focus_id),
+                    )
+                )
+            )
+
+            # Wait for success message.
+            while True:
+                message = ws.recv().model_dump()
+                if message["request_id"] == focus_id:
+                    break
+            if message["success"] is not True:
+                logger.error("Failed to move camera to fit object")
+                raise ZooMCPException("Failed to move camera to fit object")
+
+            # Take a snapshot as a JPEG.
+            snapshot_id = ModelingCmdId(uuid4())
+            ws.send(
+                WebSocketRequest(
+                    OptionModelingCmdReq(
+                        cmd=ModelingCmd(OptionTakeSnapshot(format=ImageFormat.JPEG)),
+                        cmd_id=ModelingCmdId(snapshot_id),
+                    )
+                )
+            )
+
+            # Wait for success message.
+            while True:
+                message = ws.recv().model_dump()
+                if message["request_id"] == snapshot_id:
+                    break
+            if message["success"] is not True:
+                logger.error("Failed to capture snapshot")
+                raise ZooMCPException("Failed to capture snapshot")
+            jpeg_contents = message["resp"]["data"]["modeling_response"]["data"][
+                "contents"
+            ]
+
+            jpeg_contents_list.append(jpeg_contents)
+
+        collage = create_image_collage(jpeg_contents_list)
+
+        return collage
+
+
+async def zoo_multi_isometric_snapshot_of_kcl(
+    kcl_code: str | None,
+    kcl_path: Path | str | None,
+    padding: float = 0.2,
+) -> bytes:
+    """Execute the KCL code and save a multi-isometric snapshot showing 4 isometric views. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): KCL code
+        kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+        padding (float): The padding to apply to the snapshot. Default is 0.2.
+
+    Returns:
+        bytes or None: The JPEG image contents if successful
+    """
+
+    logger.info("Taking a multi-isometric snapshot of KCL")
+
+    _check_kcl_code_or_path(kcl_code, kcl_path)
+
+    try:
+        # Use 4 isometric views from different corners
+        camera_list = [
+            CameraView.to_kcl_camera(CameraView.views.value["isometric_front_right"]),
+            CameraView.to_kcl_camera(CameraView.views.value["isometric_front_left"]),
+            CameraView.to_kcl_camera(CameraView.views.value["isometric_back_right"]),
+            CameraView.to_kcl_camera(CameraView.views.value["isometric_back_left"]),
+        ]
+
+        views = [
+            kcl.SnapshotOptions(camera=camera, padding=padding)
+            for camera in camera_list
+        ]
+
+        if kcl_code:
+            # The stub says list[list[int]] but it actually returns list[bytes]
+            jpeg_contents_list: list[bytes] = cast(
+                list[bytes],
+                cast(
+                    object,
+                    await kcl.execute_code_and_snapshot_views(
+                        kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=views
+                    ),
+                ),
+            )
+        else:
+            # _check_kcl_code_or_path ensures kcl_path is valid when kcl_code is None
+            assert kcl_path is not None
+            kcl_path_resolved = Path(kcl_path)
+            # The stub says list[list[int]] but it actually returns list[bytes]
+            jpeg_contents_list = cast(
+                list[bytes],
+                cast(
+                    object,
+                    await kcl.execute_and_snapshot_views(
+                        str(kcl_path_resolved),
+                        kcl.ImageFormat.Jpeg,
+                        snapshot_options=views,
+                    ),
+                ),
+            )
+
+        collage = create_image_collage(jpeg_contents_list)
+
+        return collage
+
+    except Exception as e:
+        logger.error("Failed to take multi-isometric snapshot: %s", e)
+        raise ZooMCPException(f"Failed to take multi-isometric snapshot: {e}")
+
+
 async def zoo_multiview_snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
@@ -1024,7 +1277,7 @@ def zoo_snapshot_of_cad(
         import_id = ModelingCmdId(uuid4())
 
         input_ext = input_path.suffix.split(".")[1]
-        if input_ext not in [i.value for i in FileImportFormat]:
+        if input_ext not in SUPPORTED_EXTS:
             logger.error("The provided input path does not have a valid extension")
             raise ZooMCPException(
                 "The provided input path does not have a valid extension"

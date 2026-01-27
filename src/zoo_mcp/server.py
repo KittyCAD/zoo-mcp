@@ -30,6 +30,8 @@ from zoo_mcp.zoo_tools import (
     zoo_format_kcl,
     zoo_lint_and_fix_kcl,
     zoo_mock_execute_kcl,
+    zoo_multi_isometric_snapshot_of_cad,
+    zoo_multi_isometric_snapshot_of_kcl,
     zoo_multiview_snapshot_of_cad,
     zoo_multiview_snapshot_of_kcl,
     zoo_snapshot_of_cad,
@@ -365,6 +367,69 @@ async def multiview_snapshot_of_kcl(
 
 
 @mcp.tool()
+async def multi_isometric_snapshot_of_cad(
+    input_file: str,
+) -> ImageContent | str:
+    """Save a multi-isometric snapshot of a CAD file showing 4 isometric views. The input file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+
+    This multi-isometric image shows the render of the model from 4 different isometric views:
+        The top left image is an isometric view from the front-right corner.
+        The top right image is an isometric view from the front-left corner.
+        The bottom left image is an isometric view from the back-right corner.
+        The bottom right image is an isometric view from the back-left corner.
+
+    Args:
+        input_file (str): The path of the file to snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+
+    Returns:
+        ImageContent | str: The multi-isometric snapshot of the CAD file as an image, or an error message if the operation fails.
+    """
+
+    logger.info("multi_isometric_snapshot_of_cad tool called for file: %s", input_file)
+
+    try:
+        image = zoo_multi_isometric_snapshot_of_cad(
+            input_path=input_file,
+        )
+        return encode_image(image)
+    except Exception as e:
+        return f"There was an error creating the multi-isometric snapshot: {e}"
+
+
+@mcp.tool()
+async def multi_isometric_snapshot_of_kcl(
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
+) -> ImageContent | str:
+    """Save a multi-isometric snapshot of KCL code showing 4 isometric views. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    This multi-isometric image shows the render of the model from 4 different isometric views:
+        The top left image is an isometric view from the front-right corner.
+        The top right image is an isometric view from the front-left corner.
+        The bottom left image is an isometric view from the back-right corner.
+        The bottom right image is an isometric view from the back-left corner.
+
+    Args:
+        kcl_code (str | None): The KCL code to export to a CAD file.
+        kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
+
+    Returns:
+        ImageContent | str: The multi-isometric snapshot of the KCL code as an image, or an error message if the operation fails.
+    """
+
+    logger.info("multi_isometric_snapshot_of_kcl tool called")
+
+    try:
+        image = await zoo_multi_isometric_snapshot_of_kcl(
+            kcl_code=kcl_code,
+            kcl_path=kcl_path,
+        )
+        return encode_image(image)
+    except Exception as e:
+        return f"There was an error creating the multi-isometric snapshot: {e}"
+
+
+@mcp.tool()
 async def snapshot_of_cad(
     input_file: str,
     camera_view: dict[str, list[float]] | str = "isometric",
@@ -375,7 +440,7 @@ async def snapshot_of_cad(
         input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
         camera_view (dict | str): The camera to use for the snapshot.
 
-            1. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom', 'isometric' to set the camera to a predefined view.
+            1. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom', 'isometric', 'isometric_front_right', 'isometric_front_left', 'isometric_back_right', 'isometric_back_left' to set the camera to a predefined view.
 
             2. If a dict is provided, supply a dict with the following keys and values:
                "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
@@ -435,7 +500,7 @@ async def snapshot_of_kcl(
         kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
         camera_view (dict | str): The camera to use for the snapshot.
 
-            1. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom', 'isometric' to set the camera to a predefined view.
+            1. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom', 'isometric', 'isometric_front_right', 'isometric_front_left', 'isometric_back_right', 'isometric_back_left' to set the camera to a predefined view.
 
             2. If a dict is provided, supply a dict with the following keys and values:
                "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
