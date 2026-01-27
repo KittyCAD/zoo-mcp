@@ -137,10 +137,26 @@ class CameraView(Enum):
         "top": {"up": [0, 1, 0], "vantage": [0, 0, 1], "center": [0, 0, 0]},
         "bottom": {"up": [0, -1, 0], "vantage": [0, 0, -1], "center": [0, 0, 0]},
         "isometric": {"up": [0, 0, 1], "vantage": [1, -1, 1], "center": [0, 0, 0]},
-        "isometric_front_right": {"up": [0, 0, 1], "vantage": [1, -1, 1], "center": [0, 0, 0]},
-        "isometric_front_left": {"up": [0, 0, 1], "vantage": [-1, -1, 1], "center": [0, 0, 0]},
-        "isometric_back_right": {"up": [0, 0, 1], "vantage": [1, 1, -1], "center": [0, 0, 0]},
-        "isometric_back_left": {"up": [0, 0, 1], "vantage": [-1, 1, -1], "center": [0, 0, 0]},
+        "isometric_front_right": {
+            "up": [0, 0, 1],
+            "vantage": [1, -1, 1],
+            "center": [0, 0, 0],
+        },
+        "isometric_front_left": {
+            "up": [0, 0, 1],
+            "vantage": [-1, -1, 1],
+            "center": [0, 0, 0],
+        },
+        "isometric_back_right": {
+            "up": [0, 0, 1],
+            "vantage": [1, 1, -1],
+            "center": [0, 0, 0],
+        },
+        "isometric_back_left": {
+            "up": [0, 0, 1],
+            "vantage": [-1, 1, -1],
+            "center": [0, 0, 0],
+        },
     }
 
     @staticmethod
@@ -990,10 +1006,18 @@ def zoo_multi_isometric_snapshot_of_cad(
 
         # Use 4 isometric views from different corners
         views = [
-            CameraView.to_kittycad_camera(CameraView.views.value["isometric_front_right"]),
-            CameraView.to_kittycad_camera(CameraView.views.value["isometric_front_left"]),
-            CameraView.to_kittycad_camera(CameraView.views.value["isometric_back_right"]),
-            CameraView.to_kittycad_camera(CameraView.views.value["isometric_back_left"]),
+            CameraView.to_kittycad_camera(
+                CameraView.views.value["isometric_front_right"]
+            ),
+            CameraView.to_kittycad_camera(
+                CameraView.views.value["isometric_front_left"]
+            ),
+            CameraView.to_kittycad_camera(
+                CameraView.views.value["isometric_back_right"]
+            ),
+            CameraView.to_kittycad_camera(
+                CameraView.views.value["isometric_back_left"]
+            ),
         ]
 
         jpeg_contents_list = []
