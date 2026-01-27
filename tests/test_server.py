@@ -421,6 +421,64 @@ async def test_multiview_snapshot_of_kcl_error(empty_step: str):
 
 
 @pytest.mark.asyncio
+async def test_multi_isometric_snapshot_of_cad(cube_stl: str):
+    response = await mcp.call_tool(
+        "multi_isometric_snapshot_of_cad",
+        arguments={
+            "input_file": cube_stl,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[0], list)
+    result = response[0][0]
+    assert isinstance(result, ImageContent)
+
+
+@pytest.mark.asyncio
+async def test_multi_isometric_snapshot_of_cad_error(empty_step: str):
+    response = await mcp.call_tool(
+        "multi_isometric_snapshot_of_cad",
+        arguments={
+            "input_file": empty_step,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "error creating the multi-isometric snapshot" in result
+
+
+@pytest.mark.asyncio
+async def test_multi_isometric_snapshot_of_kcl(cube_kcl: str):
+    response = await mcp.call_tool(
+        "multi_isometric_snapshot_of_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[0], list)
+    result = response[0][0]
+    assert isinstance(result, ImageContent)
+
+
+@pytest.mark.asyncio
+async def test_multi_isometric_snapshot_of_kcl_error(empty_step: str):
+    response = await mcp.call_tool(
+        "multi_isometric_snapshot_of_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": empty_step,
+        },
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert "error creating the multi-isometric snapshot" in result
+
+
+@pytest.mark.asyncio
 async def test_snapshot_of_cad(cube_stl: str):
     response = await mcp.call_tool(
         "snapshot_of_cad",
