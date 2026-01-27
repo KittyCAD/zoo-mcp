@@ -65,6 +65,8 @@ from kittycad.models.web_socket_request import OptionModelingCmdReq
 from zoo_mcp import ZooMCPException, kittycad_client, logger
 from zoo_mcp.utils.image_utils import create_image_collage
 
+SUPPORTED_EXTS = {x.value for x in FileImportFormat} | {"stp"}
+
 
 def _check_kcl_code_or_path(
     kcl_code: str | None,
@@ -451,7 +453,7 @@ async def zoo_convert_cad_file(
 
     input_path = Path(input_path)
     input_ext = input_path.suffix.split(".")[1]
-    if input_ext not in [i.value for i in FileImportFormat] and input_ext != "stp":
+    if input_ext not in SUPPORTED_EXTS:
         logger.error("The provided input path does not have a valid extension")
         raise ZooMCPException("The provided input path does not have a valid extension")
     logger.info("Converting the cad file %s", str(input_path.resolve()))
@@ -795,7 +797,7 @@ def zoo_multiview_snapshot_of_cad(
         import_id = ModelingCmdId(uuid4())
 
         input_ext = input_path.suffix.split(".")[1]
-        if input_ext not in [i.value for i in FileImportFormat] and input_ext != "stp":
+        if input_ext not in SUPPORTED_EXTS:
             logger.error("The provided input path does not have a valid extension")
             raise ZooMCPException(
                 "The provided input path does not have a valid extension"
@@ -958,7 +960,7 @@ def zoo_multi_isometric_snapshot_of_cad(
         import_id = ModelingCmdId(uuid4())
 
         input_ext = input_path.suffix.split(".")[1]
-        if input_ext not in [i.value for i in FileImportFormat] and input_ext != "stp":
+        if input_ext not in SUPPORTED_EXTS:
             logger.error("The provided input path does not have a valid extension")
             raise ZooMCPException(
                 "The provided input path does not have a valid extension"
@@ -1275,7 +1277,7 @@ def zoo_snapshot_of_cad(
         import_id = ModelingCmdId(uuid4())
 
         input_ext = input_path.suffix.split(".")[1]
-        if input_ext not in [i.value for i in FileImportFormat] and input_ext != "stp":
+        if input_ext not in SUPPORTED_EXTS:
             logger.error("The provided input path does not have a valid extension")
             raise ZooMCPException(
                 "The provided input path does not have a valid extension"
