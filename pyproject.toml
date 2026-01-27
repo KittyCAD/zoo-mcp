@@ -12,7 +12,7 @@ dependencies = [
     "mcp[cli]<2.0",
     "pillow<13.0",
     "truststore<1.0",
-    "zoo-kcl>=0.3.117",
+    "zoo-kcl>=0.3.122",
 ]
 authors = [
     { name = "Ryan Barton", email = "ryan@zoo.dev" },
