@@ -37,3 +37,10 @@ def kcl_project():
 def box_with_linter_errors():
     test_file = Path(__file__).parent / "data" / "box_with_linter_errors.kcl"
     yield f"{test_file.resolve()}"
+
+
+@pytest.fixture
+def cube2_step_uppercase():
+    """Fixture for a STEP file with uppercase extension to test case insensitivity."""
+    test_file = Path(__file__).parent / "data" / "cube2.STEP"
+    yield f"{test_file.resolve()}"
