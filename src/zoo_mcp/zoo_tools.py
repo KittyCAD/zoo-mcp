@@ -67,6 +67,24 @@ from zoo_mcp.utils.image_utils import create_image_collage
 
 SUPPORTED_EXTS = {x.value.lower() for x in FileImportFormat} | {"stp"}
 
+# Map alternative extensions to their canonical FileImportFormat values
+_EXT_ALIASES = {
+    "stp": "step",
+}
+
+
+def _normalize_ext(ext: str) -> str:
+    """Normalize a file extension to its canonical FileImportFormat value.
+
+    Args:
+        ext: The file extension (without the leading dot), case-insensitive.
+
+    Returns:
+        The normalized extension that can be used with FileImportFormat.
+    """
+    ext_lower = ext.lower()
+    return _EXT_ALIASES.get(ext_lower, ext_lower)
+
 
 def _check_kcl_code_or_path(
     kcl_code: str | None,
@@ -271,7 +289,7 @@ async def zoo_calculate_center_of_mass(
     async with aiofiles.open(file_path, "rb") as inp:
         data = await inp.read()
 
-    src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
+    src_format = FileImportFormat(_normalize_ext(file_path.suffix.split(".")[1]))
 
     result = kittycad_client.file.create_file_center_of_mass(
         src_format=src_format,
@@ -324,7 +342,7 @@ async def zoo_calculate_mass(
     async with aiofiles.open(file_path, "rb") as inp:
         data = await inp.read()
 
-    src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
+    src_format = FileImportFormat(_normalize_ext(file_path.suffix.split(".")[1]))
 
     result = kittycad_client.file.create_file_mass(
         output_unit=UnitMass(unit_mass),
@@ -366,7 +384,7 @@ async def zoo_calculate_surface_area(file_path: Path | str, unit_area: str) -> f
     async with aiofiles.open(file_path, "rb") as inp:
         data = await inp.read()
 
-    src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
+    src_format = FileImportFormat(_normalize_ext(file_path.suffix.split(".")[1]))
 
     result = kittycad_client.file.create_file_surface_area(
         output_unit=UnitArea(unit_area),
@@ -411,7 +429,7 @@ async def zoo_calculate_volume(file_path: Path | str, unit_vol: str) -> float:
     async with aiofiles.open(file_path, "rb") as inp:
         data = await inp.read()
 
-    src_format = FileImportFormat(file_path.suffix.split(".")[1].lower())
+    src_format = FileImportFormat(_normalize_ext(file_path.suffix.split(".")[1]))
 
     result = kittycad_client.file.create_file_volume(
         output_unit=UnitVolume(unit_vol),
@@ -504,7 +522,7 @@ async def zoo_convert_cad_file(
         data = await inp.read()
 
     export_response = kittycad_client.file.create_file_conversion(
-        src_format=FileImportFormat(input_ext),
+        src_format=FileImportFormat(_normalize_ext(input_ext)),
         output_format=FileExportFormat(export_format),
         body=data,
     )
