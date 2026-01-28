@@ -131,6 +131,36 @@ async def test_calculate_volume_error(cube_stl: str):
 
 
 @pytest.mark.asyncio
+async def test_calculate_volume_uppercase_step_extension(cube2_step_uppercase: str):
+    """Test that CAD files with uppercase extensions (e.g., .STEP) are handled correctly."""
+    response = await mcp.call_tool(
+        "calculate_volume",
+        arguments={"input_file": cube2_step_uppercase, "unit_volume": "cm3"},
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, float)
+    # The cube2.STEP file should have a valid volume
+    assert result > 0
+
+
+@pytest.mark.asyncio
+async def test_calculate_volume_stp_extension(cube_stp: str):
+    """Test that CAD files with .stp extension (alias for .step) are handled correctly."""
+    response = await mcp.call_tool(
+        "calculate_volume",
+        arguments={"input_file": cube_stp, "unit_volume": "cm3"},
+    )
+    assert isinstance(response, Sequence)
+    assert isinstance(response[1], dict)
+    result = response[1]["result"]
+    assert isinstance(result, float)
+    # The .stp file should have a valid volume
+    assert result > 0
+
+
+@pytest.mark.asyncio
 async def test_convert_cad_file(cube_stl: str):
     response = await mcp.call_tool(
         "convert_cad_file",
