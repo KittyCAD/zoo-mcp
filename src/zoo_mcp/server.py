@@ -49,7 +49,7 @@ async def calculate_center_of_mass(input_file: str, unit_length: str) -> dict | 
     """Calculate the center of mass of a 3d object represented by the input file.
 
     Args:
-        input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         unit_length (str): The unit of length to return the result in. One of 'cm', 'ft', 'in', 'm', 'mm', 'yd'
 
     Returns:
@@ -74,7 +74,7 @@ async def calculate_mass(
     """Calculate the mass of a 3d object represented by the input file.
 
     Args:
-        input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         unit_mass (str): The unit of mass to return the result in. One of 'g', 'kg', 'lb'.
         unit_density (str): The unit of density to calculate the mass. One of 'lb:ft3', 'kg:m3'.
         density (float): The density of the material.
@@ -102,7 +102,7 @@ async def calculate_surface_area(input_file: str, unit_area: str) -> float | str
     """Calculate the surface area of a 3d object represented by the input file.
 
     Args:
-        input_file (str): The path of the file to get the surface area from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_file (str): The path of the file to get the surface area from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         unit_area (str): The unit of area to return the result in. One of 'cm2', 'dm2', 'ft2', 'in2', 'km2', 'm2', 'mm2', 'yd2'.
 
     Returns:
@@ -125,7 +125,7 @@ async def calculate_volume(input_file: str, unit_volume: str) -> float | str:
     """Calculate the volume of a 3d object represented by the input file.
 
     Args:
-        input_file (str): The path of the file to get the volume from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_file (str): The path of the file to get the volume from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         unit_volume (str): The unit of volume to return the result in. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
 
     Returns:
@@ -150,7 +150,7 @@ async def convert_cad_file(
     """Convert a CAD file from one format to another CAD file format.
 
     Args:
-        input_path (str): The input cad file to convert. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_path (str): The input cad file to convert. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         export_path (str | None): The path to save the converted CAD file to. If the path is a directory, a temporary file will be created in the directory. If the path is a file, it will be overwritten if the extension is valid.
         export_format (str | None): The format of the exported CAD file. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
 
@@ -307,7 +307,7 @@ async def mock_execute_kcl(
 async def multiview_snapshot_of_cad(
     input_file: str,
 ) -> ImageContent | str:
-    """Save a multiview snapshot of a CAD file. The input file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+    """Save a multiview snapshot of a CAD file. The input file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
 
     This multiview image shows the render of the model from 4 different views:
         The top left images is a front view.
@@ -316,7 +316,7 @@ async def multiview_snapshot_of_cad(
         The bottom right image is an isometric view
 
     Args:
-        input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
 
     Returns:
         ImageContent | str: The multiview snapshot of the CAD file as an image, or an error message if the operation fails.
@@ -370,7 +370,7 @@ async def multiview_snapshot_of_kcl(
 async def multi_isometric_snapshot_of_cad(
     input_file: str,
 ) -> ImageContent | str:
-    """Save a multi-isometric snapshot of a CAD file showing 4 isometric views. The input file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+    """Save a multi-isometric snapshot of a CAD file showing 4 isometric views. The input file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
 
     This multi-isometric image shows the render of the model from 4 different isometric views:
         The top left image is an isometric view from the front-right corner.
@@ -379,7 +379,7 @@ async def multi_isometric_snapshot_of_cad(
         The bottom right image is an isometric view from the back-left corner.
 
     Args:
-        input_file (str): The path of the file to snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_file (str): The path of the file to snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
 
     Returns:
         ImageContent | str: The multi-isometric snapshot of the CAD file as an image, or an error message if the operation fails.
@@ -437,7 +437,7 @@ async def snapshot_of_cad(
     """Save a snapshot of a CAD file.
 
     Args:
-        input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         camera_view (dict | str): The camera to use for the snapshot.
 
             1. If a string is provided, it should be one of 'front', 'back', 'left', 'right', 'top', 'bottom', 'isometric', 'isometric_front_right', 'isometric_front_left', 'isometric_back_right', 'isometric_back_left' to set the camera to a predefined view.
