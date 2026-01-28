@@ -258,7 +258,7 @@ async def zoo_calculate_center_of_mass(
     """Calculate the center of mass of the file
 
     Args:
-        file_path(Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        file_path(Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl (case-insensitive)
         unit_length(str): The unit length to return. This should be one of 'cm', 'ft', 'in', 'm', 'mm', 'yd'
 
     Returns:
@@ -308,7 +308,7 @@ async def zoo_calculate_mass(
     """Calculate the mass of the file in the requested unit
 
     Args:
-        file_path(Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        file_path(Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl  (case-insensitive)
         unit_mass(str): The unit mass to return. This should be one of 'g', 'kg', 'lb'.
         unit_density(str): The unit density of the material. This should be one of 'lb:ft3', 'kg:m3'.
         density(float): The density of the material.
@@ -352,7 +352,7 @@ async def zoo_calculate_surface_area(file_path: Path | str, unit_area: str) -> f
     """Calculate the surface area of the file in the requested unit
 
     Args:
-        file_path (Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        file_path (Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl (case-insensitive)
         unit_area (str): The unit area to return. This should be one of 'cm2', 'dm2', 'ft2', 'in2', 'km2', 'm2', 'mm2', 'yd2'.
 
     Returns:
@@ -397,7 +397,7 @@ async def zoo_calculate_volume(file_path: Path | str, unit_vol: str) -> float:
     """Calculate the volume of the file in the requested unit
 
     Args:
-        file_path (Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        file_path (Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl (case-insensitive)
         unit_vol (str): The unit volume to return. This should be one of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
 
     Returns:
@@ -443,7 +443,7 @@ async def zoo_convert_cad_file(
     """Convert a cad file to another cad file
 
     Args:
-        input_path (Path | str): path to the CAD file to convert. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_path (Path | str): path to the CAD file to convert. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl (case-insensitive)
         export_path (Path | str | None): The path to save the cad file. If no path is provided, a temporary file will be created. If the path is a directory, a temporary file will be created in the directory. If the path is a file, it will be overwritten if the extension is valid.
         export_format (FileExportFormat | str | None): format to export the KCL code to. This should be one of 'fbx', 'glb', 'gltf', 'obj', 'ply', 'step', 'stl'. If no format is provided, the default is 'step'.
 
@@ -771,7 +771,7 @@ def zoo_multiview_snapshot_of_cad(
     """Save a multiview snapshot of a CAD file.
 
     Args:
-        input_path (Path | str): Path to the CAD file to save a multiview snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_path (Path | str): Path to the CAD file to save a multiview snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl (case-insensitive)
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
     Returns:
@@ -934,7 +934,7 @@ def zoo_multi_isometric_snapshot_of_cad(
     """Save a multi-isometric snapshot of a CAD file showing 4 isometric views.
 
     Args:
-        input_path (Path | str): Path to the CAD file to save a multi-isometric snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_path (Path | str): Path to the CAD file to save a multi-isometric snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl (case-insensitive)
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
     Returns:
@@ -1250,7 +1250,7 @@ def zoo_snapshot_of_cad(
     """Save a single view snapshot of a CAD file.
 
     Args:
-        input_path (Path | str): Path to the CAD file to save a snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl
+        input_path (Path | str): Path to the CAD file to save a snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stl (case-insensitive)
         camera (OptionDefaultCameraLookAt | OptionViewIsometric | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
         padding (float): The padding to apply to the snapshot. Default is 0.2.
 
