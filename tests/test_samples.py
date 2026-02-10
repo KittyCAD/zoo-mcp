@@ -1,4 +1,5 @@
 from zoo_mcp import kcl_samples
+from zoo_mcp.utils.data_retrieval_utils import extract_excerpt
 
 
 def test_extract_sample_name():
@@ -11,7 +12,7 @@ def test_extract_sample_name():
 def test_extract_excerpt():
     """Test excerpt extraction with context."""
     content = "This is some text before. The keyword appears here in the middle. And this is text after."
-    excerpt = kcl_samples._extract_excerpt(content, "keyword", context_chars=40)
+    excerpt = extract_excerpt(content, "keyword", context_chars=40)
 
     assert "keyword" in excerpt
     assert len(excerpt) < len(content) + 10  # Account for ellipsis
@@ -20,7 +21,7 @@ def test_extract_excerpt():
 def test_extract_excerpt_no_match():
     """Test excerpt extraction when query is not found."""
     content = "Some content without the search term."
-    excerpt = kcl_samples._extract_excerpt(content, "nonexistent", context_chars=50)
+    excerpt = extract_excerpt(content, "nonexistent", context_chars=50)
 
     # Should return beginning of content as fallback
     assert excerpt.startswith("Some content")
