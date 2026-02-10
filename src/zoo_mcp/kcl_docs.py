@@ -5,37 +5,34 @@ at server startup and provides search functionality for LLMs.
 """
 
 import asyncio
-import posixpath
 import re
 from dataclasses import dataclass, field
+from posixpath import normpath
 from typing import ClassVar
 from urllib.parse import unquote
 
 import httpx
 
 from zoo_mcp import logger
+from zoo_mcp.utils.data_retrieval_utils import (
+    GITHUB_REPO,
+    extract_excerpt,
+    fetch_github_file,
+    is_safe_path_component,
+    resolve_github_ref,
+)
 
-_GITHUB_REPO = "KittyCAD/modeling-app"
-_LATEST_RELEASE_URL = f"https://api.github.com/repos/{_GITHUB_REPO}/releases/latest"
-
-# Only allow safe characters in doc paths: alphanumeric, hyphens, underscores,
+# Only allow safe characters in doc paths
 _SAFE_DOC_PATH_RE = re.compile(r"^docs/[A-Za-z0-9/_-]+\.md$")
 
 
 def _is_safe_doc_path(path: str) -> bool:
-    """Validate that a doc path is safe and does not contain traversal sequences.
-    """
-    # regex on raw path
-    if not _SAFE_DOC_PATH_RE.match(path):
+    """Validate that a doc path is safe and does not contain traversal sequences."""
+    if not is_safe_path_component(path, _SAFE_DOC_PATH_RE):
         return False
 
-    # decode and re-validate (catches double-encoding like %252e)
-    decoded = unquote(path)
-    if not _SAFE_DOC_PATH_RE.match(decoded):
-        return False
-
-    # normalize and verify prefix is preserved
-    normalized = posixpath.normpath(decoded)
+    # Additional check: after normalization the path must still be under docs/
+    normalized = normpath(unquote(path))
     if not normalized.startswith("docs/"):
         return False
 
@@ -98,74 +95,10 @@ def _extract_title(content: str) -> str:
     return ""
 
 
-def _extract_excerpt(content: str, query: str, context_chars: int = 200) -> str:
-    """Extract an excerpt around the first match of query in content."""
-    query_lower = query.lower()
-    content_lower = content.lower()
-
-    pos = content_lower.find(query_lower)
-    if pos == -1:
-        # Return first context_chars of content as fallback
-        return content[:context_chars].strip() + "..."
-
-    # Find start and end positions for excerpt
-    start = max(0, pos - context_chars // 2)
-    end = min(len(content), pos + len(query) + context_chars // 2)
-
-    # Adjust to word boundaries
-    if start > 0:
-        # Find the start of the word
-        while start > 0 and content[start - 1] not in " \n\t":
-            start -= 1
-
-    if end < len(content):
-        # Find the end of the word
-        while end < len(content) and content[end] not in " \n\t":
-            end += 1
-
-    excerpt = content[start:end].strip()
-
-    # Add ellipsis
-    prefix = "..." if start > 0 else ""
-    suffix = "..." if end < len(content) else ""
-
-    return f"{prefix}{excerpt}{suffix}"
-
-
-async def _fetch_doc_content(
-    client: httpx.AsyncClient, path: str, raw_content_base: str
-) -> tuple[str, str | None]:
-    """Fetch a single doc file's content."""
-    url = f"{raw_content_base}{path}"
-    try:
-        response = await client.get(url, follow_redirects=False)
-        if response.is_redirect:
-            logger.warning(f"Rejected redirect for {path}: {response.headers.get('location')}")
-            return path, None
-        response.raise_for_status()
-        return path, response.text
-    except httpx.HTTPError as e:
-        logger.warning(f"Failed to fetch {path}: {e}")
-        return path, None
-
-
-async def _resolve_latest_release_tag(client: httpx.AsyncClient) -> str | None:
-    """Resolve the latest release tag from the GitHub API."""
-    try:
-        response = await client.get(_LATEST_RELEASE_URL)
-        response.raise_for_status()
-        tag = response.json().get("tag_name")
-        if tag and isinstance(tag, str):
-            return tag
-    except httpx.HTTPError as e:
-        logger.warning(f"Failed to fetch latest release tag: {e}")
-    return None
-
-
 async def _fetch_docs_from_github() -> KCLDocs:
     """Fetch all docs from GitHub and return a KCLDocs.
 
-    Uses the latest tagged release instead of the main branch
+    Uses the latest tagged release instead of the main branch.
     """
     docs = KCLDocs()
 
@@ -173,15 +106,10 @@ async def _fetch_docs_from_github() -> KCLDocs:
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         # 1. Resolve the latest release tag (fall back to "main" if unavailable)
-        ref = await _resolve_latest_release_tag(client)
-        if ref:
-            logger.info(f"Using release tag: {ref}")
-        else:
-            ref = "main"
-            logger.warning("Could not resolve latest release, falling back to main")
+        ref = await resolve_github_ref(client)
 
-        tree_url = f"https://api.github.com/repos/{_GITHUB_REPO}/git/trees/{ref}?recursive=1"
-        raw_content_base = f"https://raw.githubusercontent.com/{_GITHUB_REPO}/{ref}/"
+        tree_url = f"https://api.github.com/repos/{GITHUB_REPO}/git/trees/{ref}?recursive=1"
+        raw_content_base = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{ref}/"
 
         # 2. Get file tree from GitHub API
         try:
@@ -202,11 +130,14 @@ async def _fetch_docs_from_github() -> KCLDocs:
         logger.info(f"Found {len(doc_paths)} documentation files")
 
         # 4. Fetch raw content in parallel
-        tasks = [_fetch_doc_content(client, path, raw_content_base) for path in doc_paths]
+        tasks = [
+            fetch_github_file(client, f"{raw_content_base}{path}", path)
+            for path in doc_paths
+        ]
         results = await asyncio.gather(*tasks)
 
-        # 4. Populate cache and index
-        for path, content in results:
+        # 5. Populate cache and index
+        for path, content in zip(doc_paths, results):
             if content is not None:
                 docs.docs[path] = content
 
@@ -279,7 +210,7 @@ def search_docs(query: str, max_results: int = 5) -> list[dict]:
         match_count = content_lower.count(query_lower)
         if match_count > 0:
             title = _extract_title(content)
-            excerpt = _extract_excerpt(content, query)
+            excerpt = extract_excerpt(content, query)
 
             results.append(
                 {

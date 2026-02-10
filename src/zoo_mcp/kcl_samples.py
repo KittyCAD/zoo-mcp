@@ -5,47 +5,26 @@ at server startup and provides search functionality for LLMs.
 """
 
 import asyncio
-import posixpath
 import re
 from dataclasses import dataclass, field
 from typing import ClassVar, TypedDict
-from urllib.parse import unquote
 
 import httpx
 
 from zoo_mcp import logger
+from zoo_mcp.utils.data_retrieval_utils import (
+    GITHUB_REPO,
+    extract_excerpt,
+    fetch_github_file,
+    is_safe_path_component,
+    resolve_github_ref,
+)
 
-_GITHUB_REPO = "KittyCAD/modeling-app"
-_LATEST_RELEASE_URL = f"https://api.github.com/repos/{_GITHUB_REPO}/releases/latest"
 _SAMPLES_PATH = "public/kcl-samples"
 
-# Only allow safe characters in sample names and filenames: alphanumeric,
-# hyphens, underscores, and dots (for file extensions). No slashes, percent
-# signs, or other characters that could enable path traversal.
+# Only allow safe characters in sample names and filenames
 _SAFE_NAME_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 _SAFE_FILENAME_RE = re.compile(r"^[A-Za-z0-9_-]+\.kcl$")
-
-
-def _is_safe_path_component(value: str, pattern: re.Pattern[str]) -> bool:
-    """Validate that a path component is safe"""
-    if not value:
-        return False
-
-    # Layer 1: regex on raw value
-    if not pattern.match(value):
-        return False
-
-    # Layer 2: decode and re-validate
-    decoded = unquote(value)
-    if not pattern.match(decoded):
-        return False
-
-    # Layer 3: normalize and verify no directory traversal
-    normalized = posixpath.normpath(decoded)
-    if normalized != decoded or normalized.startswith(".."):
-        return False
-
-    return True
 
 
 class SampleMetadata(TypedDict):
@@ -109,64 +88,6 @@ def _extract_sample_name(path: str) -> str:
     return path.split("/")[0] if "/" in path else path
 
 
-def _extract_excerpt(content: str, query: str, context_chars: int = 200) -> str:
-    """Extract an excerpt around the first match of query in content."""
-    query_lower = query.lower()
-    content_lower = content.lower()
-
-    pos = content_lower.find(query_lower)
-    if pos == -1:
-        # Return first context_chars of content as fallback
-        return content[:context_chars].strip() + "..."
-
-    # Find start and end positions for excerpt
-    start = max(0, pos - context_chars // 2)
-    end = min(len(content), pos + len(query) + context_chars // 2)
-
-    # Adjust to word boundaries
-    if start > 0:
-        while start > 0 and content[start - 1] not in " \n\t":
-            start -= 1
-
-    if end < len(content):
-        while end < len(content) and content[end] not in " \n\t":
-            end += 1
-
-    excerpt = content[start:end].strip()
-
-    prefix = "..." if start > 0 else ""
-    suffix = "..." if end < len(content) else ""
-
-    return f"{prefix}{excerpt}{suffix}"
-
-
-async def _fetch_file_content(
-    client: httpx.AsyncClient,
-    raw_content_base: str,
-    sample_name: str,
-    filename: str,
-) -> tuple[str, str | None]:
-    """Fetch a single sample file's content.
-
-    Uses follow_redirects=False to prevent the server from silently
-    resolving traversal paths to content outside the samples directory.
-    """
-    url = f"{raw_content_base}{sample_name}/{filename}"
-    try:
-        response = await client.get(url, follow_redirects=False)
-        if response.is_redirect:
-            logger.warning(
-                f"Rejected redirect for {sample_name}/{filename}: "
-                f"{response.headers.get('location')}"
-            )
-            return filename, None
-        response.raise_for_status()
-        return filename, response.text
-    except httpx.HTTPError as e:
-        logger.warning(f"Failed to fetch {sample_name}/{filename}: {e}")
-        return filename, None
-
-
 async def _fetch_sample_files(
     client: httpx.AsyncClient,
     raw_content_base: str,
@@ -175,46 +96,32 @@ async def _fetch_sample_files(
 ) -> dict[str, str]:
     """Fetch all files for a sample."""
     tasks = [
-        _fetch_file_content(client, raw_content_base, sample_name, f)
-        for f in filenames
+        fetch_github_file(
+            client,
+            f"{raw_content_base}{sample_name}/{filename}",
+            f"{sample_name}/{filename}",
+        )
+        for filename in filenames
     ]
     results = await asyncio.gather(*tasks)
-    return {filename: content for filename, content in results if content is not None}
-
-
-async def _resolve_latest_release_tag(client: httpx.AsyncClient) -> str | None:
-    """Resolve the latest release tag from the GitHub API."""
-    try:
-        response = await client.get(_LATEST_RELEASE_URL)
-        response.raise_for_status()
-        tag = response.json().get("tag_name")
-        if tag and isinstance(tag, str):
-            return tag
-    except httpx.HTTPError as e:
-        logger.warning(f"Failed to fetch latest release tag: {e}")
-    return None
+    return {
+        filename: content
+        for filename, content in zip(filenames, results)
+        if content is not None
+    }
 
 
 async def _fetch_manifest_from_github() -> KCLSamples:
-    """Fetch the manifest from GitHub and return a KCLSamples instance.
-
-    Uses the latest tagged release instead of the main branch to reduce
-    the attack surface from arbitrary repository commits.
-    """
+    """Fetch the manifest from GitHub and return a KCLSamples instance."""
     samples = KCLSamples()
 
     logger.info("Fetching KCL samples manifest from GitHub...")
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         # 1. Resolve the latest release tag (fall back to "main" if unavailable)
-        ref = await _resolve_latest_release_tag(client)
-        if ref:
-            logger.info(f"Using release tag for samples: {ref}")
-        else:
-            ref = "main"
-            logger.warning("Could not resolve latest release, falling back to main")
+        ref = await resolve_github_ref(client)
 
-        raw_content_base = f"https://raw.githubusercontent.com/{_GITHUB_REPO}/{ref}/{_SAMPLES_PATH}/"
+        raw_content_base = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{ref}/{_SAMPLES_PATH}/"
         manifest_url = f"{raw_content_base}manifest.json"
 
         # Store ref for later use when fetching sample files on-demand
@@ -233,7 +140,7 @@ async def _fetch_manifest_from_github() -> KCLSamples:
             sample_name = _extract_sample_name(
                 entry.get("pathFromProjectDirectoryToFirstFile", "")
             )
-            if sample_name and _is_safe_path_component(sample_name, _SAFE_NAME_RE):
+            if sample_name and is_safe_path_component(sample_name, _SAFE_NAME_RE):
                 samples.manifest[sample_name] = entry
             elif sample_name:
                 logger.warning(f"Rejected unsafe sample name from manifest: {sample_name!r}")
@@ -317,7 +224,7 @@ def search_samples(query: str, max_results: int = 5) -> list[dict]:
             title_matches = title.lower().count(query_lower)
             score = match_count + (title_matches * 3)  # Boost title matches
 
-            excerpt = _extract_excerpt(searchable, query, context_chars=150)
+            excerpt = extract_excerpt(searchable, query, context_chars=150)
 
             results.append(
                 {
@@ -363,7 +270,7 @@ async def get_sample_content(sample_name: str) -> SampleData | None:
     samples = KCLSamples.get()
 
     # Validate sample name against allowlist
-    if not _is_safe_path_component(sample_name, _SAFE_NAME_RE):
+    if not is_safe_path_component(sample_name, _SAFE_NAME_RE):
         return None
 
     metadata = samples.manifest.get(sample_name)
@@ -378,7 +285,7 @@ async def get_sample_content(sample_name: str) -> SampleData | None:
         raw_filenames = metadata.get("files", ["main.kcl"])
         filenames = []
         for f in raw_filenames:
-            if _is_safe_path_component(f, _SAFE_FILENAME_RE):
+            if is_safe_path_component(f, _SAFE_FILENAME_RE):
                 filenames.append(f)
             else:
                 logger.warning(f"Rejected unsafe filename in sample {sample_name!r}: {f!r}")
@@ -386,7 +293,7 @@ async def get_sample_content(sample_name: str) -> SampleData | None:
         if not filenames:
             return None
 
-        raw_content_base = f"https://raw.githubusercontent.com/{_GITHUB_REPO}/{samples._ref}/{_SAMPLES_PATH}/"
+        raw_content_base = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{samples._ref}/{_SAMPLES_PATH}/"
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             file_contents = await _fetch_sample_files(
