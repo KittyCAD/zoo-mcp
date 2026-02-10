@@ -13,9 +13,9 @@
 ### Testing and Quality
 - `uv run -n auto pytest` - Run all tests
 - `uv run pytest tests/test_server.py` - Run specific test file
-- `uvx ruff check` - Run linter
-- `uvx ruff format` - Format code
-- `uvx ty check` - Type check source code
+- `ruff check` - Run linter
+- `ruff format` - Format code
+- `uv run ty check` - Type check source code
 
 ### Integration Commands
 - `uv run mcp install src/zoo_mcp/server.py` - Install server for Claude Desktop integration
