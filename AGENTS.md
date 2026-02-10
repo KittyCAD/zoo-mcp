@@ -1,4 +1,5 @@
 ## Development Commands
+Before committing any code, ensure all tests pass, formatting is good, linting is clean, and type checks succeed.
 
 ### Environment Setup
 - `uv venv` - Create virtual environment
