@@ -15,10 +15,8 @@ import httpx
 
 from zoo_mcp import logger
 
-GITHUB_TREE_URL = (
-    "https://api.github.com/repos/KittyCAD/modeling-app/git/trees/main?recursive=1"
-)
-RAW_CONTENT_BASE = "https://raw.githubusercontent.com/KittyCAD/modeling-app/main/"
+_GITHUB_REPO = "KittyCAD/modeling-app"
+_LATEST_RELEASE_URL = f"https://api.github.com/repos/{_GITHUB_REPO}/releases/latest"
 
 # Only allow safe characters in doc paths: alphanumeric, hyphens, underscores,
 _SAFE_DOC_PATH_RE = re.compile(r"^docs/[A-Za-z0-9/_-]+\.md$")
@@ -135,10 +133,10 @@ def _extract_excerpt(content: str, query: str, context_chars: int = 200) -> str:
 
 
 async def _fetch_doc_content(
-    client: httpx.AsyncClient, path: str
+    client: httpx.AsyncClient, path: str, raw_content_base: str
 ) -> tuple[str, str | None]:
     """Fetch a single doc file's content."""
-    url = f"{RAW_CONTENT_BASE}{path}"
+    url = f"{raw_content_base}{path}"
     try:
         response = await client.get(url, follow_redirects=False)
         if response.is_redirect:
@@ -151,24 +149,50 @@ async def _fetch_doc_content(
         return path, None
 
 
+async def _resolve_latest_release_tag(client: httpx.AsyncClient) -> str | None:
+    """Resolve the latest release tag from the GitHub API."""
+    try:
+        response = await client.get(_LATEST_RELEASE_URL)
+        response.raise_for_status()
+        tag = response.json().get("tag_name")
+        if tag and isinstance(tag, str):
+            return tag
+    except httpx.HTTPError as e:
+        logger.warning(f"Failed to fetch latest release tag: {e}")
+    return None
+
+
 async def _fetch_docs_from_github() -> KCLDocs:
-    """Fetch all docs from GitHub and return a KCLDocs."""
+    """Fetch all docs from GitHub and return a KCLDocs.
+
+    Uses the latest tagged release instead of the main branch
+    """
     docs = KCLDocs()
 
     logger.info("Fetching KCL documentation from GitHub...")
 
     async with httpx.AsyncClient(timeout=30.0) as client:
-        # 1. Get file tree from GitHub API
+        # 1. Resolve the latest release tag (fall back to "main" if unavailable)
+        ref = await _resolve_latest_release_tag(client)
+        if ref:
+            logger.info(f"Using release tag: {ref}")
+        else:
+            ref = "main"
+            logger.warning("Could not resolve latest release, falling back to main")
+
+        tree_url = f"https://api.github.com/repos/{_GITHUB_REPO}/git/trees/{ref}?recursive=1"
+        raw_content_base = f"https://raw.githubusercontent.com/{_GITHUB_REPO}/{ref}/"
+
+        # 2. Get file tree from GitHub API
         try:
-            response = await client.get(GITHUB_TREE_URL)
+            response = await client.get(tree_url)
             response.raise_for_status()
             tree_data = response.json()
         except httpx.HTTPError as e:
             logger.warning(f"Failed to fetch GitHub tree: {e}")
             return docs
 
-        # 2. Filter for docs/*.md files, rejecting paths with
-        # URL-encoded or unexpected characters to prevent traversal
+        # 3. Filter for docs/*.md files
         doc_paths: list[str] = []
         for item in tree_data.get("tree", []):
             path = item.get("path", "")
@@ -177,8 +201,8 @@ async def _fetch_docs_from_github() -> KCLDocs:
 
         logger.info(f"Found {len(doc_paths)} documentation files")
 
-        # 3. Fetch raw content in parallel
-        tasks = [_fetch_doc_content(client, path) for path in doc_paths]
+        # 4. Fetch raw content in parallel
+        tasks = [_fetch_doc_content(client, path, raw_content_base) for path in doc_paths]
         results = await asyncio.gather(*tasks)
 
         # 4. Populate cache and index
