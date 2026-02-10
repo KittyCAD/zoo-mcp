@@ -1,6 +1,7 @@
 import json
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 import pytest_asyncio
@@ -9,6 +10,22 @@ from mcp.types import ImageContent, TextContent
 from zoo_mcp.kcl_docs import KCLDocs
 from zoo_mcp.kcl_samples import KCLSamples
 from zoo_mcp.server import mcp
+
+
+def _meta_result(response: Sequence[Any] | dict[str, Any]) -> Any:
+    """Extract response[1]["result"] with proper typing for ty."""
+    assert isinstance(response, Sequence)
+    meta = response[1]
+    assert isinstance(meta, dict)
+    return cast(dict[str, Any], meta)["result"]
+
+
+def _content_list(response: Sequence[Any] | dict[str, Any]) -> list[Any]:
+    """Extract response[0] as a typed list for ty."""
+    assert isinstance(response, Sequence)
+    content = response[0]
+    assert isinstance(content, list)
+    return cast(list[Any], content)
 
 
 @pytest.mark.asyncio
@@ -20,9 +37,7 @@ async def test_calculate_center_of_mass(cube_stl: str):
             "unit_length": "mm",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert isinstance(result, dict)
     assert "x" in result and "y" in result and "z" in result
     assert result["x"] == pytest.approx(5.0)
@@ -39,9 +54,7 @@ async def test_calculate_center_of_mass_error(cube_stl: str):
             "unit_length": "asdf",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "not a valid UnitLength" in result
 
 
@@ -56,9 +69,7 @@ async def test_calculate_mass(cube_stl: str):
             "density": 1000.0,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert isinstance(result, float)
     assert result == pytest.approx(1.0)
 
@@ -74,9 +85,7 @@ async def test_calculate_mass_error(cube_stl: str):
             "density": 1000.0,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "not a valid UnitMass" in result
 
 
@@ -85,9 +94,7 @@ async def test_calculate_surface_area(cube_stl: str):
     response = await mcp.call_tool(
         "calculate_surface_area", arguments={"input_file": cube_stl, "unit_area": "mm2"}
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert isinstance(result, float)
     assert result == pytest.approx(600.0)
 
@@ -101,9 +108,7 @@ async def test_calculate_surface_area_error(cube_stl: str):
             "unit_area": "asdf",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "not a valid UnitArea" in result
 
 
@@ -112,9 +117,7 @@ async def test_calculate_volume(cube_stl: str):
     response = await mcp.call_tool(
         "calculate_volume", arguments={"input_file": cube_stl, "unit_volume": "cm3"}
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert isinstance(result, float)
     assert result == pytest.approx(1.0)
 
@@ -124,9 +127,7 @@ async def test_calculate_volume_error(cube_stl: str):
     response = await mcp.call_tool(
         "calculate_volume", arguments={"input_file": cube_stl, "unit_volume": "asdf"}
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "not a valid UnitVolume" in result
 
 
@@ -137,9 +138,7 @@ async def test_calculate_volume_uppercase_step_extension(cube2_step_uppercase: s
         "calculate_volume",
         arguments={"input_file": cube2_step_uppercase, "unit_volume": "cm3"},
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert isinstance(result, float)
     # The cube2.STEP file should have a valid volume
     assert result > 0
@@ -152,9 +151,7 @@ async def test_calculate_volume_stp_extension(cube_stp: str):
         "calculate_volume",
         arguments={"input_file": cube_stp, "unit_volume": "cm3"},
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert isinstance(result, float)
     # The .stp file should have a valid volume
     assert result > 0
@@ -170,9 +167,7 @@ async def test_convert_cad_file(cube_stl: str):
             "export_format": "obj",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert Path(result).exists()
     assert Path(result).stat().st_size != 0
 
@@ -187,9 +182,7 @@ async def test_convert_cad_file_error(empty_step: str):
             "export_format": "asdf",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "error converting the CAD" in result
 
 
@@ -202,9 +195,7 @@ async def test_execute_kcl(cube_kcl: str):
             "kcl_path": cube_kcl,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert isinstance(result, (tuple, list))
     assert result[0] is True
     assert "KCL code executed successfully" in result[1]
@@ -219,9 +210,7 @@ async def test_execute_kcl_error():
             "kcl_path": None,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert isinstance(result, (tuple, list))
     assert result[0] is False
     assert "Failed to execute KCL code" in result[1]
@@ -238,9 +227,7 @@ async def test_export_kcl(cube_kcl: str):
             "export_format": "step",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert Path(result).exists()
     assert Path(result).stat().st_size != 0
 
@@ -256,9 +243,7 @@ async def test_export_kcl_error():
             "export_format": "step",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "error exporting the CAD" in result
 
 
@@ -271,9 +256,7 @@ async def test_format_kcl_path_success(cube_kcl: str):
             "kcl_path": cube_kcl,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "Successfully formatted KCL code at" in result
 
 
@@ -286,9 +269,7 @@ async def test_format_kcl_str_success(cube_kcl: str):
             "kcl_path": None,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "|>" in result
 
 
@@ -301,9 +282,7 @@ async def test_format_kcl_error(cube_stl: str):
             "kcl_path": cube_stl,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "error formatting the KCL" in result
 
 
@@ -322,9 +301,7 @@ async def test_lint_and_fix_kcl_str_success():
             "kcl_path": None,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    fixed_code, _ = response[1]["result"]
+    fixed_code, _ = _meta_result(response)
     assert fixed_code != code
 
 
@@ -337,9 +314,7 @@ async def test_lint_and_fix_kcl_path_success(kcl_project: str):
             "kcl_path": kcl_project,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    fixed_code_msg, _ = response[1]["result"]
+    fixed_code_msg, _ = _meta_result(response)
     assert "Successfully linted and fixed KCL code" in fixed_code_msg
 
 
@@ -352,9 +327,7 @@ async def test_lint_and_fix_kcl_error(cube_stl: str):
             "kcl_path": cube_stl,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    fixed_code_msg, _ = response[1]["result"]
+    fixed_code_msg, _ = _meta_result(response)
     assert "error linting and fixing" in fixed_code_msg
 
 
@@ -367,9 +340,7 @@ async def test_mock_execute_kcl(cube_kcl: str):
             "kcl_path": cube_kcl,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert isinstance(result, (tuple, list))
     assert result[0] is True
     assert "KCL code mock executed successfully" in result[1]
@@ -384,9 +355,7 @@ async def test_mock_execute_kcl_error():
             "kcl_path": None,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert isinstance(result, (tuple, list))
     assert result[0] is False
     assert "Failed to mock execute KCL code" in result[1]
@@ -400,9 +369,7 @@ async def test_multiview_snapshot_of_cad(cube_stl: str):
             "input_file": cube_stl,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[0], list)
-    result = response[0][0]
+    result = _content_list(response)[0]
     assert isinstance(result, ImageContent)
 
 
@@ -414,9 +381,7 @@ async def test_multiview_snapshot_of_cad_error(empty_step: str):
             "input_file": empty_step,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "error creating the multiview snapshot" in result
 
 
@@ -429,9 +394,7 @@ async def test_multiview_snapshot_of_kcl(cube_kcl: str):
             "kcl_path": cube_kcl,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[0], list)
-    result = response[0][0]
+    result = _content_list(response)[0]
     assert isinstance(result, ImageContent)
 
 
@@ -444,9 +407,7 @@ async def test_multiview_snapshot_of_kcl_error(empty_step: str):
             "kcl_path": empty_step,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "error creating the multiview snapshot" in result
 
 
@@ -458,9 +419,7 @@ async def test_multi_isometric_snapshot_of_cad(cube_stl: str):
             "input_file": cube_stl,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[0], list)
-    result = response[0][0]
+    result = _content_list(response)[0]
     assert isinstance(result, ImageContent)
 
 
@@ -472,9 +431,7 @@ async def test_multi_isometric_snapshot_of_cad_error(empty_step: str):
             "input_file": empty_step,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "error creating the multi-isometric snapshot" in result
 
 
@@ -487,9 +444,7 @@ async def test_multi_isometric_snapshot_of_kcl(cube_kcl: str):
             "kcl_path": cube_kcl,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[0], list)
-    result = response[0][0]
+    result = _content_list(response)[0]
     assert isinstance(result, ImageContent)
 
 
@@ -502,9 +457,7 @@ async def test_multi_isometric_snapshot_of_kcl_error(empty_step: str):
             "kcl_path": empty_step,
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "error creating the multi-isometric snapshot" in result
 
 
@@ -517,9 +470,7 @@ async def test_snapshot_of_cad(cube_stl: str):
             "camera_view": "isometric",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[0], list)
-    result = response[0][0]
+    result = _content_list(response)[0]
     assert isinstance(result, ImageContent)
 
 
@@ -532,9 +483,7 @@ async def test_snapshot_of_cad_error(empty_step: str):
             "camera_view": "isometric",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "error creating the snapshot" in result
 
 
@@ -551,9 +500,7 @@ async def test_snapshot_of_cad_camera(cube_stl: str):
             },
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[0], list)
-    result = response[0][0]
+    result = _content_list(response)[0]
     assert isinstance(result, ImageContent)
 
 
@@ -568,9 +515,7 @@ async def test_snapshot_of_cad_camera_error(empty_step: str):
             },
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "error creating the snapshot" in result
 
 
@@ -583,9 +528,7 @@ async def test_snapshot_of_cad_view(cube_stl: str):
             "camera_view": "front",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[0], list)
-    result = response[0][0]
+    result = _content_list(response)[0]
     assert isinstance(result, ImageContent)
 
 
@@ -598,9 +541,7 @@ async def test_snapshot_of_cad_view_error(cube_stl: str):
             "camera_view": "asdf",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "Invalid camera view" in result
 
 
@@ -614,9 +555,7 @@ async def test_snapshot_of_kcl(cube_kcl: str):
             "camera_view": "isometric",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[0], list)
-    result = response[0][0]
+    result = _content_list(response)[0]
     assert isinstance(result, ImageContent)
 
 
@@ -630,9 +569,7 @@ async def test_snapshot_of_kcl_error(empty_step: str):
             "camera_view": "isometric",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "error creating the snapshot" in result
 
 
@@ -650,9 +587,7 @@ async def test_snapshot_of_kcl_camera(cube_kcl: str):
             },
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[0], list)
-    result = response[0][0]
+    result = _content_list(response)[0]
     assert isinstance(result, ImageContent)
 
 
@@ -668,9 +603,7 @@ async def test_snapshot_of_kcl_camera_error(empty_kcl: str):
             },
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "error creating the snapshot" in result
 
 
@@ -684,9 +617,7 @@ async def test_snapshot_of_kcl_view(cube_kcl: str):
             "camera_view": "front",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[0], list)
-    result = response[0][0]
+    result = _content_list(response)[0]
     assert isinstance(result, ImageContent)
 
 
@@ -700,9 +631,7 @@ async def test_snapshot_of_kcl_view_error(cube_kcl: str):
             "camera_view": "asdf",
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "Invalid camera view" in result
 
 
@@ -710,9 +639,7 @@ async def test_snapshot_of_kcl_view_error(cube_kcl: str):
 async def test_text_to_cad_failure():
     prompt = "the quick brown fox jumps over the lazy dog"
     response = await mcp.call_tool("text_to_cad", arguments={"prompt": prompt})
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "400 Bad Request" in result
 
 
@@ -725,9 +652,7 @@ async def test_text_to_cad_success():
 
     prompt = "Create a cube centered at the origin with side length 10mm."
     response = await mcp.call_tool("text_to_cad", arguments={"prompt": prompt})
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert "/*\nGenerated by Text-to-CAD" in result
 
 
@@ -747,9 +672,7 @@ async def test_edit_kcl_project_success(kcl_project: str):
         },
     )
 
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert isinstance(result, dict)
     assert "main.kcl" in result.keys()
     assert "bench-parts.kcl" in result.keys()
@@ -767,9 +690,7 @@ async def test_edit_kcl_project_error(kcl_project: str):
         },
     )
 
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert isinstance(result, str)
     assert "400 Bad Request" in result
 
@@ -799,11 +720,7 @@ async def live_docs_cache():
 async def test_list_kcl_docs(live_docs_cache):
     """Test that list_kcl_docs returns categorized documentation."""
     response = await mcp.call_tool("list_kcl_docs", arguments={})
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) == 1
     assert isinstance(inner_list[0], TextContent)
     result = json.loads(inner_list[0].text)
@@ -829,12 +746,8 @@ async def test_search_kcl_docs(live_docs_cache):
     response = await mcp.call_tool(
         "search_kcl_docs", arguments={"query": "extrude", "max_results": 5}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
     # FastMCP returns list results as [list_of_TextContent]
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) > 0, "Should find results for 'extrude'"
 
     # Parse all results
@@ -861,11 +774,7 @@ async def test_search_kcl_docs_sketch(live_docs_cache):
     response = await mcp.call_tool(
         "search_kcl_docs", arguments={"query": "sketch", "max_results": 10}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) > 0, "Should find results for 'sketch'"
 
     result = [json.loads(tc.text) for tc in inner_list]
@@ -883,11 +792,7 @@ async def test_search_kcl_docs_no_results(live_docs_cache):
         "search_kcl_docs",
         arguments={"query": "xyznonexistentterm12345abc", "max_results": 5},
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) == 0, "Should find no results for gibberish query"
 
 
@@ -898,11 +803,7 @@ async def test_search_kcl_docs_empty_query(live_docs_cache):
     response = await mcp.call_tool(
         "search_kcl_docs", arguments={"query": "", "max_results": 5}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) == 1
 
     result = json.loads(inner_list[0].text)
@@ -916,11 +817,7 @@ async def test_get_kcl_doc_functions(live_docs_cache):
     response = await mcp.call_tool(
         "get_kcl_doc", arguments={"doc_path": "docs/kcl-lang/functions.md"}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) == 1
 
     result = inner_list[0].text
@@ -937,11 +834,7 @@ async def test_get_kcl_doc_extrude(live_docs_cache):
     response = await mcp.call_tool(
         "get_kcl_doc", arguments={"doc_path": "docs/kcl-std/functions/extrude.md"}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) == 1
 
     result = inner_list[0].text
@@ -956,11 +849,7 @@ async def test_get_kcl_doc_not_found(live_docs_cache):
     response = await mcp.call_tool(
         "get_kcl_doc", arguments={"doc_path": "docs/nonexistent/fake.md"}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) == 1
 
     result = inner_list[0].text
@@ -975,11 +864,7 @@ async def test_get_kcl_doc_path_traversal(live_docs_cache):
     response = await mcp.call_tool(
         "get_kcl_doc", arguments={"doc_path": "../../../etc/passwd"}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) == 1
 
     result = inner_list[0].text
@@ -1012,11 +897,7 @@ async def live_samples_cache():
 async def test_list_kcl_samples(live_samples_cache):
     """Test that list_kcl_samples returns sample information."""
     response = await mcp.call_tool("list_kcl_samples", arguments={})
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) > 100, "Should have many samples"
 
     # Parse first result and check structure
@@ -1034,11 +915,7 @@ async def test_search_kcl_samples_gear(live_samples_cache):
     response = await mcp.call_tool(
         "search_kcl_samples", arguments={"query": "gear", "max_results": 5}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) > 0, "Should find results for 'gear'"
 
     result = [json.loads(tc.text) for tc in inner_list]
@@ -1063,11 +940,7 @@ async def test_search_kcl_samples_bearing(live_samples_cache):
     response = await mcp.call_tool(
         "search_kcl_samples", arguments={"query": "bearing", "max_results": 5}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) > 0, "Should find results for 'bearing'"
 
     result = [json.loads(tc.text) for tc in inner_list]
@@ -1085,11 +958,7 @@ async def test_search_kcl_samples_no_results(live_samples_cache):
         "search_kcl_samples",
         arguments={"query": "xyznonexistentterm12345abc", "max_results": 5},
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) == 0, "Should find no results for gibberish query"
 
 
@@ -1100,11 +969,7 @@ async def test_search_kcl_samples_empty_query(live_samples_cache):
     response = await mcp.call_tool(
         "search_kcl_samples", arguments={"query": "", "max_results": 5}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) == 1
 
     result = json.loads(inner_list[0].text)
@@ -1118,10 +983,7 @@ async def test_get_kcl_sample_single_file(live_samples_cache):
     response = await mcp.call_tool(
         "get_kcl_sample", arguments={"sample_name": "ball-bearing"}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
 
     assert isinstance(result, dict)
     assert result["name"] == "ball-bearing"
@@ -1143,10 +1005,7 @@ async def test_get_kcl_sample_multi_file(live_samples_cache):
     response = await mcp.call_tool(
         "get_kcl_sample", arguments={"sample_name": "axial-fan"}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
 
     assert isinstance(result, dict)
     assert result["name"] == "axial-fan"
@@ -1166,11 +1025,7 @@ async def test_get_kcl_sample_not_found(live_samples_cache):
     response = await mcp.call_tool(
         "get_kcl_sample", arguments={"sample_name": "nonexistent-sample-xyz"}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) == 1
 
     result = inner_list[0].text
@@ -1185,11 +1040,7 @@ async def test_get_kcl_sample_path_traversal(live_samples_cache):
     response = await mcp.call_tool(
         "get_kcl_sample", arguments={"sample_name": "../../../etc/passwd"}
     )
-    assert isinstance(response, Sequence)
-    assert len(response) > 0
-
-    inner_list = response[0]
-    assert isinstance(inner_list, list)
+    inner_list = _content_list(response)
     assert len(inner_list) == 1
 
     result = inner_list[0].text
@@ -1208,9 +1059,7 @@ async def test_save_image(cube_stl: str, tmp_path):
             "camera_view": "isometric",
         },
     )
-    assert isinstance(snapshot_response, Sequence)
-    assert isinstance(snapshot_response[0], list)
-    image = snapshot_response[0][0]
+    image = _content_list(snapshot_response)[0]
     assert isinstance(image, ImageContent)
 
     # Now save the image to disk
@@ -1222,9 +1071,7 @@ async def test_save_image(cube_stl: str, tmp_path):
             "output_path": str(output_path),
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert Path(result).exists()
     assert Path(result).stat().st_size > 0
 
@@ -1240,9 +1087,8 @@ async def test_save_image_to_directory(cube_stl: str, tmp_path):
             "camera_view": "isometric",
         },
     )
-    assert isinstance(snapshot_response, Sequence)
-    assert isinstance(snapshot_response[0], list)
-    image = snapshot_response[0][0]
+    image = _content_list(snapshot_response)[0]
+    assert isinstance(image, ImageContent)
 
     # Save to directory
     response = await mcp.call_tool(
@@ -1252,9 +1098,7 @@ async def test_save_image_to_directory(cube_stl: str, tmp_path):
             "output_path": str(tmp_path),
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert Path(result).exists()
     assert Path(result).name == "image.png"
     assert Path(result).stat().st_size > 0
@@ -1271,9 +1115,8 @@ async def test_save_image_creates_parent_dirs(cube_stl: str, tmp_path):
             "camera_view": "isometric",
         },
     )
-    assert isinstance(snapshot_response, Sequence)
-    assert isinstance(snapshot_response[0], list)
-    image = snapshot_response[0][0]
+    image = _content_list(snapshot_response)[0]
+    assert isinstance(image, ImageContent)
 
     # Save to a nested path that doesn't exist
     output_path = tmp_path / "nested" / "dirs" / "test_image.png"
@@ -1284,9 +1127,7 @@ async def test_save_image_creates_parent_dirs(cube_stl: str, tmp_path):
             "output_path": str(output_path),
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert Path(result).exists()
     assert Path(result).stat().st_size > 0
 
@@ -1302,9 +1143,8 @@ async def test_save_image_to_temp_file(cube_stl: str):
             "camera_view": "isometric",
         },
     )
-    assert isinstance(snapshot_response, Sequence)
-    assert isinstance(snapshot_response[0], list)
-    image = snapshot_response[0][0]
+    image = _content_list(snapshot_response)[0]
+    assert isinstance(image, ImageContent)
 
     # Save without specifying a path
     response = await mcp.call_tool(
@@ -1313,9 +1153,7 @@ async def test_save_image_to_temp_file(cube_stl: str):
             "image": image.model_dump(),
         },
     )
-    assert isinstance(response, Sequence)
-    assert isinstance(response[1], dict)
-    result = response[1]["result"]
+    result = _meta_result(response)
     assert Path(result).exists()
     assert Path(result).suffix == ".png"
     assert Path(result).stat().st_size > 0
