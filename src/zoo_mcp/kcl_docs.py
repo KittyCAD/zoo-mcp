@@ -108,7 +108,9 @@ async def _fetch_docs_from_github() -> KCLDocs:
         # 1. Resolve the latest release tag (fall back to "main" if unavailable)
         ref = await resolve_github_ref(client)
 
-        tree_url = f"https://api.github.com/repos/{GITHUB_REPO}/git/trees/{ref}?recursive=1"
+        tree_url = (
+            f"https://api.github.com/repos/{GITHUB_REPO}/git/trees/{ref}?recursive=1"
+        )
         raw_content_base = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{ref}/"
 
         # 2. Get file tree from GitHub API

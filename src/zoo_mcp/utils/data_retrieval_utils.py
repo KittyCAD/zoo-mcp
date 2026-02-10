@@ -85,8 +85,7 @@ async def fetch_github_file(
         response = await client.get(url, follow_redirects=False)
         if response.is_redirect:
             logger.warning(
-                f"Rejected redirect for {label}: "
-                f"{response.headers.get('location')}"
+                f"Rejected redirect for {label}: {response.headers.get('location')}"
             )
             return None
         response.raise_for_status()

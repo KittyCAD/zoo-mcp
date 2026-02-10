@@ -121,7 +121,9 @@ async def _fetch_manifest_from_github() -> KCLSamples:
         # 1. Resolve the latest release tag (fall back to "main" if unavailable)
         ref = await resolve_github_ref(client)
 
-        raw_content_base = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{ref}/{_SAMPLES_PATH}/"
+        raw_content_base = (
+            f"https://raw.githubusercontent.com/{GITHUB_REPO}/{ref}/{_SAMPLES_PATH}/"
+        )
         manifest_url = f"{raw_content_base}manifest.json"
 
         # Store ref for later use when fetching sample files on-demand
@@ -143,7 +145,9 @@ async def _fetch_manifest_from_github() -> KCLSamples:
             if sample_name and is_safe_path_component(sample_name, _SAFE_NAME_RE):
                 samples.manifest[sample_name] = entry
             elif sample_name:
-                logger.warning(f"Rejected unsafe sample name from manifest: {sample_name!r}")
+                logger.warning(
+                    f"Rejected unsafe sample name from manifest: {sample_name!r}"
+                )
 
     logger.info(f"KCL samples manifest loaded with {len(samples.manifest)} samples")
     return samples
@@ -288,7 +292,9 @@ async def get_sample_content(sample_name: str) -> SampleData | None:
             if is_safe_path_component(f, _SAFE_FILENAME_RE):
                 filenames.append(f)
             else:
-                logger.warning(f"Rejected unsafe filename in sample {sample_name!r}: {f!r}")
+                logger.warning(
+                    f"Rejected unsafe filename in sample {sample_name!r}: {f!r}"
+                )
 
         if not filenames:
             return None
