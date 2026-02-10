@@ -5,8 +5,11 @@ at server startup and provides search functionality for LLMs.
 """
 
 import asyncio
+import posixpath
+import re
 from dataclasses import dataclass, field
 from typing import ClassVar
+from urllib.parse import unquote
 
 import httpx
 
@@ -16,6 +19,29 @@ GITHUB_TREE_URL = (
     "https://api.github.com/repos/KittyCAD/modeling-app/git/trees/main?recursive=1"
 )
 RAW_CONTENT_BASE = "https://raw.githubusercontent.com/KittyCAD/modeling-app/main/"
+
+# Only allow safe characters in doc paths: alphanumeric, hyphens, underscores,
+_SAFE_DOC_PATH_RE = re.compile(r"^docs/[A-Za-z0-9/_-]+\.md$")
+
+
+def _is_safe_doc_path(path: str) -> bool:
+    """Validate that a doc path is safe and does not contain traversal sequences.
+    """
+    # regex on raw path
+    if not _SAFE_DOC_PATH_RE.match(path):
+        return False
+
+    # decode and re-validate (catches double-encoding like %252e)
+    decoded = unquote(path)
+    if not _SAFE_DOC_PATH_RE.match(decoded):
+        return False
+
+    # normalize and verify prefix is preserved
+    normalized = posixpath.normpath(decoded)
+    if not normalized.startswith("docs/"):
+        return False
+
+    return True
 
 
 @dataclass
@@ -114,7 +140,10 @@ async def _fetch_doc_content(
     """Fetch a single doc file's content."""
     url = f"{RAW_CONTENT_BASE}{path}"
     try:
-        response = await client.get(url)
+        response = await client.get(url, follow_redirects=False)
+        if response.is_redirect:
+            logger.warning(f"Rejected redirect for {path}: {response.headers.get('location')}")
+            return path, None
         response.raise_for_status()
         return path, response.text
     except httpx.HTTPError as e:
@@ -138,15 +167,12 @@ async def _fetch_docs_from_github() -> KCLDocs:
             logger.warning(f"Failed to fetch GitHub tree: {e}")
             return docs
 
-        # 2. Filter for docs/*.md files
+        # 2. Filter for docs/*.md files, rejecting paths with
+        # URL-encoded or unexpected characters to prevent traversal
         doc_paths: list[str] = []
         for item in tree_data.get("tree", []):
             path = item.get("path", "")
-            if (
-                path.startswith("docs/")
-                and path.endswith(".md")
-                and item.get("type") == "blob"
-            ):
+            if item.get("type") == "blob" and _is_safe_doc_path(path):
                 doc_paths.append(path)
 
         logger.info(f"Found {len(doc_paths)} documentation files")
@@ -261,8 +287,7 @@ def get_doc_content(doc_path: str) -> str | None:
             or an error message if not found.
     """
 
-    # Basic validation to prevent path traversal
-    if ".." in doc_path or not doc_path.startswith("docs/"):
+    if not _is_safe_doc_path(doc_path):
         return None
 
     return KCLDocs.get().docs.get(doc_path)
