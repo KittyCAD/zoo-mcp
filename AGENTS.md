@@ -14,8 +14,8 @@ Before committing any code, ensure all tests pass, formatting is good, linting i
 ### Testing and Quality
 - `uv run -n auto pytest` - Run all tests
 - `uv run pytest tests/test_server.py` - Run specific test file
-- `ruff check` - Run linter
-- `ruff format` - Format code
+- `uv run ruff check` - Run linter
+- `uv run ruff format` - Format code
 - `uv run ty check` - Type check source code
 
 ### Integration Commands
