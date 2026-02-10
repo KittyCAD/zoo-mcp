@@ -60,6 +60,7 @@ where = ["src"]
 [dependency-groups]
 dev = [
     "pytest-asyncio",
+    "pytest-httpx",
     "pytest-rerunfailures",
     "pytest-xdist",
     "ruff",
