@@ -5,17 +5,38 @@ at server startup and provides search functionality for LLMs.
 """
 
 import asyncio
+import re
 from dataclasses import dataclass, field
+from posixpath import normpath
 from typing import ClassVar
+from urllib.parse import unquote
 
 import httpx
 
 from zoo_mcp import logger
-
-GITHUB_TREE_URL = (
-    "https://api.github.com/repos/KittyCAD/modeling-app/git/trees/main?recursive=1"
+from zoo_mcp.utils.data_retrieval_utils import (
+    GITHUB_REPO,
+    extract_excerpt,
+    fetch_github_file,
+    is_safe_path_component,
+    resolve_github_ref,
 )
-RAW_CONTENT_BASE = "https://raw.githubusercontent.com/KittyCAD/modeling-app/main/"
+
+# Only allow safe characters in doc paths
+_SAFE_DOC_PATH_RE = re.compile(r"^docs/[A-Za-z0-9/_-]+\.md$")
+
+
+def _is_safe_doc_path(path: str) -> bool:
+    """Validate that a doc path is safe and does not contain traversal sequences."""
+    if not is_safe_path_component(path, _SAFE_DOC_PATH_RE):
+        return False
+
+    # Additional check: after normalization the path must still be under docs/
+    normalized = normpath(unquote(path))
+    if not normalized.startswith("docs/"):
+        return False
+
+    return True
 
 
 @dataclass
@@ -74,89 +95,51 @@ def _extract_title(content: str) -> str:
     return ""
 
 
-def _extract_excerpt(content: str, query: str, context_chars: int = 200) -> str:
-    """Extract an excerpt around the first match of query in content."""
-    query_lower = query.lower()
-    content_lower = content.lower()
-
-    pos = content_lower.find(query_lower)
-    if pos == -1:
-        # Return first context_chars of content as fallback
-        return content[:context_chars].strip() + "..."
-
-    # Find start and end positions for excerpt
-    start = max(0, pos - context_chars // 2)
-    end = min(len(content), pos + len(query) + context_chars // 2)
-
-    # Adjust to word boundaries
-    if start > 0:
-        # Find the start of the word
-        while start > 0 and content[start - 1] not in " \n\t":
-            start -= 1
-
-    if end < len(content):
-        # Find the end of the word
-        while end < len(content) and content[end] not in " \n\t":
-            end += 1
-
-    excerpt = content[start:end].strip()
-
-    # Add ellipsis
-    prefix = "..." if start > 0 else ""
-    suffix = "..." if end < len(content) else ""
-
-    return f"{prefix}{excerpt}{suffix}"
-
-
-async def _fetch_doc_content(
-    client: httpx.AsyncClient, path: str
-) -> tuple[str, str | None]:
-    """Fetch a single doc file's content."""
-    url = f"{RAW_CONTENT_BASE}{path}"
-    try:
-        response = await client.get(url)
-        response.raise_for_status()
-        return path, response.text
-    except httpx.HTTPError as e:
-        logger.warning(f"Failed to fetch {path}: {e}")
-        return path, None
-
-
 async def _fetch_docs_from_github() -> KCLDocs:
-    """Fetch all docs from GitHub and return a KCLDocs."""
+    """Fetch all docs from GitHub and return a KCLDocs.
+
+    Uses the latest tagged release instead of the main branch.
+    """
     docs = KCLDocs()
 
     logger.info("Fetching KCL documentation from GitHub...")
 
     async with httpx.AsyncClient(timeout=30.0) as client:
-        # 1. Get file tree from GitHub API
+        # 1. Resolve the latest release tag (fall back to "main" if unavailable)
+        ref = await resolve_github_ref(client)
+
+        tree_url = (
+            f"https://api.github.com/repos/{GITHUB_REPO}/git/trees/{ref}?recursive=1"
+        )
+        raw_content_base = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{ref}/"
+
+        # 2. Get file tree from GitHub API
         try:
-            response = await client.get(GITHUB_TREE_URL)
+            response = await client.get(tree_url)
             response.raise_for_status()
             tree_data = response.json()
         except httpx.HTTPError as e:
             logger.warning(f"Failed to fetch GitHub tree: {e}")
             return docs
 
-        # 2. Filter for docs/*.md files
+        # 3. Filter for docs/*.md files
         doc_paths: list[str] = []
         for item in tree_data.get("tree", []):
             path = item.get("path", "")
-            if (
-                path.startswith("docs/")
-                and path.endswith(".md")
-                and item.get("type") == "blob"
-            ):
+            if item.get("type") == "blob" and _is_safe_doc_path(path):
                 doc_paths.append(path)
 
         logger.info(f"Found {len(doc_paths)} documentation files")
 
-        # 3. Fetch raw content in parallel
-        tasks = [_fetch_doc_content(client, path) for path in doc_paths]
+        # 4. Fetch raw content in parallel
+        tasks = [
+            fetch_github_file(client, f"{raw_content_base}{path}", path)
+            for path in doc_paths
+        ]
         results = await asyncio.gather(*tasks)
 
-        # 4. Populate cache and index
-        for path, content in results:
+        # 5. Populate cache and index
+        for path, content in zip(doc_paths, results):
             if content is not None:
                 docs.docs[path] = content
 
@@ -229,7 +212,7 @@ def search_docs(query: str, max_results: int = 5) -> list[dict]:
         match_count = content_lower.count(query_lower)
         if match_count > 0:
             title = _extract_title(content)
-            excerpt = _extract_excerpt(content, query)
+            excerpt = extract_excerpt(content, query)
 
             results.append(
                 {
@@ -261,8 +244,7 @@ def get_doc_content(doc_path: str) -> str | None:
             or an error message if not found.
     """
 
-    # Basic validation to prevent path traversal
-    if ".." in doc_path or not doc_path.startswith("docs/"):
+    if not _is_safe_doc_path(doc_path):
         return None
 
     return KCLDocs.get().docs.get(doc_path)

@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "zoo_mcp"
-version = "0.10.1"
+version = "0.10.2"
 requires-python = ">=3.11, <3.14"
 dependencies = [
     "aiofiles<26.0",
@@ -60,6 +60,7 @@ where = ["src"]
 [dependency-groups]
 dev = [
     "pytest-asyncio",
+    "pytest-httpx",
     "pytest-rerunfailures",
     "pytest-xdist",
     "ruff",
