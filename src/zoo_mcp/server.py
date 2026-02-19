@@ -65,6 +65,10 @@ async def calculate_center_of_mass(input_file: str, unit_length: str) -> dict | 
         return com
     except Exception as e:
         return f"There was an error calculating the center of mass of the file: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
+        return f"There was an error calculating the center of mass of the file: {e}"
 
 
 @mcp.tool()
@@ -95,6 +99,10 @@ async def calculate_mass(
         return mass
     except Exception as e:
         return f"There was an error calculating the mass of the file: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
+        return f"There was an error calculating the mass of the file: {e}"
 
 
 @mcp.tool()
@@ -118,6 +126,10 @@ async def calculate_surface_area(input_file: str, unit_area: str) -> float | str
         return surface_area
     except Exception as e:
         return f"There was an error calculating the surface area of the file: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
+        return f"There was an error calculating the surface area of the file: {e}"
 
 
 @mcp.tool()
@@ -138,6 +150,10 @@ async def calculate_volume(input_file: str, unit_volume: str) -> float | str:
         volume = await zoo_calculate_volume(file_path=input_file, unit_vol=unit_volume)
         return volume
     except Exception as e:
+        return f"There was an error calculating the volume of the file: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         return f"There was an error calculating the volume of the file: {e}"
 
 
@@ -167,6 +183,10 @@ async def convert_cad_file(
         return str(step_path)
     except Exception as e:
         return f"There was an error converting the CAD file: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
+        return f"There was an error converting the CAD file: {e}"
 
 
 @mcp.tool()
@@ -189,6 +209,10 @@ async def execute_kcl(
     try:
         return await zoo_execute_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
     except Exception as e:
+        return False, f"Failed to execute KCL code: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         return False, f"Failed to execute KCL code: {e}"
 
 
@@ -223,6 +247,10 @@ async def export_kcl(
         return str(cad_path)
     except Exception as e:
         return f"There was an error exporting the CAD file: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
+        return f"There was an error exporting the CAD file: {e}"
 
 
 @mcp.tool()
@@ -249,6 +277,10 @@ async def format_kcl(
         else:
             return f"Successfully formatted KCL code at: {kcl_path}"
     except Exception as e:
+        return f"There was an error formatting the KCL: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         return f"There was an error formatting the KCL: {e}"
 
 
@@ -278,6 +310,10 @@ async def lint_and_fix_kcl(
             return f"Successfully linted and fixed KCL code at: {kcl_path}", lints
     except Exception as e:
         return f"There was an error linting and fixing the KCL: {e}", []
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
+        return f"There was an error linting and fixing the KCL: {e}", []
 
 
 @mcp.tool()
@@ -300,6 +336,10 @@ async def mock_execute_kcl(
     try:
         return await zoo_mock_execute_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
     except Exception as e:
+        return False, f"Failed to mock execute KCL code: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         return False, f"Failed to mock execute KCL code: {e}"
 
 
@@ -330,6 +370,10 @@ async def multiview_snapshot_of_cad(
         )
         return encode_image(image)
     except Exception as e:
+        return f"There was an error creating the multiview snapshot: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         return f"There was an error creating the multiview snapshot: {e}"
 
 
@@ -364,6 +408,10 @@ async def multiview_snapshot_of_kcl(
         return encode_image(image)
     except Exception as e:
         return f"There was an error creating the multiview snapshot: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
+        return f"There was an error creating the multiview snapshot: {e}"
 
 
 @mcp.tool()
@@ -393,6 +441,10 @@ async def multi_isometric_snapshot_of_cad(
         )
         return encode_image(image)
     except Exception as e:
+        return f"There was an error creating the multi-isometric snapshot: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         return f"There was an error creating the multi-isometric snapshot: {e}"
 
 
@@ -426,6 +478,10 @@ async def multi_isometric_snapshot_of_kcl(
         )
         return encode_image(image)
     except Exception as e:
+        return f"There was an error creating the multi-isometric snapshot: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         return f"There was an error creating the multi-isometric snapshot: {e}"
 
 
@@ -484,6 +540,10 @@ async def snapshot_of_cad(
         )
         return encode_image(image)
     except Exception as e:
+        return f"There was an error creating the snapshot: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         return f"There was an error creating the snapshot: {e}"
 
 
@@ -546,6 +606,10 @@ async def snapshot_of_kcl(
         return encode_image(image)
     except Exception as e:
         return f"There was an error creating the snapshot: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
+        return f"There was an error creating the snapshot: {e}"
 
 
 @mcp.tool()
@@ -579,6 +643,10 @@ async def text_to_cad(prompt: str) -> str:
     try:
         return await _text_to_cad(prompt=prompt)
     except Exception as e:
+        return f"There was an error generating the CAD file from text: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         return f"There was an error generating the CAD file from text: {e}"
 
 
@@ -623,6 +691,10 @@ async def edit_kcl_project(
         )
     except Exception as e:
         return f"There was an error modifying the KCL project from text: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
+        return f"There was an error modifying the KCL project from text: {e}"
 
 
 @mcp.tool()
@@ -646,6 +718,10 @@ async def save_image(
         saved_path = save_image_to_disk(image=image, output_path=output_path)
         return saved_path
     except Exception as e:
+        return f"There was an error saving the image: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         return f"There was an error saving the image: {e}"
 
 
@@ -671,6 +747,11 @@ async def list_kcl_docs() -> dict | str:
     try:
         return list_available_docs()
     except Exception as e:
+        logger.error("list_kcl_docs tool called with error: %s", e)
+        return f"There was an error listing KCL documentation: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         logger.error("list_kcl_docs tool called with error: %s", e)
         return f"There was an error listing KCL documentation: {e}"
 
@@ -700,6 +781,11 @@ async def search_kcl_docs(query: str, max_results: int = 5) -> list[dict] | str:
     except Exception as e:
         logger.error("search_kcl_docs tool called with error: %s", e)
         return f"There was an error searching KCL documentation: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
+        logger.error("search_kcl_docs tool called with error: %s", e)
+        return f"There was an error searching KCL documentation: {e}"
 
 
 @mcp.tool()
@@ -726,6 +812,11 @@ async def get_kcl_doc(doc_path: str) -> str:
     except Exception as e:
         logger.error("get_kcl_doc tool called with error: %s", e)
         return f"There was an error retrieving KCL documentation: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
+        logger.error("get_kcl_doc tool called with error: %s", e)
+        return f"There was an error retrieving KCL documentation: {e}"
 
 
 @mcp.tool()
@@ -748,6 +839,11 @@ async def list_kcl_samples() -> list[dict] | str:
     try:
         return list_available_samples()
     except Exception as e:
+        logger.error("list_kcl_samples tool called with error: %s", e)
+        return f"There was an error listing KCL samples: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         logger.error("list_kcl_samples tool called with error: %s", e)
         return f"There was an error listing KCL samples: {e}"
 
@@ -777,6 +873,11 @@ async def search_kcl_samples(query: str, max_results: int = 5) -> list[dict] | s
     try:
         return search_samples(query, max_results)
     except Exception as e:
+        logger.error("search_kcl_samples tool called with error: %s", e)
+        return f"There was an error searching KCL samples: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         logger.error("search_kcl_samples tool called with error: %s", e)
         return f"There was an error searching KCL samples: {e}"
 
@@ -812,6 +913,11 @@ async def get_kcl_sample(sample_name: str) -> SampleData | str:
             return f"Sample not found: {sample_name}. Use list_kcl_samples() to see available samples."
         return sample
     except Exception as e:
+        logger.error("get_kcl_sample tool called with error: %s", e)
+        return f"There was an error retrieving KCL sample: {e}"
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit)):
+            raise
         logger.error("get_kcl_sample tool called with error: %s", e)
         return f"There was an error retrieving KCL sample: {e}"
 
