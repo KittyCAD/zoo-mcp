@@ -831,7 +831,7 @@ def zoo_multiview_snapshot_of_cad(
                 OptionModelingCmdReq(
                     cmd=ModelingCmd(
                         OptionImportFiles(
-                            files=[ImportFile(data=data.read(), path=str(input_path))],
+                            files=[ImportFile(data=data.read(), path=input_path.name)],
                             format=input_format,
                         )
                     ),
@@ -994,7 +994,7 @@ def zoo_multi_isometric_snapshot_of_cad(
                 OptionModelingCmdReq(
                     cmd=ModelingCmd(
                         OptionImportFiles(
-                            files=[ImportFile(data=data.read(), path=str(input_path))],
+                            files=[ImportFile(data=data.read(), path=input_path.name)],
                             format=input_format,
                         )
                     ),
@@ -1311,7 +1311,7 @@ def zoo_snapshot_of_cad(
                 OptionModelingCmdReq(
                     cmd=ModelingCmd(
                         OptionImportFiles(
-                            files=[ImportFile(data=data.read(), path=str(input_path))],
+                            files=[ImportFile(data=data.read(), path=input_path.name)],
                             format=input_format,
                         )
                     ),
