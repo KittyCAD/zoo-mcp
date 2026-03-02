@@ -581,12 +581,14 @@ async def zoo_calculate_cad_physical_properties(
     ):
         raise ZooMCPException("Failed to calculate center of mass")
 
-    return {
+    physical_properties = {
         "volume": volume_result.volume,
         "mass": mass_result.mass,
         "surface_area": sa_result.surface_area,
         "center_of_mass": com_result.center_of_mass.to_dict(),
     }
+
+    return physical_properties
 
 
 async def zoo_calculate_kcl_physical_properties(
