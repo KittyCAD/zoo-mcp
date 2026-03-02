@@ -179,6 +179,7 @@ async def test_calculate_cad_physical_properties(cube_stl: str):
     com = result["center_of_mass"]
     assert com["x"] == pytest.approx(5.0)
     assert com["y"] == pytest.approx(5.0)
+    assert com["z"] == pytest.approx(-5.0)
 
 
 @pytest.mark.asyncio
@@ -223,6 +224,7 @@ async def test_calculate_kcl_physical_properties(cube_kcl: str):
     com = result["center_of_mass"]
     assert com["x"] == pytest.approx(5.0, abs=1e-1)
     assert com["y"] == pytest.approx(5.0, abs=1e-1)
+    assert com["z"] == pytest.approx(-5.0, abs=1e-1)
 
 
 @pytest.mark.asyncio
