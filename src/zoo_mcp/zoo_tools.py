@@ -512,6 +512,83 @@ async def zoo_calculate_volume(file_path: Path | str, unit_vol: str) -> float:
     return volume
 
 
+async def zoo_calculate_cad_physical_properties(
+    file_path: Path | str,
+    unit_length: str,
+    unit_mass: str,
+    unit_density: str,
+    density: float,
+    unit_area: str,
+    unit_vol: str,
+) -> dict:
+    """Calculate physical properties (volume, mass, surface area, center of mass) of a CAD file.
+
+    Args:
+        file_path (Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
+        unit_length (str): The unit of length for center of mass. One of 'cm', 'ft', 'in', 'm', 'mm', 'yd'.
+        unit_mass (str): The unit of mass for the mass result. One of 'g', 'kg', 'lb'.
+        unit_density (str): The unit of density for the material. One of 'lb:ft3', 'kg:m3'.
+        density (float): The density of the material.
+        unit_area (str): The unit of area for surface area. One of 'cm2', 'dm2', 'ft2', 'in2', 'km2', 'm2', 'mm2', 'yd2'.
+        unit_vol (str): The unit of volume. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
+
+    Returns:
+        dict: A dictionary with keys 'volume', 'mass', 'surface_area', and 'center_of_mass'.
+    """
+    file_path = Path(file_path)
+
+    logger.info("Calculating physical properties for %s", str(file_path.resolve()))
+
+    async with aiofiles.open(file_path, "rb") as inp:
+        data = await inp.read()
+
+    src_format = FileImportFormat(_normalize_ext(file_path.suffix.split(".")[1]))
+
+    volume_result = kittycad_client.file.create_file_volume(
+        output_unit=UnitVolume(unit_vol),
+        src_format=src_format,
+        body=data,
+    )
+    if not isinstance(volume_result, FileVolume) or volume_result.volume is None:
+        raise ZooMCPException("Failed to calculate volume")
+
+    mass_result = kittycad_client.file.create_file_mass(
+        output_unit=UnitMass(unit_mass),
+        src_format=src_format,
+        body=data,
+        material_density_unit=UnitDensity(unit_density),
+        material_density=density,
+    )
+    if not isinstance(mass_result, FileMass) or mass_result.mass is None:
+        raise ZooMCPException("Failed to calculate mass")
+
+    sa_result = kittycad_client.file.create_file_surface_area(
+        output_unit=UnitArea(unit_area),
+        src_format=src_format,
+        body=data,
+    )
+    if not isinstance(sa_result, FileSurfaceArea) or sa_result.surface_area is None:
+        raise ZooMCPException("Failed to calculate surface area")
+
+    com_result = kittycad_client.file.create_file_center_of_mass(
+        src_format=src_format,
+        body=data,
+        output_unit=UnitLength(unit_length),
+    )
+    if (
+        not isinstance(com_result, FileCenterOfMass)
+        or com_result.center_of_mass is None
+    ):
+        raise ZooMCPException("Failed to calculate center of mass")
+
+    return {
+        "volume": volume_result.volume,
+        "mass": mass_result.mass,
+        "surface_area": sa_result.surface_area,
+        "center_of_mass": com_result.center_of_mass.to_dict(),
+    }
+
+
 async def zoo_calculate_kcl_physical_properties(
     kcl_code: str | None,
     kcl_path: Path | str | None,
