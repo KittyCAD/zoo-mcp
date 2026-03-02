@@ -1,6 +1,6 @@
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Protocol, TypeVar, cast
 from uuid import uuid4
 
 import aiofiles
@@ -71,6 +71,65 @@ SUPPORTED_EXTS = {x.value.lower() for x in FileImportFormat} | {"stp"}
 _EXT_ALIASES = {
     "stp": "step",
 }
+
+# Mappings from user-facing short strings to kcl PyO3 enum members.
+# The kcl unit enums cannot be constructed from strings directly.
+UNIT_AREA_MAP: dict[str, kcl.UnitArea] = {
+    "cm2": kcl.UnitArea.SquareCentimeters,
+    "dm2": kcl.UnitArea.SquareDecimeters,
+    "ft2": kcl.UnitArea.SquareFeet,
+    "in2": kcl.UnitArea.SquareInches,
+    "km2": kcl.UnitArea.SquareKilometers,
+    "m2": kcl.UnitArea.SquareMeters,
+    "mm2": kcl.UnitArea.SquareMillimeters,
+    "yd2": kcl.UnitArea.SquareYards,
+}
+
+UNIT_VOLUME_MAP: dict[str, kcl.UnitVolume] = {
+    "cm3": kcl.UnitVolume.CubicCentimeters,
+    "ft3": kcl.UnitVolume.CubicFeet,
+    "in3": kcl.UnitVolume.CubicInches,
+    "m3": kcl.UnitVolume.CubicMeters,
+    "yd3": kcl.UnitVolume.CubicYards,
+    "usfloz": kcl.UnitVolume.FluidOunces,
+    "usgal": kcl.UnitVolume.Gallons,
+    "l": kcl.UnitVolume.Liters,
+    "ml": kcl.UnitVolume.Milliliters,
+}
+
+UNIT_LENGTH_MAP: dict[str, kcl.UnitLength] = {
+    "cm": kcl.UnitLength.Centimeters,
+    "ft": kcl.UnitLength.Feet,
+    "in": kcl.UnitLength.Inches,
+    "m": kcl.UnitLength.Meters,
+    "mm": kcl.UnitLength.Millimeters,
+    "yd": kcl.UnitLength.Yards,
+}
+
+UNIT_MASS_MAP: dict[str, kcl.UnitMass] = {
+    "g": kcl.UnitMass.Grams,
+    "kg": kcl.UnitMass.Kilograms,
+    "lb": kcl.UnitMass.Pounds,
+}
+
+UNIT_DENSITY_MAP: dict[str, kcl.UnitDensity] = {
+    "lb:ft3": kcl.UnitDensity.PoundsPerCubicFeet,
+    "kg:m3": kcl.UnitDensity.KilogramsPerCubicMeter,
+}
+
+
+_T = TypeVar("_T")
+
+
+def _parse_unit(value: str, mapping: dict[str, _T], unit_type_name: str) -> _T:
+    """Look up a unit enum member from a user-provided string."""
+    result = mapping.get(value)
+    if result is None:
+        valid = ", ".join(f"'{k}'" for k in mapping)
+        raise ZooMCPException(
+            f"Invalid {unit_type_name} '{value}'. Valid options: {valid}"
+        )
+    return result
 
 
 def _normalize_ext(ext: str) -> str:
@@ -451,6 +510,149 @@ async def zoo_calculate_volume(file_path: Path | str, unit_vol: str) -> float:
         raise ZooMCPException("Failed to calculate volume, no volume returned")
 
     return volume
+
+
+async def zoo_calculate_cad_physical_properties(
+    file_path: Path | str,
+    unit_length: str,
+    unit_mass: str,
+    unit_density: str,
+    density: float,
+    unit_area: str,
+    unit_vol: str,
+) -> dict:
+    """Calculate physical properties (volume, mass, surface area, center of mass) of a CAD file.
+
+    Args:
+        file_path (Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
+        unit_length (str): The unit of length for center of mass. One of 'cm', 'ft', 'in', 'm', 'mm', 'yd'.
+        unit_mass (str): The unit of mass for the mass result. One of 'g', 'kg', 'lb'.
+        unit_density (str): The unit of density for the material. One of 'lb:ft3', 'kg:m3'.
+        density (float): The density of the material.
+        unit_area (str): The unit of area for surface area. One of 'cm2', 'dm2', 'ft2', 'in2', 'km2', 'm2', 'mm2', 'yd2'.
+        unit_vol (str): The unit of volume. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
+
+    Returns:
+        dict: A dictionary with keys 'volume', 'mass', 'surface_area', and 'center_of_mass'.
+    """
+    file_path = Path(file_path)
+
+    logger.info("Calculating physical properties for %s", str(file_path.resolve()))
+
+    async with aiofiles.open(file_path, "rb") as inp:
+        data = await inp.read()
+
+    src_format = FileImportFormat(_normalize_ext(file_path.suffix.split(".")[1]))
+
+    volume_result = kittycad_client.file.create_file_volume(
+        output_unit=UnitVolume(unit_vol),
+        src_format=src_format,
+        body=data,
+    )
+    if not isinstance(volume_result, FileVolume) or volume_result.volume is None:
+        raise ZooMCPException("Failed to calculate volume")
+
+    mass_result = kittycad_client.file.create_file_mass(
+        output_unit=UnitMass(unit_mass),
+        src_format=src_format,
+        body=data,
+        material_density_unit=UnitDensity(unit_density),
+        material_density=density,
+    )
+    if not isinstance(mass_result, FileMass) or mass_result.mass is None:
+        raise ZooMCPException("Failed to calculate mass")
+
+    sa_result = kittycad_client.file.create_file_surface_area(
+        output_unit=UnitArea(unit_area),
+        src_format=src_format,
+        body=data,
+    )
+    if not isinstance(sa_result, FileSurfaceArea) or sa_result.surface_area is None:
+        raise ZooMCPException("Failed to calculate surface area")
+
+    com_result = kittycad_client.file.create_file_center_of_mass(
+        src_format=src_format,
+        body=data,
+        output_unit=UnitLength(unit_length),
+    )
+    if (
+        not isinstance(com_result, FileCenterOfMass)
+        or com_result.center_of_mass is None
+    ):
+        raise ZooMCPException("Failed to calculate center of mass")
+
+    physical_properties = {
+        "volume": volume_result.volume,
+        "mass": mass_result.mass,
+        "surface_area": sa_result.surface_area,
+        "center_of_mass": com_result.center_of_mass.to_dict(),
+    }
+
+    return physical_properties
+
+
+async def zoo_calculate_kcl_physical_properties(
+    kcl_code: str | None,
+    kcl_path: Path | str | None,
+    unit_length: str,
+    unit_mass: str,
+    unit_density: str,
+    density: float,
+    unit_area: str,
+    unit_vol: str,
+) -> dict:
+    """Calculate physical properties (volume, mass, surface area, center of mass) of a KCL model.
+
+    Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point
+    to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): KCL code to evaluate.
+        kcl_path (Path | str | None): Path to a .kcl file or a directory containing a main.kcl file.
+        unit_length (str): The unit of length for center of mass. One of 'cm', 'ft', 'in', 'm', 'mm', 'yd'.
+        unit_mass (str): The unit of mass for the mass result. One of 'g', 'kg', 'lb'.
+        unit_density (str): The unit of density for the material. One of 'lb:ft3', 'kg:m3'.
+        density (float): The density of the material.
+        unit_area (str): The unit of area for surface area. One of 'cm2', 'dm2', 'ft2', 'in2', 'km2', 'm2', 'mm2', 'yd2'.
+        unit_vol (str): The unit of volume. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
+
+    Returns:
+        dict: A dictionary with keys 'volume', 'mass', 'surface_area', and 'center_of_mass'.
+    """
+    logger.info("Calculating physical properties of KCL")
+
+    _check_kcl_code_or_path(kcl_code, kcl_path)
+
+    request = kcl.PhysicalPropertiesRequest()
+    request.set_surface_area(_parse_unit(unit_area, UNIT_AREA_MAP, "unit_area"))
+    request.set_volume(_parse_unit(unit_vol, UNIT_VOLUME_MAP, "unit_volume"))
+    request.set_center_of_mass(_parse_unit(unit_length, UNIT_LENGTH_MAP, "unit_length"))
+    request.set_mass(
+        output_unit=_parse_unit(unit_mass, UNIT_MASS_MAP, "unit_mass"),
+        material_density=density,
+        material_density_unit=_parse_unit(
+            unit_density, UNIT_DENSITY_MAP, "unit_density"
+        ),
+    )
+
+    if kcl_code:
+        response = await kcl.execute_code_and_measure(kcl_code, request)
+    else:
+        response = await kcl.execute_and_measure(str(kcl_path), request)
+
+    volume = response.get_volume()
+    com = response.get_center_of_mass()
+    sa = response.get_surface_area()
+    mass = response.get_mass()
+
+    physical_properties = {
+        "volume": volume,
+        "mass": mass,
+        "surface_area": sa,
+        "center_of_mass": {"x": com.x, "y": com.y, "z": com.z},
+    }
+
+    return physical_properties
 
 
 async def zoo_convert_cad_file(

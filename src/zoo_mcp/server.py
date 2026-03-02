@@ -20,7 +20,9 @@ from zoo_mcp.kcl_samples import (
 from zoo_mcp.utils.image_utils import encode_image, save_image_to_disk
 from zoo_mcp.zoo_tools import (
     CameraView,
+    zoo_calculate_cad_physical_properties,
     zoo_calculate_center_of_mass,
+    zoo_calculate_kcl_physical_properties,
     zoo_calculate_mass,
     zoo_calculate_surface_area,
     zoo_calculate_volume,
@@ -139,6 +141,98 @@ async def calculate_volume(input_file: str, unit_volume: str) -> float | str:
         return volume
     except Exception as e:
         return f"There was an error calculating the volume of the file: {e}"
+
+
+@mcp.tool()
+async def calculate_cad_physical_properties(
+    input_file: str,
+    unit_length: str,
+    unit_mass: str,
+    unit_density: str,
+    density: float,
+    unit_area: str,
+    unit_volume: str,
+) -> dict | str:
+    """Calculate physical properties (volume, mass, surface area, center of mass) of a CAD file.
+
+    Args:
+        input_file (str): The path of the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
+        unit_length (str): The unit of length for center of mass. One of 'cm', 'ft', 'in', 'm', 'mm', 'yd'.
+        unit_mass (str): The unit of mass for the mass result. One of 'g', 'kg', 'lb'.
+        unit_density (str): The unit of density for the material. One of 'lb:ft3', 'kg:m3'.
+        density (float): The density of the material.
+        unit_area (str): The unit of area for surface area. One of 'cm2', 'dm2', 'ft2', 'in2', 'km2', 'm2', 'mm2', 'yd2'.
+        unit_volume (str): The unit of volume. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
+
+    Returns:
+        dict | str: A dictionary with keys 'volume', 'mass', 'surface_area', and 'center_of_mass', or an error message if the operation fails.
+    """
+
+    logger.info(
+        "calculate_cad_physical_properties tool called for file: %s", input_file
+    )
+
+    try:
+        return await zoo_calculate_cad_physical_properties(
+            file_path=input_file,
+            unit_length=unit_length,
+            unit_mass=unit_mass,
+            unit_density=unit_density,
+            density=density,
+            unit_area=unit_area,
+            unit_vol=unit_volume,
+        )
+    except Exception as e:
+        return f"There was an error calculating physical properties of the file: {e}"
+
+
+@mcp.tool()
+async def calculate_kcl_physical_properties(
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
+    unit_length: str = "mm",
+    unit_mass: str = "g",
+    unit_density: str = "kg:m3",
+    density: float = 1000.0,
+    unit_area: str = "mm2",
+    unit_volume: str = "cm3",
+) -> dict | str:
+    """Calculate physical properties (volume, mass, surface area, center of mass) of a KCL model.
+
+    Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point
+    to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): The KCL code to evaluate.
+        kcl_path (str | None): Path to a .kcl file or a directory containing a main.kcl file.
+        unit_length (str): The unit of length for center of mass. One of 'cm', 'ft', 'in', 'm', 'mm', 'yd'.
+        unit_mass (str): The unit of mass for the mass result. One of 'g', 'kg', 'lb'.
+        unit_density (str): The unit of density for the material. One of 'lb:ft3', 'kg:m3'.
+        density (float): The density of the material.
+        unit_area (str): The unit of area for surface area. One of 'cm2', 'dm2', 'ft2', 'in2', 'km2', 'm2', 'mm2', 'yd2'.
+        unit_volume (str): The unit of volume. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
+
+    Returns:
+        dict | str: A dictionary with keys 'volume', 'mass', 'surface_area', and 'center_of_mass', or an error message if the operation fails.
+    """
+
+    logger.info("calculate_kcl_physical_properties tool called")
+
+    try:
+        return await zoo_calculate_kcl_physical_properties(
+            kcl_code=kcl_code,
+            kcl_path=kcl_path,
+            unit_length=unit_length,
+            unit_mass=unit_mass,
+            unit_density=unit_density,
+            density=density,
+            unit_area=unit_area,
+            unit_vol=unit_volume,
+        )
+    except Exception as e:
+        return (
+            f"There was an error calculating physical properties of the KCL model: {e}"
+        )
 
 
 @mcp.tool()

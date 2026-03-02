@@ -158,6 +158,114 @@ async def test_calculate_volume_stp_extension(cube_stp: str):
 
 
 @pytest.mark.asyncio
+async def test_calculate_cad_physical_properties(cube_stl: str):
+    response = await mcp.call_tool(
+        "calculate_cad_physical_properties",
+        arguments={
+            "input_file": cube_stl,
+            "unit_length": "mm",
+            "unit_mass": "g",
+            "unit_density": "kg:m3",
+            "density": 1000.0,
+            "unit_area": "mm2",
+            "unit_volume": "cm3",
+        },
+    )
+    result = _meta_result(response)
+    assert isinstance(result, dict)
+    assert result["volume"] == pytest.approx(1.0)
+    assert result["mass"] == pytest.approx(1.0)
+    assert result["surface_area"] == pytest.approx(600.0)
+    com = result["center_of_mass"]
+    assert com["x"] == pytest.approx(5.0)
+    assert com["y"] == pytest.approx(5.0)
+    assert com["z"] == pytest.approx(-5.0)
+
+
+@pytest.mark.asyncio
+async def test_calculate_cad_physical_properties_error(cube_stl: str):
+    response = await mcp.call_tool(
+        "calculate_cad_physical_properties",
+        arguments={
+            "input_file": cube_stl,
+            "unit_length": "mm",
+            "unit_mass": "bad",
+            "unit_density": "kg:m3",
+            "density": 1000.0,
+            "unit_area": "mm2",
+            "unit_volume": "cm3",
+        },
+    )
+    result = _meta_result(response)
+    assert "error calculating physical properties" in result
+
+
+@pytest.mark.asyncio
+async def test_calculate_kcl_physical_properties(cube_kcl: str):
+    response = await mcp.call_tool(
+        "calculate_kcl_physical_properties",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+            "unit_length": "mm",
+            "unit_mass": "g",
+            "unit_density": "kg:m3",
+            "density": 1000.0,
+            "unit_area": "mm2",
+            "unit_volume": "cm3",
+        },
+    )
+    result = _meta_result(response)
+    assert isinstance(result, dict)
+    # 10mm cube = 1 cm³
+    assert result["volume"] == pytest.approx(1.0, abs=1e-3)
+    assert result["mass"] == pytest.approx(1.0, abs=1e-3)
+    assert result["surface_area"] == pytest.approx(600.0, abs=1e-1)
+    com = result["center_of_mass"]
+    assert com["x"] == pytest.approx(5.0, abs=1e-1)
+    assert com["y"] == pytest.approx(5.0, abs=1e-1)
+    assert com["z"] == pytest.approx(-5.0, abs=1e-1)
+
+
+@pytest.mark.asyncio
+async def test_calculate_kcl_physical_properties_error():
+    response = await mcp.call_tool(
+        "calculate_kcl_physical_properties",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": None,
+            "unit_length": "mm",
+            "unit_mass": "g",
+            "unit_density": "kg:m3",
+            "density": 1000.0,
+            "unit_area": "mm2",
+            "unit_volume": "cm3",
+        },
+    )
+    result = _meta_result(response)
+    assert "error calculating physical properties" in result
+
+
+@pytest.mark.asyncio
+async def test_calculate_kcl_physical_properties_invalid_unit(cube_kcl: str):
+    response = await mcp.call_tool(
+        "calculate_kcl_physical_properties",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+            "unit_length": "mm",
+            "unit_mass": "g",
+            "unit_density": "kg:m3",
+            "density": 1000.0,
+            "unit_area": "bad",
+            "unit_volume": "cm3",
+        },
+    )
+    result = _meta_result(response)
+    assert "Invalid unit_area" in result
+
+
+@pytest.mark.asyncio
 async def test_convert_cad_file(cube_stl: str):
     response = await mcp.call_tool(
         "convert_cad_file",
