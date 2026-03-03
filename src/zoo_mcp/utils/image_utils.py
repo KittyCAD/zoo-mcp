@@ -56,6 +56,38 @@ def create_image_collage(image_byte_list: list[bytes]) -> bytes:
     return collage_bytes
 
 
+def resize_image(img_bytes: bytes, max_dimension: int) -> bytes:
+    """
+    Resize an image so the longest side equals max_dimension, maintaining aspect ratio.
+
+    Args:
+        img_bytes: raw image bytes.
+        max_dimension: The maximum width or height in pixels.
+
+    Returns:
+        Resized image bytes in JPEG format.
+    """
+
+    img = PILImage.open(io.BytesIO(img_bytes))
+    img = img.convert("RGB") if img.mode != "RGB" else img
+
+    w, h = img.size
+    if max(w, h) > max_dimension:
+        scale = max_dimension / max(w, h)
+        new_size = (int(w * scale), int(h * scale))
+        img = img.resize(new_size, PILImage.Resampling.LANCZOS)
+
+    out = io.BytesIO()
+    img.save(out, format="JPEG", quality=95)
+
+    result = out.getvalue()
+
+    img.close()
+    out.close()
+
+    return result
+
+
 def encode_image(img_bytes: bytes) -> ImageContent:
     """
     Encodes a PIL Image to a format compatible with ImageContent.
