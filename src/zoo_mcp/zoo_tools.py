@@ -63,7 +63,7 @@ from kittycad.models.modeling_cmd import (
 from kittycad.models.web_socket_request import OptionModelingCmdReq
 
 from zoo_mcp import ZooMCPException, kittycad_client, logger
-from zoo_mcp.utils.image_utils import create_image_collage
+from zoo_mcp.utils.image_utils import create_image_collage, resize_image
 
 SUPPORTED_EXTS = {x.value.lower() for x in FileImportFormat} | {"stp"}
 
@@ -986,14 +986,15 @@ async def zoo_mock_execute_kcl(
 
 def zoo_multiview_snapshot_of_cad(
     input_path: Path | str,
-    padding: float = 0.2,
     padding: float = 0.1,
+    max_image_dimension: int = 512,
 ) -> bytes:
     """Save a multiview snapshot of a CAD file.
 
     Args:
         input_path (Path | str): Path to the CAD file to save a multiview snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         padding (float): The padding to apply to the snapshot. Default is 0.2.
+        max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
 
     Returns:
         bytes or None: The JPEG image contents if successful
@@ -1145,19 +1146,20 @@ def zoo_multiview_snapshot_of_cad(
 
         collage = create_image_collage(jpeg_contents_list)
 
-        return collage
+        return resize_image(collage, max_image_dimension)
 
 
 def zoo_multi_isometric_snapshot_of_cad(
     input_path: Path | str,
-    padding: float = 0.2,
     padding: float = 0.1,
+    max_image_dimension: int = 512,
 ) -> bytes:
     """Save a multi-isometric snapshot of a CAD file showing 4 isometric views.
 
     Args:
         input_path (Path | str): Path to the CAD file to save a multi-isometric snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         padding (float): The padding to apply to the snapshot. Default is 0.2.
+        max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
 
     Returns:
         bytes or None: The JPEG image contents if successful
@@ -1306,14 +1308,14 @@ def zoo_multi_isometric_snapshot_of_cad(
 
         collage = create_image_collage(jpeg_contents_list)
 
-        return collage
+        return resize_image(collage, max_image_dimension)
 
 
 async def zoo_multi_isometric_snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
-    padding: float = 0.2,
     padding: float = 0.1,
+    max_image_dimension: int = 512,
 ) -> bytes:
     """Execute the KCL code and save a multi-isometric snapshot showing 4 isometric views. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -1321,6 +1323,7 @@ async def zoo_multi_isometric_snapshot_of_kcl(
         kcl_code (str | None): KCL code
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
         padding (float): The padding to apply to the snapshot. Default is 0.2.
+        max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
 
     Returns:
         bytes or None: The JPEG image contents if successful
@@ -1374,7 +1377,7 @@ async def zoo_multi_isometric_snapshot_of_kcl(
 
         collage = create_image_collage(jpeg_contents_list)
 
-        return collage
+        return resize_image(collage, max_image_dimension)
 
     except Exception as e:
         logger.error("Failed to take multi-isometric snapshot: %s", e)
@@ -1384,8 +1387,8 @@ async def zoo_multi_isometric_snapshot_of_kcl(
 async def zoo_multiview_snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
-    padding: float = 0.2,
     padding: float = 0.1,
+    max_image_dimension: int = 512,
 ) -> bytes:
     """Execute the KCL code and save a multiview snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -1393,6 +1396,7 @@ async def zoo_multiview_snapshot_of_kcl(
         kcl_code (str | None): KCL code
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
         padding (float): The padding to apply to the snapshot. Default is 0.2.
+        max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
 
     Returns:
         bytes or None: The JPEG image contents if successful
@@ -1459,7 +1463,7 @@ async def zoo_multiview_snapshot_of_kcl(
 
         collage = create_image_collage(jpeg_contents_list)
 
-        return collage
+        return resize_image(collage, max_image_dimension)
 
     except Exception as e:
         logger.error("Failed to take multiview snapshot: %s", e)
@@ -1469,8 +1473,8 @@ async def zoo_multiview_snapshot_of_kcl(
 def zoo_snapshot_of_cad(
     input_path: Path | str,
     camera: OptionDefaultCameraLookAt | OptionViewIsometric | None = None,
-    padding: float = 0.2,
     padding: float = 0.1,
+    max_image_dimension: int = 512,
 ) -> bytes:
     """Save a single view snapshot of a CAD file.
 
@@ -1478,6 +1482,7 @@ def zoo_snapshot_of_cad(
         input_path (Path | str): Path to the CAD file to save a snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         camera (OptionDefaultCameraLookAt | OptionViewIsometric | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
         padding (float): The padding to apply to the snapshot. Default is 0.2.
+        max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
 
     Returns:
         bytes or None: The JPEG image contents if successful
@@ -1599,15 +1604,15 @@ def zoo_snapshot_of_cad(
             raise ZooMCPException("Failed to take snapshot of CAD file")
         jpeg_contents = message["resp"]["data"]["modeling_response"]["data"]["contents"]
 
-        return jpeg_contents
+        return resize_image(jpeg_contents, max_image_dimension)
 
 
 async def zoo_snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
     camera: kcl.CameraLookAt | None = None,
-    padding: float = 0.2,
     padding: float = 0.1,
+    max_image_dimension: int = 512,
 ) -> bytes:
     """Execute the KCL code and save a single view snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -1616,6 +1621,7 @@ async def zoo_snapshot_of_kcl(
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
         camera (kcl.CameraLookAt | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
         padding (float): The padding to apply to the snapshot. Default is 0.2.
+        max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
 
     Returns:
         bytes or None: The JPEG image contents if successful
@@ -1655,4 +1661,4 @@ async def zoo_snapshot_of_kcl(
             ),
         )
 
-    return jpeg_contents_list[0]
+    return resize_image(jpeg_contents_list[0], max_image_dimension)
