@@ -80,10 +80,12 @@ def resize_image(img_bytes: bytes, max_dimension: int) -> bytes:
     out = io.BytesIO()
     img.save(out, format="JPEG", quality=95)
 
+    result = out.getvalue()
+
     img.close()
     out.close()
 
-    return out.getvalue()
+    return result
 
 
 def encode_image(img_bytes: bytes) -> ImageContent:
