@@ -987,6 +987,7 @@ async def zoo_mock_execute_kcl(
 def zoo_multiview_snapshot_of_cad(
     input_path: Path | str,
     padding: float = 0.2,
+    padding: float = 0.1,
 ) -> bytes:
     """Save a multiview snapshot of a CAD file.
 
@@ -1150,6 +1151,7 @@ def zoo_multiview_snapshot_of_cad(
 def zoo_multi_isometric_snapshot_of_cad(
     input_path: Path | str,
     padding: float = 0.2,
+    padding: float = 0.1,
 ) -> bytes:
     """Save a multi-isometric snapshot of a CAD file showing 4 isometric views.
 
@@ -1311,6 +1313,7 @@ async def zoo_multi_isometric_snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
     padding: float = 0.2,
+    padding: float = 0.1,
 ) -> bytes:
     """Execute the KCL code and save a multi-isometric snapshot showing 4 isometric views. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -1382,6 +1385,7 @@ async def zoo_multiview_snapshot_of_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
     padding: float = 0.2,
+    padding: float = 0.1,
 ) -> bytes:
     """Execute the KCL code and save a multiview snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -1466,6 +1470,7 @@ def zoo_snapshot_of_cad(
     input_path: Path | str,
     camera: OptionDefaultCameraLookAt | OptionViewIsometric | None = None,
     padding: float = 0.2,
+    padding: float = 0.1,
 ) -> bytes:
     """Save a single view snapshot of a CAD file.
 
@@ -1602,6 +1607,7 @@ async def zoo_snapshot_of_kcl(
     kcl_path: Path | str | None,
     camera: kcl.CameraLookAt | None = None,
     padding: float = 0.2,
+    padding: float = 0.1,
 ) -> bytes:
     """Execute the KCL code and save a single view snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
