@@ -993,7 +993,7 @@ def zoo_multiview_snapshot_of_cad(
 
     Args:
         input_path (Path | str): Path to the CAD file to save a multiview snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
-        padding (float): The padding to apply to the snapshot. Default is 0.2.
+        padding (float): The padding to apply to the snapshot. Default is 0.1.
         max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
 
     Returns:
@@ -1158,7 +1158,7 @@ def zoo_multi_isometric_snapshot_of_cad(
 
     Args:
         input_path (Path | str): Path to the CAD file to save a multi-isometric snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
-        padding (float): The padding to apply to the snapshot. Default is 0.2.
+        padding (float): The padding to apply to the snapshot. Default is 0.1.
         max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
 
     Returns:
@@ -1322,7 +1322,7 @@ async def zoo_multi_isometric_snapshot_of_kcl(
     Args:
         kcl_code (str | None): KCL code
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
-        padding (float): The padding to apply to the snapshot. Default is 0.2.
+        padding (float): The padding to apply to the snapshot. Default is 0.1.
         max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
 
     Returns:
@@ -1395,7 +1395,7 @@ async def zoo_multiview_snapshot_of_kcl(
     Args:
         kcl_code (str | None): KCL code
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
-        padding (float): The padding to apply to the snapshot. Default is 0.2.
+        padding (float): The padding to apply to the snapshot. Default is 0.1.
         max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
 
     Returns:
@@ -1481,7 +1481,7 @@ def zoo_snapshot_of_cad(
     Args:
         input_path (Path | str): Path to the CAD file to save a snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         camera (OptionDefaultCameraLookAt | OptionViewIsometric | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
-        padding (float): The padding to apply to the snapshot. Default is 0.2.
+        padding (float): The padding to apply to the snapshot. Default is 0.1.
         max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
 
     Returns:
@@ -1620,7 +1620,7 @@ async def zoo_snapshot_of_kcl(
         kcl_code (str | None): KCL code
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
         camera (kcl.CameraLookAt | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
-        padding (float): The padding to apply to the snapshot. Default is 0.2.
+        padding (float): The padding to apply to the snapshot. Default is 0.1.
         max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
 
     Returns:
