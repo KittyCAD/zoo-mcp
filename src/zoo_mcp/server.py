@@ -20,6 +20,8 @@ from zoo_mcp.kcl_samples import (
 from zoo_mcp.utils.image_utils import encode_image, save_image_to_disk
 from zoo_mcp.zoo_tools import (
     CameraView,
+    zoo_calculate_bounding_box_cad,
+    zoo_calculate_bounding_box_kcl,
     zoo_calculate_cad_physical_properties,
     zoo_calculate_center_of_mass,
     zoo_calculate_kcl_physical_properties,
@@ -153,7 +155,7 @@ async def calculate_cad_physical_properties(
     unit_area: str,
     unit_volume: str,
 ) -> dict | str:
-    """Calculate physical properties (volume, mass, surface area, center of mass) of a CAD file.
+    """Calculate physical properties (volume, mass, surface area, center of mass, bounding box) of a CAD file.
 
     Args:
         input_file (str): The path of the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
@@ -165,7 +167,7 @@ async def calculate_cad_physical_properties(
         unit_volume (str): The unit of volume. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
 
     Returns:
-        dict | str: A dictionary with keys 'volume', 'mass', 'surface_area', and 'center_of_mass', or an error message if the operation fails.
+        dict | str: A dictionary with keys 'volume', 'mass', 'surface_area', 'center_of_mass', and 'bounding_box', or an error message if the operation fails.
     """
 
     logger.info(
@@ -197,7 +199,7 @@ async def calculate_kcl_physical_properties(
     unit_area: str = "mm2",
     unit_volume: str = "cm3",
 ) -> dict | str:
-    """Calculate physical properties (volume, mass, surface area, center of mass) of a KCL model.
+    """Calculate physical properties (volume, mass, surface area, center of mass, bounding box) of a KCL model.
 
     Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point
     to a .kcl file or a directory containing a main.kcl file.
@@ -213,7 +215,7 @@ async def calculate_kcl_physical_properties(
         unit_volume (str): The unit of volume. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
 
     Returns:
-        dict | str: A dictionary with keys 'volume', 'mass', 'surface_area', and 'center_of_mass', or an error message if the operation fails.
+        dict | str: A dictionary with keys 'volume', 'mass', 'surface_area', 'center_of_mass', and 'bounding_box', or an error message if the operation fails.
     """
 
     logger.info("calculate_kcl_physical_properties tool called")
@@ -233,6 +235,58 @@ async def calculate_kcl_physical_properties(
         return (
             f"There was an error calculating physical properties of the KCL model: {e}"
         )
+
+
+@mcp.tool()
+async def calculate_bounding_box_kcl(
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
+) -> dict | str:
+    """Calculate the bounding box of a KCL model.
+
+    Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point
+    to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): The KCL code to evaluate.
+        kcl_path (str | None): Path to a .kcl file or a directory containing a main.kcl file.
+
+    Returns:
+        dict | str: A dictionary with 'center' (dict with x,y,z) and 'extents' (dict with x,y,z),
+                    or an error message if the operation fails.
+    """
+
+    logger.info("calculate_bounding_box_kcl tool called")
+
+    try:
+        return await zoo_calculate_bounding_box_kcl(
+            kcl_code=kcl_code,
+            kcl_path=kcl_path,
+        )
+    except Exception as e:
+        return f"There was an error calculating bounding box of the KCL model: {e}"
+
+
+@mcp.tool()
+async def calculate_bounding_box_cad(
+    input_file: str,
+) -> dict | str:
+    """Calculate the bounding box of a CAD file.
+
+    Args:
+        input_file (str): The path of the CAD file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
+
+    Returns:
+        dict | str: A dictionary with 'center' (dict with x,y,z) and 'extents' (dict with x,y,z),
+                    or an error message if the operation fails.
+    """
+
+    logger.info("calculate_bounding_box_cad tool called for file: %s", input_file)
+
+    try:
+        return await zoo_calculate_bounding_box_cad(file_path=input_file)
+    except Exception as e:
+        return f"There was an error calculating the bounding box of the file: {e}"
 
 
 @mcp.tool()
