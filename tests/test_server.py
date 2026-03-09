@@ -180,6 +180,11 @@ async def test_calculate_cad_physical_properties(cube_stl: str):
     assert com["x"] == pytest.approx(5.0)
     assert com["y"] == pytest.approx(5.0)
     assert com["z"] == pytest.approx(-5.0)
+    bbox = result["bounding_box"]
+    assert "center" in bbox and "extents" in bbox
+    assert bbox["extents"]["x"] == pytest.approx(10.0, abs=0.1)
+    assert bbox["extents"]["y"] == pytest.approx(10.0, abs=0.1)
+    assert bbox["extents"]["z"] == pytest.approx(10.0, abs=0.1)
 
 
 @pytest.mark.asyncio
@@ -225,6 +230,11 @@ async def test_calculate_kcl_physical_properties(cube_kcl: str):
     assert com["x"] == pytest.approx(5.0, abs=1e-1)
     assert com["y"] == pytest.approx(5.0, abs=1e-1)
     assert com["z"] == pytest.approx(-5.0, abs=1e-1)
+    bbox = result["bounding_box"]
+    assert "center" in bbox and "extents" in bbox
+    assert bbox["extents"]["x"] == pytest.approx(10.0, abs=0.1)
+    assert bbox["extents"]["y"] == pytest.approx(10.0, abs=0.1)
+    assert bbox["extents"]["z"] == pytest.approx(10.0, abs=0.1)
 
 
 @pytest.mark.asyncio
@@ -263,6 +273,101 @@ async def test_calculate_kcl_physical_properties_invalid_unit(cube_kcl: str):
     )
     result = _meta_result(response)
     assert "Invalid unit_area" in result
+
+
+@pytest.mark.asyncio
+async def test_calculate_bounding_box_kcl(cube_kcl: str):
+    response = await mcp.call_tool(
+        "calculate_bounding_box_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": cube_kcl,
+        },
+    )
+    result = _meta_result(response)
+    assert isinstance(result, dict)
+    assert "center" in result
+    assert "extents" in result
+    center = result["center"]
+    extents = result["extents"]
+    assert "x" in center and "y" in center and "z" in center
+    assert "x" in extents and "y" in extents and "z" in extents
+    # 10mm cube: extents should be ~10 in each direction
+    assert extents["x"] == pytest.approx(10.0, abs=0.1)
+    assert extents["y"] == pytest.approx(10.0, abs=0.1)
+    assert extents["z"] == pytest.approx(10.0, abs=0.1)
+
+
+@pytest.mark.asyncio
+async def test_calculate_bounding_box_kcl_error():
+    response = await mcp.call_tool(
+        "calculate_bounding_box_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": None,
+        },
+    )
+    result = _meta_result(response)
+    assert "error calculating bounding box" in result
+
+
+@pytest.mark.asyncio
+async def test_calculate_bounding_box_cad(cube_stl: str):
+    response = await mcp.call_tool(
+        "calculate_bounding_box_cad",
+        arguments={
+            "input_file": cube_stl,
+        },
+    )
+    result = _meta_result(response)
+    assert isinstance(result, dict)
+    assert "center" in result
+    assert "extents" in result
+    center = result["center"]
+    extents = result["extents"]
+    assert "x" in center and "y" in center and "z" in center
+    assert "x" in extents and "y" in extents and "z" in extents
+    assert extents["x"] == pytest.approx(10.0, abs=0.1)
+    assert extents["y"] == pytest.approx(10.0, abs=0.1)
+    assert extents["z"] == pytest.approx(10.0, abs=0.1)
+    assert center["x"] == pytest.approx(5.0, abs=0.1)
+    assert center["y"] == pytest.approx(5.0, abs=0.1)
+    assert center["z"] == pytest.approx(5.0, abs=0.1)
+
+
+@pytest.mark.asyncio
+async def test_calculate_bounding_box_cad_error(empty_step: str):
+    response = await mcp.call_tool(
+        "calculate_bounding_box_cad",
+        arguments={
+            "input_file": empty_step,
+        },
+    )
+    result = _meta_result(response)
+    assert "error calculating the bounding box" in result
+
+
+@pytest.mark.asyncio
+async def test_calculate_bounding_box_cad_step(cube_stp: str):
+    """Test bounding box calculation for STEP files with uppercase extension."""
+    response = await mcp.call_tool(
+        "calculate_bounding_box_cad",
+        arguments={
+            "input_file": cube_stp,
+        },
+    )
+    result = _meta_result(response)
+    assert isinstance(result, dict)
+    center = result["center"]
+    extents = result["extents"]
+    assert "x" in center and "y" in center and "z" in center
+    assert "x" in extents and "y" in extents and "z" in extents
+    assert extents["x"] == pytest.approx(10.0, abs=0.1)
+    assert extents["y"] == pytest.approx(10.0, abs=0.1)
+    assert extents["z"] == pytest.approx(10.0, abs=0.1)
+    assert center["x"] == pytest.approx(5.0, abs=0.1)
+    assert center["y"] == pytest.approx(5.0, abs=0.1)
+    assert center["z"] == pytest.approx(-5.0, abs=0.1)
 
 
 @pytest.mark.asyncio
