@@ -181,10 +181,10 @@ async def test_calculate_cad_physical_properties(cube_stl: str):
     assert com["y"] == pytest.approx(5.0)
     assert com["z"] == pytest.approx(-5.0)
     bbox = result["bounding_box"]
-    assert "center" in bbox and "extents" in bbox
-    assert bbox["extents"]["x"] == pytest.approx(10.0, abs=0.1)
-    assert bbox["extents"]["y"] == pytest.approx(10.0, abs=0.1)
-    assert bbox["extents"]["z"] == pytest.approx(10.0, abs=0.1)
+    assert "center" in bbox and "dimensions" in bbox
+    assert bbox["dimensions"]["x"] == pytest.approx(10.0, abs=0.1)
+    assert bbox["dimensions"]["y"] == pytest.approx(10.0, abs=0.1)
+    assert bbox["dimensions"]["z"] == pytest.approx(10.0, abs=0.1)
 
 
 @pytest.mark.asyncio
@@ -231,10 +231,10 @@ async def test_calculate_kcl_physical_properties(cube_kcl: str):
     assert com["y"] == pytest.approx(5.0, abs=1e-1)
     assert com["z"] == pytest.approx(-5.0, abs=1e-1)
     bbox = result["bounding_box"]
-    assert "center" in bbox and "extents" in bbox
-    assert bbox["extents"]["x"] == pytest.approx(10.0, abs=0.1)
-    assert bbox["extents"]["y"] == pytest.approx(10.0, abs=0.1)
-    assert bbox["extents"]["z"] == pytest.approx(10.0, abs=0.1)
+    assert "center" in bbox and "dimensions" in bbox
+    assert bbox["dimensions"]["x"] == pytest.approx(10.0, abs=0.1)
+    assert bbox["dimensions"]["y"] == pytest.approx(10.0, abs=0.1)
+    assert bbox["dimensions"]["z"] == pytest.approx(10.0, abs=0.1)
 
 
 @pytest.mark.asyncio
@@ -287,15 +287,15 @@ async def test_calculate_bounding_box_kcl(cube_kcl: str):
     result = _meta_result(response)
     assert isinstance(result, dict)
     assert "center" in result
-    assert "extents" in result
+    assert "dimensions" in result
     center = result["center"]
-    extents = result["extents"]
+    dimensions = result["dimensions"]
     assert "x" in center and "y" in center and "z" in center
-    assert "x" in extents and "y" in extents and "z" in extents
-    # 10mm cube: extents should be ~10 in each direction
-    assert extents["x"] == pytest.approx(10.0, abs=0.1)
-    assert extents["y"] == pytest.approx(10.0, abs=0.1)
-    assert extents["z"] == pytest.approx(10.0, abs=0.1)
+    assert "x" in dimensions and "y" in dimensions and "z" in dimensions
+    # 10mm cube: dimensions should be ~10 in each direction
+    assert dimensions["x"] == pytest.approx(10.0, abs=0.1)
+    assert dimensions["y"] == pytest.approx(10.0, abs=0.1)
+    assert dimensions["z"] == pytest.approx(10.0, abs=0.1)
 
 
 @pytest.mark.asyncio
@@ -322,14 +322,14 @@ async def test_calculate_bounding_box_cad(cube_stl: str):
     result = _meta_result(response)
     assert isinstance(result, dict)
     assert "center" in result
-    assert "extents" in result
+    assert "dimensions" in result
     center = result["center"]
-    extents = result["extents"]
+    dimensions = result["dimensions"]
     assert "x" in center and "y" in center and "z" in center
-    assert "x" in extents and "y" in extents and "z" in extents
-    assert extents["x"] == pytest.approx(10.0, abs=0.1)
-    assert extents["y"] == pytest.approx(10.0, abs=0.1)
-    assert extents["z"] == pytest.approx(10.0, abs=0.1)
+    assert "x" in dimensions and "y" in dimensions and "z" in dimensions
+    assert dimensions["x"] == pytest.approx(10.0, abs=0.1)
+    assert dimensions["y"] == pytest.approx(10.0, abs=0.1)
+    assert dimensions["z"] == pytest.approx(10.0, abs=0.1)
     assert center["x"] == pytest.approx(5.0, abs=0.1)
     assert center["y"] == pytest.approx(5.0, abs=0.1)
     assert center["z"] == pytest.approx(5.0, abs=0.1)
@@ -359,12 +359,12 @@ async def test_calculate_bounding_box_cad_step(cube_stp: str):
     result = _meta_result(response)
     assert isinstance(result, dict)
     center = result["center"]
-    extents = result["extents"]
+    dimensions = result["dimensions"]
     assert "x" in center and "y" in center and "z" in center
-    assert "x" in extents and "y" in extents and "z" in extents
-    assert extents["x"] == pytest.approx(10.0, abs=0.1)
-    assert extents["y"] == pytest.approx(10.0, abs=0.1)
-    assert extents["z"] == pytest.approx(10.0, abs=0.1)
+    assert "x" in dimensions and "y" in dimensions and "z" in dimensions
+    assert dimensions["x"] == pytest.approx(10.0, abs=0.1)
+    assert dimensions["y"] == pytest.approx(10.0, abs=0.1)
+    assert dimensions["z"] == pytest.approx(10.0, abs=0.1)
     assert center["x"] == pytest.approx(5.0, abs=0.1)
     assert center["y"] == pytest.approx(5.0, abs=0.1)
     assert center["z"] == pytest.approx(-5.0, abs=0.1)

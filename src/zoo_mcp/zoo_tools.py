@@ -678,7 +678,7 @@ async def zoo_calculate_kcl_physical_properties(
         "center_of_mass": {"x": com.x, "y": com.y, "z": com.z},
         "bounding_box": {
             "center": {"x": bbox_center.x, "y": bbox_center.y, "z": bbox_center.z},
-            "extents": {"x": bbox_dims.x, "y": bbox_dims.y, "z": bbox_dims.z},
+            "dimensions": {"x": bbox_dims.x, "y": bbox_dims.y, "z": bbox_dims.z},
         },
     }
 
@@ -692,7 +692,7 @@ def _compute_stl_bounding_box(stl_data: bytes) -> dict:
         stl_data: Raw bytes of an STL file (binary or ASCII).
 
     Returns:
-        dict with 'center' (dict with x,y,z) and 'extents' (dict with x,y,z).
+        dict with 'center' (dict with x,y,z) and 'dimensions' (dict with x,y,z).
     """
     if len(stl_data) == 0:
         raise ZooMCPException("STL data is empty")
@@ -704,14 +704,14 @@ def _compute_stl_bounding_box(stl_data: bytes) -> dict:
 
     bounds = mesh.bounds  # [[min_x, min_y, min_z], [max_x, max_y, max_z]]
     center = (bounds[0] + bounds[1]) / 2
-    extents = bounds[1] - bounds[0]
+    dimensions = bounds[1] - bounds[0]
 
     return {
         "center": {"x": float(center[0]), "y": float(center[1]), "z": float(center[2])},
-        "extents": {
-            "x": float(extents[0]),
-            "y": float(extents[1]),
-            "z": float(extents[2]),
+        "dimensions": {
+            "x": float(dimensions[0]),
+            "y": float(dimensions[1]),
+            "z": float(dimensions[2]),
         },
     }
 
@@ -730,7 +730,7 @@ async def zoo_calculate_bounding_box_kcl(
         kcl_path (Path | str | None): Path to a .kcl file or a directory containing a main.kcl file.
 
     Returns:
-        dict: A dictionary with 'center' (dict with x,y,z) and 'extents' (dict with x,y,z).
+        dict: A dictionary with 'center' (dict with x,y,z) and 'dimensions' (dict with x,y,z).
     """
     logger.info("Calculating bounding box of KCL")
 
@@ -746,7 +746,7 @@ async def zoo_calculate_bounding_box_kcl(
 
     return {
         "center": {"x": center.x, "y": center.y, "z": center.z},
-        "extents": {"x": dims.x, "y": dims.y, "z": dims.z},
+        "dimensions": {"x": dims.x, "y": dims.y, "z": dims.z},
     }
 
 
@@ -761,7 +761,7 @@ async def zoo_calculate_bounding_box_cad(
         file_path (Path | str): The path to the CAD file. Supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
 
     Returns:
-        dict: A dictionary with 'center' (dict with x,y,z) and 'extents' (dict with x,y,z).
+        dict: A dictionary with 'center' (dict with x,y,z) and 'dimensions' (dict with x,y,z).
     """
     file_path = Path(file_path)
 

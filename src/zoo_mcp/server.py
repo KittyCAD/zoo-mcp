@@ -252,7 +252,7 @@ async def calculate_bounding_box_kcl(
         kcl_path (str | None): Path to a .kcl file or a directory containing a main.kcl file.
 
     Returns:
-        dict | str: A dictionary with 'center' (dict with x,y,z) and 'extents' (dict with x,y,z),
+        dict | str: A dictionary with 'center' (dict with x,y,z) and 'dimensions' (dict with x,y,z),
                     or an error message if the operation fails.
     """
 
@@ -277,7 +277,7 @@ async def calculate_bounding_box_cad(
         input_file (str): The path of the CAD file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
 
     Returns:
-        dict | str: A dictionary with 'center' (dict with x,y,z) and 'extents' (dict with x,y,z),
+        dict | str: A dictionary with 'center' (dict with x,y,z) and 'dimensions' (dict with x,y,z),
                     or an error message if the operation fails.
     """
 
