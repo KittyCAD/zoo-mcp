@@ -1,3 +1,4 @@
+import io
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, TypeVar, cast
@@ -5,6 +6,7 @@ from uuid import uuid4
 
 import aiofiles
 import kcl
+import trimesh
 
 if TYPE_CHECKING:
 
@@ -521,7 +523,7 @@ async def zoo_calculate_cad_physical_properties(
     unit_area: str,
     unit_vol: str,
 ) -> dict:
-    """Calculate physical properties (volume, mass, surface area, center of mass) of a CAD file.
+    """Calculate physical properties (volume, mass, surface area, center of mass, bounding box) of a CAD file.
 
     Args:
         file_path (Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
@@ -533,7 +535,7 @@ async def zoo_calculate_cad_physical_properties(
         unit_vol (str): The unit of volume. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
 
     Returns:
-        dict: A dictionary with keys 'volume', 'mass', 'surface_area', and 'center_of_mass'.
+        dict: A dictionary with keys 'volume', 'mass', 'surface_area', 'center_of_mass', and 'bounding_box'.
     """
     file_path = Path(file_path)
 
@@ -542,7 +544,8 @@ async def zoo_calculate_cad_physical_properties(
     async with aiofiles.open(file_path, "rb") as inp:
         data = await inp.read()
 
-    src_format = FileImportFormat(_normalize_ext(file_path.suffix.split(".")[1]))
+    normalized_ext = _normalize_ext(file_path.suffix.split(".")[1])
+    src_format = FileImportFormat(normalized_ext)
 
     volume_result = kittycad_client.file.create_file_volume(
         output_unit=UnitVolume(unit_vol),
@@ -581,11 +584,29 @@ async def zoo_calculate_cad_physical_properties(
     ):
         raise ZooMCPException("Failed to calculate center of mass")
 
+    # Compute bounding box from mesh data
+    if normalized_ext == "stl":
+        bbox = _compute_stl_bounding_box(data)
+    else:
+        stl_result = kittycad_client.file.create_file_conversion(
+            src_format=src_format,
+            output_format=FileExportFormat.STL,
+            body=data,
+        )
+        if not isinstance(stl_result, FileConversion):
+            raise ZooMCPException("Failed to convert file for bounding box calculation")
+        if stl_result.outputs is None or len(stl_result.outputs) == 0:
+            raise ZooMCPException(
+                "Failed to convert file for bounding box calculation, no output"
+            )
+        bbox = _compute_stl_bounding_box(list(stl_result.outputs.values())[0])
+
     physical_properties = {
         "volume": volume_result.volume,
         "mass": mass_result.mass,
         "surface_area": sa_result.surface_area,
         "center_of_mass": com_result.center_of_mass.to_dict(),
+        "bounding_box": bbox,
     }
 
     return physical_properties
@@ -601,7 +622,7 @@ async def zoo_calculate_kcl_physical_properties(
     unit_area: str,
     unit_vol: str,
 ) -> dict:
-    """Calculate physical properties (volume, mass, surface area, center of mass) of a KCL model.
+    """Calculate physical properties (volume, mass, surface area, center of mass, bounding box) of a KCL model.
 
     Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point
     to a .kcl file or a directory containing a main.kcl file.
@@ -617,7 +638,7 @@ async def zoo_calculate_kcl_physical_properties(
         unit_vol (str): The unit of volume. One of 'cm3', 'ft3', 'in3', 'm3', 'yd3', 'usfloz', 'usgal', 'l', 'ml'.
 
     Returns:
-        dict: A dictionary with keys 'volume', 'mass', 'surface_area', and 'center_of_mass'.
+        dict: A dictionary with keys 'volume', 'mass', 'surface_area', 'center_of_mass', and 'bounding_box'.
     """
     logger.info("Calculating physical properties of KCL")
 
@@ -637,22 +658,147 @@ async def zoo_calculate_kcl_physical_properties(
 
     if kcl_code:
         response = await kcl.execute_code_and_measure(kcl_code, request)
+        bbox_response = await kcl.execute_code_and_bounding_box(kcl_code)
     else:
         response = await kcl.execute_and_measure(str(kcl_path), request)
+        bbox_response = await kcl.execute_and_bounding_box(str(kcl_path))
 
     volume = response.get_volume()
     com = response.get_center_of_mass()
     sa = response.get_surface_area()
     mass = response.get_mass()
 
+    bbox_center = bbox_response.get_center()
+    bbox_dims = bbox_response.get_dimensions()
+
     physical_properties = {
         "volume": volume,
         "mass": mass,
         "surface_area": sa,
         "center_of_mass": {"x": com.x, "y": com.y, "z": com.z},
+        "bounding_box": {
+            "center": {"x": bbox_center.x, "y": bbox_center.y, "z": bbox_center.z},
+            "dimensions": {"x": bbox_dims.x, "y": bbox_dims.y, "z": bbox_dims.z},
+        },
     }
 
     return physical_properties
+
+
+def _compute_stl_bounding_box(stl_data: bytes) -> dict:
+    """Load an STL file with trimesh and compute the bounding box.
+
+    Args:
+        stl_data: Raw bytes of an STL file (binary or ASCII).
+
+    Returns:
+        dict with 'center' (dict with x,y,z) and 'dimensions' (dict with x,y,z).
+    """
+    if len(stl_data) == 0:
+        raise ZooMCPException("STL data is empty")
+
+    mesh = trimesh.load(io.BytesIO(stl_data), file_type="stl")
+
+    if not hasattr(mesh, "bounds") or mesh.bounds is None:
+        raise ZooMCPException("Failed to compute bounding box from STL data")
+
+    bounds = mesh.bounds  # [[min_x, min_y, min_z], [max_x, max_y, max_z]]
+    center = (bounds[0] + bounds[1]) / 2
+    dimensions = bounds[1] - bounds[0]
+
+    return {
+        "center": {"x": float(center[0]), "y": float(center[1]), "z": float(center[2])},
+        "dimensions": {
+            "x": float(dimensions[0]),
+            "y": float(dimensions[1]),
+            "z": float(dimensions[2]),
+        },
+    }
+
+
+async def zoo_calculate_bounding_box_kcl(
+    kcl_code: str | None = None,
+    kcl_path: Path | str | None = None,
+) -> dict:
+    """Calculate the bounding box of a KCL model.
+
+    Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point
+    to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): KCL code to evaluate.
+        kcl_path (Path | str | None): Path to a .kcl file or a directory containing a main.kcl file.
+
+    Returns:
+        dict: A dictionary with 'center' (dict with x,y,z) and 'dimensions' (dict with x,y,z).
+    """
+    logger.info("Calculating bounding box of KCL")
+
+    _check_kcl_code_or_path(kcl_code, kcl_path)
+
+    if kcl_code:
+        response = await kcl.execute_code_and_bounding_box(kcl_code)
+    else:
+        response = await kcl.execute_and_bounding_box(str(kcl_path))
+
+    center = response.get_center()
+    dims = response.get_dimensions()
+
+    return {
+        "center": {"x": center.x, "y": center.y, "z": center.z},
+        "dimensions": {"x": dims.x, "y": dims.y, "z": dims.z},
+    }
+
+
+async def zoo_calculate_bounding_box_cad(
+    file_path: Path | str,
+) -> dict:
+    """Calculate the bounding box of a CAD file.
+
+    Converts the CAD file to STL via the Zoo API, then parses the mesh to compute the bounding box.
+
+    Args:
+        file_path (Path | str): The path to the CAD file. Supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
+
+    Returns:
+        dict: A dictionary with 'center' (dict with x,y,z) and 'dimensions' (dict with x,y,z).
+    """
+    file_path = Path(file_path)
+
+    logger.info("Calculating bounding box for %s", str(file_path.resolve()))
+
+    async with aiofiles.open(file_path, "rb") as inp:
+        data = await inp.read()
+
+    normalized_ext = _normalize_ext(file_path.suffix.split(".")[1])
+
+    # If the file is already STL, parse it directly
+    if normalized_ext == "stl":
+        return _compute_stl_bounding_box(data)
+
+    src_format = FileImportFormat(normalized_ext)
+
+    # Convert to STL to get mesh data for bounding box computation
+    stl_result = kittycad_client.file.create_file_conversion(
+        src_format=src_format,
+        output_format=FileExportFormat.STL,
+        body=data,
+    )
+
+    if not isinstance(stl_result, FileConversion):
+        raise ZooMCPException(
+            "Failed to convert file for bounding box calculation, incorrect return type %s",
+            type(stl_result),
+        )
+
+    if stl_result.outputs is None or len(stl_result.outputs) == 0:
+        raise ZooMCPException(
+            "Failed to convert file for bounding box calculation, no output"
+        )
+
+    stl_data = list(stl_result.outputs.values())[0]
+
+    return _compute_stl_bounding_box(stl_data)
 
 
 async def zoo_convert_cad_file(
