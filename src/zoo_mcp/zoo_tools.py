@@ -648,6 +648,7 @@ async def zoo_calculate_kcl_physical_properties(
     request.set_surface_area(_parse_unit(unit_area, UNIT_AREA_MAP, "unit_area"))
     request.set_volume(_parse_unit(unit_vol, UNIT_VOLUME_MAP, "unit_volume"))
     request.set_center_of_mass(_parse_unit(unit_length, UNIT_LENGTH_MAP, "unit_length"))
+    request.set_bounding_box(_parse_unit(unit_length, UNIT_LENGTH_MAP, "unit_length"))
     request.set_mass(
         output_unit=_parse_unit(unit_mass, UNIT_MASS_MAP, "unit_mass"),
         material_density=density,
@@ -658,18 +659,16 @@ async def zoo_calculate_kcl_physical_properties(
 
     if kcl_code:
         response = await kcl.execute_code_and_measure(kcl_code, request)
-        bbox_response = await kcl.execute_code_and_bounding_box(kcl_code)
     else:
         response = await kcl.execute_and_measure(str(kcl_path), request)
-        bbox_response = await kcl.execute_and_bounding_box(str(kcl_path))
 
     volume = response.get_volume()
     com = response.get_center_of_mass()
     sa = response.get_surface_area()
     mass = response.get_mass()
-
-    bbox_center = bbox_response.get_center()
-    bbox_dims = bbox_response.get_dimensions()
+    bbox = response.get_bounding_box()
+    bbox_center = bbox.get_center()
+    bbox_dims = bbox.get_dimensions()
 
     physical_properties = {
         "volume": volume,
@@ -717,6 +716,7 @@ def _compute_stl_bounding_box(stl_data: bytes) -> dict:
 
 
 async def zoo_calculate_bounding_box_kcl(
+    unit_length: str,
     kcl_code: str | None = None,
     kcl_path: Path | str | None = None,
 ) -> dict:
@@ -728,6 +728,7 @@ async def zoo_calculate_bounding_box_kcl(
     Args:
         kcl_code (str | None): KCL code to evaluate.
         kcl_path (Path | str | None): Path to a .kcl file or a directory containing a main.kcl file.
+        unit_length(str): The unit length to return. This should be one of 'cm', 'ft', 'in', 'm', 'mm', 'yd'
 
     Returns:
         dict: A dictionary with 'center' (dict with x,y,z) and 'dimensions' (dict with x,y,z).
@@ -737,9 +738,15 @@ async def zoo_calculate_bounding_box_kcl(
     _check_kcl_code_or_path(kcl_code, kcl_path)
 
     if kcl_code:
-        response = await kcl.execute_code_and_bounding_box(kcl_code)
+        response = await kcl.execute_code_and_bounding_box(
+            kcl_code,
+            output_unit=_parse_unit(unit_length, UNIT_LENGTH_MAP, "unit_length"),
+        )
     else:
-        response = await kcl.execute_and_bounding_box(str(kcl_path))
+        response = await kcl.execute_and_bounding_box(
+            str(kcl_path),
+            output_unit=_parse_unit(unit_length, UNIT_LENGTH_MAP, "unit_length"),
+        )
 
     center = response.get_center()
     dims = response.get_dimensions()

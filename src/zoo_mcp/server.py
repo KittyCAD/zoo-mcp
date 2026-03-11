@@ -239,6 +239,7 @@ async def calculate_kcl_physical_properties(
 
 @mcp.tool()
 async def calculate_bounding_box_kcl(
+    unit_length: str,
     kcl_code: str | None = None,
     kcl_path: str | None = None,
 ) -> dict | str:
@@ -248,6 +249,7 @@ async def calculate_bounding_box_kcl(
     to a .kcl file or a directory containing a main.kcl file.
 
     Args:
+        unit_length (str): The unit of length to return the result in. One of 'cm', 'ft', 'in', 'm', 'mm', 'yd'
         kcl_code (str | None): The KCL code to evaluate.
         kcl_path (str | None): Path to a .kcl file or a directory containing a main.kcl file.
 
@@ -260,6 +262,7 @@ async def calculate_bounding_box_kcl(
 
     try:
         return await zoo_calculate_bounding_box_kcl(
+            unit_length=unit_length,
             kcl_code=kcl_code,
             kcl_path=kcl_path,
         )
