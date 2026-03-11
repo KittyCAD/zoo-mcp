@@ -282,6 +282,7 @@ async def test_calculate_bounding_box_kcl(cube_kcl: str):
         arguments={
             "kcl_code": None,
             "kcl_path": cube_kcl,
+            "unit_length": "mm",
         },
     )
     result = _meta_result(response)
@@ -305,6 +306,7 @@ async def test_calculate_bounding_box_kcl_error():
         arguments={
             "kcl_code": None,
             "kcl_path": None,
+            "unit_length": "mm",
         },
     )
     result = _meta_result(response)
