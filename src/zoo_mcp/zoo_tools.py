@@ -525,6 +525,8 @@ async def zoo_calculate_cad_physical_properties(
 ) -> dict:
     """Calculate physical properties (volume, mass, surface area, center of mass, bounding box) of a CAD file.
 
+    NOTE: The bounding box will be returned in the same unit length as the original CAD file.
+
     Args:
         file_path (Path | str): The path to the file. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         unit_length (str): The unit of length for center of mass. One of 'cm', 'ft', 'in', 'm', 'mm', 'yd'.
@@ -630,7 +632,7 @@ async def zoo_calculate_kcl_physical_properties(
     Args:
         kcl_code (str | None): KCL code to evaluate.
         kcl_path (Path | str | None): Path to a .kcl file or a directory containing a main.kcl file.
-        unit_length (str): The unit of length for center of mass. One of 'cm', 'ft', 'in', 'm', 'mm', 'yd'.
+        unit_length (str): The unit of length for center of mass and bounding box. One of 'cm', 'ft', 'in', 'm', 'mm', 'yd'.
         unit_mass (str): The unit of mass for the mass result. One of 'g', 'kg', 'lb'.
         unit_density (str): The unit of density for the material. One of 'lb:ft3', 'kg:m3'.
         density (float): The density of the material.
