@@ -768,7 +768,7 @@ async def zoo_calculate_bounding_box_cad(
         file_path (Path | str): The path to the CAD file. Supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
 
     Returns:
-        dict: A dictionary with 'center' (dict with x,y,z) and 'dimensions' (dict with x,y,z).
+        dict: A dictionary with 'center' (dict with x,y,z) and 'dimensions' (dict with x,y,z). The unit of the center and dimensions is the same as original unit of the CAD file.
     """
     file_path = Path(file_path)
 
