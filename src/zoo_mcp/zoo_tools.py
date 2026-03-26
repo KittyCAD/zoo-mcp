@@ -211,32 +211,60 @@ class KCLExportFormat(Enum):
 
 class CameraView(Enum):
     views = {
-        "front": {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]},
-        "back": {"up": [0, 0, 1], "vantage": [0, 1, 0], "center": [0, 0, 0]},
-        "left": {"up": [0, 0, 1], "vantage": [-1, 0, 0], "center": [0, 0, 0]},
-        "right": {"up": [0, 0, 1], "vantage": [1, 0, 0], "center": [0, 0, 0]},
-        "top": {"up": [0, 1, 0], "vantage": [0, 0, 1], "center": [0, 0, 0]},
-        "bottom": {"up": [0, -1, 0], "vantage": [0, 0, -1], "center": [0, 0, 0]},
-        "isometric": {"up": [0, 0, 1], "vantage": [1, -1, 1], "center": [0, 0, 0]},
+        "front": {
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [0.0, -1.0, 0.0],
+            "center": [0.0, 0.0, 0.0],
+        },
+        "back": {
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [0.0, 1.0, 0.0],
+            "center": [0.0, 0.0, 0.0],
+        },
+        "left": {
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [-1.0, 0.0, 0.0],
+            "center": [0.0, 0.0, 0.0],
+        },
+        "right": {
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [1.0, 0.0, 0.0],
+            "center": [0.0, 0.0, 0.0],
+        },
+        "top": {
+            "up": [0.0, 1.0, 0.0],
+            "vantage": [0.0, 0.0, 1.0],
+            "center": [0.0, 0.0, 0.0],
+        },
+        "bottom": {
+            "up": [0.0, -1.0, 0.0],
+            "vantage": [0.0, 0.0, -1.0],
+            "center": [0.0, 0.0, 0.0],
+        },
+        "isometric": {
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [1.0, -1.0, 1.0],
+            "center": [0.0, 0.0, 0.0],
+        },
         "isometric_front_right": {
-            "up": [0, 0, 1],
-            "vantage": [1, -1, 1],
-            "center": [0, 0, 0],
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [1.0, -1.0, 1.0],
+            "center": [0.0, 0.0, 0.0],
         },
         "isometric_front_left": {
-            "up": [0, 0, 1],
-            "vantage": [-1, -1, 1],
-            "center": [0, 0, 0],
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [-1.0, -1.0, 1.0],
+            "center": [0.0, 0.0, 0.0],
         },
         "isometric_back_right": {
-            "up": [0, 0, 1],
-            "vantage": [1, 1, -1],
-            "center": [0, 0, 0],
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [1.0, 1.0, -1.0],
+            "center": [0.0, 0.0, 0.0],
         },
         "isometric_back_left": {
-            "up": [0, 0, 1],
-            "vantage": [-1, 1, -1],
-            "center": [0, 0, 0],
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [-1.0, 1.0, -1.0],
+            "center": [0.0, 0.0, 0.0],
         },
     }
 
