@@ -261,7 +261,9 @@ class CameraView(Enum):
         )
 
     @staticmethod
-    def to_kittycad_camera(view: dict[str, list[float]]) -> OptionDefaultCameraLookAt:
+    def to_kittycad_camera(
+        view: dict[str, list[float]],
+    ) -> OptionDefaultCameraLookAt:
         return OptionDefaultCameraLookAt(
             up=Point3d(
                 x=view["up"][0],
@@ -1015,7 +1017,7 @@ async def zoo_export_kcl(
     return Path(export_path)
 
 
-def zoo_format_kcl(
+async def zoo_format_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
 ) -> str | None:
@@ -1038,7 +1040,7 @@ def zoo_format_kcl(
             formatted_code = kcl.format(kcl_code)
             return formatted_code
         else:
-            kcl.format_dir(str(kcl_path))
+            await kcl.format_dir(str(kcl_path))
             return None
     except Exception as e:
         logger.error(e)
