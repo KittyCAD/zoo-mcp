@@ -211,32 +211,60 @@ class KCLExportFormat(Enum):
 
 class CameraView(Enum):
     views = {
-        "front": {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]},
-        "back": {"up": [0, 0, 1], "vantage": [0, 1, 0], "center": [0, 0, 0]},
-        "left": {"up": [0, 0, 1], "vantage": [-1, 0, 0], "center": [0, 0, 0]},
-        "right": {"up": [0, 0, 1], "vantage": [1, 0, 0], "center": [0, 0, 0]},
-        "top": {"up": [0, 1, 0], "vantage": [0, 0, 1], "center": [0, 0, 0]},
-        "bottom": {"up": [0, -1, 0], "vantage": [0, 0, -1], "center": [0, 0, 0]},
-        "isometric": {"up": [0, 0, 1], "vantage": [1, -1, 1], "center": [0, 0, 0]},
+        "front": {
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [0.0, -1.0, 0.0],
+            "center": [0.0, 0.0, 0.0],
+        },
+        "back": {
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [0.0, 1.0, 0.0],
+            "center": [0.0, 0.0, 0.0],
+        },
+        "left": {
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [-1.0, 0.0, 0.0],
+            "center": [0.0, 0.0, 0.0],
+        },
+        "right": {
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [1.0, 0.0, 0.0],
+            "center": [0.0, 0.0, 0.0],
+        },
+        "top": {
+            "up": [0.0, 1.0, 0.0],
+            "vantage": [0.0, 0.0, 1.0],
+            "center": [0.0, 0.0, 0.0],
+        },
+        "bottom": {
+            "up": [0.0, -1.0, 0.0],
+            "vantage": [0.0, 0.0, -1.0],
+            "center": [0.0, 0.0, 0.0],
+        },
+        "isometric": {
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [1.0, -1.0, 1.0],
+            "center": [0.0, 0.0, 0.0],
+        },
         "isometric_front_right": {
-            "up": [0, 0, 1],
-            "vantage": [1, -1, 1],
-            "center": [0, 0, 0],
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [1.0, -1.0, 1.0],
+            "center": [0.0, 0.0, 0.0],
         },
         "isometric_front_left": {
-            "up": [0, 0, 1],
-            "vantage": [-1, -1, 1],
-            "center": [0, 0, 0],
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [-1.0, -1.0, 1.0],
+            "center": [0.0, 0.0, 0.0],
         },
         "isometric_back_right": {
-            "up": [0, 0, 1],
-            "vantage": [1, 1, -1],
-            "center": [0, 0, 0],
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [1.0, 1.0, -1.0],
+            "center": [0.0, 0.0, 0.0],
         },
         "isometric_back_left": {
-            "up": [0, 0, 1],
-            "vantage": [-1, 1, -1],
-            "center": [0, 0, 0],
+            "up": [0.0, 0.0, 1.0],
+            "vantage": [-1.0, 1.0, -1.0],
+            "center": [0.0, 0.0, 0.0],
         },
     }
 
@@ -261,7 +289,9 @@ class CameraView(Enum):
         )
 
     @staticmethod
-    def to_kittycad_camera(view: dict[str, list[float]]) -> OptionDefaultCameraLookAt:
+    def to_kittycad_camera(
+        view: dict[str, list[float]],
+    ) -> OptionDefaultCameraLookAt:
         return OptionDefaultCameraLookAt(
             up=Point3d(
                 x=view["up"][0],
@@ -1038,7 +1068,13 @@ def zoo_format_kcl(
             formatted_code = kcl.format(kcl_code)
             return formatted_code
         else:
-            kcl.format_dir(str(kcl_path))
+            path = Path(kcl_path)  # type: ignore[arg-type]
+            if path.is_file():
+                code = path.read_text()
+                formatted = kcl.format(code)
+                path.write_text(formatted)
+            else:
+                kcl.format_dir(str(kcl_path))  # type: ignore[unused-awaitable]
             return None
     except Exception as e:
         logger.error(e)

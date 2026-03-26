@@ -73,5 +73,5 @@ def _initialize_kcl_samples() -> None:
 
 
 # Initialize caches when module is imported
-_initialize_kcl_docs()
-_initialize_kcl_samples()
+# _initialize_kcl_docs()
+# _initialize_kcl_samples()
