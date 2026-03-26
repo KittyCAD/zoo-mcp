@@ -394,7 +394,7 @@ async def format_kcl(
     logger.info("format_kcl tool called")
 
     try:
-        res = zoo_format_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
+        res = await zoo_format_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
         if isinstance(res, str):
             return res
         else:
