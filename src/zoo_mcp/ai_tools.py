@@ -2,6 +2,7 @@ import asyncio
 import time
 from pathlib import Path
 
+from kittycad._io_types import SyncUpload
 from kittycad.models import (
     ApiCallStatus,
     FileExportFormat,
@@ -216,7 +217,7 @@ async def edit_kcl_project(
             "No main.kcl file found in the root of the provided project path"
         )
 
-    file_attachments = {
+    file_attachments: dict[str, SyncUpload] = {
         str(fp.relative_to(proj_path)): str(fp.resolve()) for fp in file_paths
     }
 
