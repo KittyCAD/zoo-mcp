@@ -1,0 +1,9 @@
+@settings(defaultLengthUnit = mm, kclVersion = 1.0)
+
+// Simple right circular cylinder centered on the origin.
+radius = 15
+height = 40
+
+cylinder = startSketchOn(XY)
+  |> circle(center = [0, 0], radius = radius)
+  |> extrude(length = height)

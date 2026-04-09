@@ -1,0 +1,33 @@
+@settings(defaultLengthUnit = mm, kclVersion = 1.0)
+
+outerRadius = 30
+gearThickness = 8
+
+gearSketch = startSketchOn(XY)
+  |> startProfile(at = [outerRadius, 0])
+  |> line(endAbsolute = [21.25, 5.694], tag = $tooth01)
+  |> line(endAbsolute = [25.981, 15], tag = $tooth02)
+  |> line(endAbsolute = [15.556, 15.556], tag = $tooth03)
+  |> line(endAbsolute = [15, 25.981], tag = $tooth04)
+  |> line(endAbsolute = [5.694, 21.25], tag = $tooth05)
+  |> line(endAbsolute = [0, 30], tag = $tooth06)
+  |> line(endAbsolute = [-5.694, 21.25], tag = $tooth07)
+  |> line(endAbsolute = [-15, 25.981], tag = $tooth08)
+  |> line(endAbsolute = [-15.556, 15.556], tag = $tooth09)
+  |> line(endAbsolute = [-25.981, 15], tag = $tooth10)
+  |> line(endAbsolute = [-21.25, 5.694], tag = $tooth11)
+  |> line(endAbsolute = [-30, 0], tag = $tooth12)
+  |> line(endAbsolute = [-21.25, -5.694], tag = $tooth13)
+  |> line(endAbsolute = [-25.981, -15], tag = $tooth14)
+  |> line(endAbsolute = [-15.556, -15.556], tag = $tooth15)
+  |> line(endAbsolute = [-15, -25.981], tag = $tooth16)
+  |> line(endAbsolute = [-5.694, -21.25], tag = $tooth17)
+  |> line(endAbsolute = [0, -30], tag = $tooth18)
+  |> line(endAbsolute = [5.694, -21.25], tag = $tooth19)
+  |> line(endAbsolute = [15, -25.981], tag = $tooth20)
+  |> line(endAbsolute = [15.556, -15.556], tag = $tooth21)
+  |> line(endAbsolute = [25.981, -15], tag = $tooth22)
+  |> line(endAbsolute = [21.25, -5.694], tag = $tooth23)
+  |> close(tag = $tooth24)
+
+gear = extrude(gearSketch, length = gearThickness)
