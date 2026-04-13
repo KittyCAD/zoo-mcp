@@ -545,8 +545,6 @@ async def test_lint_and_fix_kcl_error(cube_stl: str):
 @pytest.mark.asyncio
 async def test_get_sketch_constraint_status_fully_constrained_code():
     kcl_code = """
-@settings(experimentalFeatures = allow)
-
 sketch(on = YZ) {
   line1 = line(start = [var 2mm, var 8mm], end = [var 5mm, var 7mm])
   line1.start.at[0] == 2
@@ -574,8 +572,6 @@ sketch(on = YZ) {
 @pytest.mark.asyncio
 async def test_get_sketch_constraint_status_under_constrained_code():
     kcl_code = """
-@settings(experimentalFeatures = allow)
-
 sketch(on = YZ) {
   line1 = line(start = [var 1.32mm, var -1.93mm], end = [var 6.08mm, var 2.51mm])
 }
@@ -597,8 +593,6 @@ sketch(on = YZ) {
 @pytest.mark.asyncio
 async def test_get_sketch_constraint_status_over_constrained_code():
     kcl_code = """
-@settings(experimentalFeatures = allow)
-
 sketch(on = YZ) {
   line1 = line(start = [var 2mm, var 8mm], end = [var 5mm, var 7mm])
   line1.start.at[0] == 2

@@ -1,5 +1,3 @@
-@settings(experimentalFeatures = allow)
-
 sketch(on = YZ) {
   line1 = line(start = [var 2mm, var 8mm], end = [var 5mm, var 7mm])
   line1.start.at[0] == 2
