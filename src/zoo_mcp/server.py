@@ -21,6 +21,7 @@ from zoo_mcp.zoo_tools import (
     zoo_execute_kcl,
     zoo_export_kcl,
     zoo_format_kcl,
+    zoo_get_sketch_constraint_status,
     zoo_lint_and_fix_kcl,
     zoo_mock_execute_kcl,
     zoo_multi_isometric_snapshot_of_cad,
@@ -366,7 +367,7 @@ async def export_kcl(
 
 
 @mcp.tool()
-def format_kcl(
+async def format_kcl(
     kcl_code: str | None = None,
     kcl_path: str | None = None,
 ) -> str:
@@ -383,13 +384,41 @@ def format_kcl(
     logger.info("format_kcl tool called")
 
     try:
-        res = zoo_format_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
+        res = await zoo_format_kcl(kcl_code=kcl_code, kcl_path=kcl_path)
         if isinstance(res, str):
             return res
         else:
             return f"Successfully formatted KCL code at: {kcl_path}"
     except Exception as e:
         return f"There was an error formatting the KCL: {e}"
+
+
+@mcp.tool()
+async def get_sketch_constraint_status(
+    kcl_code: str | None = None,
+    kcl_path: str | None = None,
+) -> dict | str:
+    """Execute KCL and return a report of sketch constraint status. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Sketches are grouped by constraint status: fully_constrained, under_constrained, over_constrained, and errors.
+    Each sketch entry includes the sketch name, status, free_count (under-constrained segments), conflict_count (over-constrained segments), and total_count (total segments analyzed).
+
+    Args:
+        kcl_code (str | None): The KCL code to check constraints for.
+        kcl_path (str | None): The path to a KCL file or directory containing a main.kcl file.
+
+    Returns:
+        dict | str: A report grouping sketches by constraint status, or an error message if the operation fails.
+    """
+
+    logger.info("get_sketch_constraint_status tool called")
+
+    try:
+        return await zoo_get_sketch_constraint_status(
+            kcl_code=kcl_code, kcl_path=kcl_path
+        )
+    except Exception as e:
+        return f"Failed to get sketch constraint status: {e}"
 
 
 @mcp.tool()

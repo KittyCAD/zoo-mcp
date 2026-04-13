@@ -54,3 +54,15 @@ def cube_stp(tmp_path):
     dest_file = tmp_path / "cube.stp"
     shutil.copy(source_file, dest_file)
     yield f"{dest_file.resolve()}"
+
+
+@pytest.fixture
+def fully_constrained_kcl():
+    test_file = Path(__file__).parent / "data" / "fully_constrained_sketch.kcl"
+    yield f"{test_file.resolve()}"
+
+
+@pytest.fixture
+def under_constrained_kcl():
+    test_file = Path(__file__).parent / "data" / "under_constrained_sketch.kcl"
+    yield f"{test_file.resolve()}"
