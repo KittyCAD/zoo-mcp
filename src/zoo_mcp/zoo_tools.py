@@ -1045,7 +1045,7 @@ async def zoo_export_kcl(
     return Path(export_path)
 
 
-def zoo_format_kcl(
+async def zoo_format_kcl(
     kcl_code: str | None,
     kcl_path: Path | str | None,
 ) -> str | None:
@@ -1068,13 +1068,15 @@ def zoo_format_kcl(
             formatted_code = kcl.format(kcl_code)
             return formatted_code
         else:
-            path = Path(kcl_path)  # type: ignore[arg-type]
+            # _check_kcl_code_or_path ensures kcl_path is valid when kcl_code is None
+            assert kcl_path is not None
+            path = Path(kcl_path)
             if path.is_file():
                 code = path.read_text()
                 formatted = kcl.format(code)
                 path.write_text(formatted)
             else:
-                kcl.format_dir(str(kcl_path))  # type: ignore[unused-awaitable]
+                await kcl.format_dir(str(kcl_path))
             return None
     except Exception as e:
         logger.error(e)
