@@ -543,6 +543,109 @@ async def test_lint_and_fix_kcl_error(cube_stl: str):
 
 
 @pytest.mark.asyncio
+async def test_get_sketch_constraint_status_fully_constrained_code():
+    kcl_code = """
+@settings(experimentalFeatures = allow)
+
+sketch(on = YZ) {
+  line1 = line(start = [var 2mm, var 8mm], end = [var 5mm, var 7mm])
+  line1.start.at[0] == 2
+  line1.start.at[1] == 8
+  line1.end.at[0] == 5
+  line1.end.at[1] == 7
+}
+"""
+    response = await mcp.call_tool(
+        "get_sketch_constraint_status",
+        arguments={"kcl_code": kcl_code, "kcl_path": None},
+    )
+    result = _meta_result(response)
+    assert isinstance(result, dict)
+    assert len(result["fully_constrained"]) == 1
+    assert len(result["under_constrained"]) == 0
+    assert len(result["over_constrained"]) == 0
+    assert result["total_sketches"] == 1
+    sketch = result["fully_constrained"][0]
+    assert sketch["status"] == "FullyConstrained"
+    assert sketch["free_count"] == 0
+    assert sketch["conflict_count"] == 0
+
+
+@pytest.mark.asyncio
+async def test_get_sketch_constraint_status_under_constrained_code():
+    kcl_code = """
+@settings(experimentalFeatures = allow)
+
+sketch(on = YZ) {
+  line1 = line(start = [var 1.32mm, var -1.93mm], end = [var 6.08mm, var 2.51mm])
+}
+"""
+    response = await mcp.call_tool(
+        "get_sketch_constraint_status",
+        arguments={"kcl_code": kcl_code, "kcl_path": None},
+    )
+    result = _meta_result(response)
+    assert isinstance(result, dict)
+    assert len(result["under_constrained"]) == 1
+    assert len(result["fully_constrained"]) == 0
+    assert result["total_sketches"] == 1
+    sketch = result["under_constrained"][0]
+    assert sketch["status"] == "UnderConstrained"
+    assert sketch["free_count"] > 0
+
+
+@pytest.mark.asyncio
+async def test_get_sketch_constraint_status_over_constrained_code():
+    kcl_code = """
+@settings(experimentalFeatures = allow)
+
+sketch(on = YZ) {
+  line1 = line(start = [var 2mm, var 8mm], end = [var 5mm, var 7mm])
+  line1.start.at[0] == 2
+  line1.start.at[1] == 8
+  line1.end.at[0] == 5
+  line1.end.at[1] == 7
+  distance([line1.start, line1.end]) == 100mm
+}
+"""
+    response = await mcp.call_tool(
+        "get_sketch_constraint_status",
+        arguments={"kcl_code": kcl_code, "kcl_path": None},
+    )
+    result = _meta_result(response)
+    assert isinstance(result, dict)
+    assert len(result["over_constrained"]) == 1
+    assert len(result["fully_constrained"]) == 0
+    assert result["total_sketches"] == 1
+    sketch = result["over_constrained"][0]
+    assert sketch["status"] == "OverConstrained"
+    assert sketch["conflict_count"] > 0
+
+
+@pytest.mark.asyncio
+async def test_get_sketch_constraint_status_path(fully_constrained_kcl: str):
+    response = await mcp.call_tool(
+        "get_sketch_constraint_status",
+        arguments={"kcl_code": None, "kcl_path": fully_constrained_kcl},
+    )
+    result = _meta_result(response)
+    assert isinstance(result, dict)
+    assert len(result["fully_constrained"]) == 1
+    assert result["total_sketches"] == 1
+
+
+@pytest.mark.asyncio
+async def test_get_sketch_constraint_status_error():
+    response = await mcp.call_tool(
+        "get_sketch_constraint_status",
+        arguments={"kcl_code": "asdf = asdf", "kcl_path": None},
+    )
+    result = _meta_result(response)
+    assert isinstance(result, str)
+    assert "Failed to get sketch constraint status" in result
+
+
+@pytest.mark.asyncio
 async def test_mock_execute_kcl(cube_kcl: str):
     response = await mcp.call_tool(
         "mock_execute_kcl",
