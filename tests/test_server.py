@@ -472,6 +472,19 @@ async def test_format_kcl_path_success(cube_kcl: str):
 
 
 @pytest.mark.asyncio
+async def test_format_kcl_project_success(kcl_project: str):
+    response = await mcp.call_tool(
+        "format_kcl",
+        arguments={
+            "kcl_code": None,
+            "kcl_path": kcl_project,
+        },
+    )
+    result = _meta_result(response)
+    assert "Successfully formatted KCL code at" in result
+
+
+@pytest.mark.asyncio
 async def test_format_kcl_str_success(cube_kcl: str):
     response = await mcp.call_tool(
         "format_kcl",
