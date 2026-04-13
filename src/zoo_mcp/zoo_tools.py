@@ -1148,6 +1148,69 @@ def zoo_lint_and_fix_kcl(
         raise ZooMCPException(f"Failed to lint and fix the KCL: {e}")
 
 
+def _format_constraint_status(status: kcl.SketchConstraintStatus) -> dict:
+    """Format a single SketchConstraintStatus into a dict."""
+    return {
+        "name": status.name,
+        "status": str(status.status).removeprefix("ConstraintKind."),
+        "free_count": status.free_count,
+        "conflict_count": status.conflict_count,
+        "total_count": status.total_count,
+    }
+
+
+def _format_constraint_report(report: kcl.SketchConstraintReport) -> dict:
+    """Format a SketchConstraintReport into a dict."""
+    return {
+        "fully_constrained": [
+            _format_constraint_status(s) for s in report.fully_constrained
+        ],
+        "under_constrained": [
+            _format_constraint_status(s) for s in report.under_constrained
+        ],
+        "over_constrained": [
+            _format_constraint_status(s) for s in report.over_constrained
+        ],
+        "errors": [_format_constraint_status(s) for s in report.errors],
+        "total_sketches": (
+            len(report.fully_constrained)
+            + len(report.under_constrained)
+            + len(report.over_constrained)
+            + len(report.errors)
+        ),
+    }
+
+
+async def zoo_get_sketch_constraint_status(
+    kcl_code: str | None = None,
+    kcl_path: Path | str | None = None,
+) -> dict:
+    """Execute KCL and return a report of sketch constraint status. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
+
+    Args:
+        kcl_code (str | None): KCL code to check constraints for.
+        kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
+
+    Returns:
+        dict: A report grouping sketches by constraint status (fully_constrained, under_constrained, over_constrained, errors).
+    """
+
+    logger.info("Getting sketch constraint status")
+
+    _check_kcl_code_or_path(kcl_code, kcl_path)
+
+    try:
+        if kcl_code:
+            report = await kcl.get_sketch_constraint_status_code(kcl_code)
+        else:
+            assert kcl_path is not None
+            report = await kcl.get_sketch_constraint_status(str(kcl_path))
+        return _format_constraint_report(report)
+    except Exception as e:
+        logger.error(e)
+        raise ZooMCPException(f"Failed to get sketch constraint status: {e}")
+
+
 async def zoo_mock_execute_kcl(
     kcl_code: str | None = None,
     kcl_path: Path | str | None = None,
