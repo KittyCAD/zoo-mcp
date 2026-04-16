@@ -102,7 +102,7 @@ The script prompts for a request, runs Codex with the Zoo MCP server, and saves 
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request on the [GitHub repository](https://github.com/KittyCAD/zoo-mcp)
+Contributions are welcome! Please open an issue or submit a pull request on the [GitHub repository](https://github.com/KittyCAD/mcp)
 
 PRs will need to pass tests and linting before being merged.
 
