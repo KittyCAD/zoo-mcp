@@ -41,7 +41,7 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/KittyCAD/zoo-mcp"
+Repository = "https://github.com/KittyCAD/mcp"
 
 [project.scripts]
 zoo-mcp = "zoo_mcp.server:main"

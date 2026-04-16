@@ -3,7 +3,7 @@
   "name": "io.github.KittyCAD/zoo-mcp",
   "description": "An MCP server that provides access to the Zoo API for various CAD operations and tools.",
   "repository": {
-    "url": "https://github.com/KittyCAD/zoo-mcp",
+    "url": "https://github.com/KittyCAD/mcp",
     "source": "github"
   },
   "version": "0.13.1",
