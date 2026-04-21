@@ -648,8 +648,12 @@ async def test_get_sketch_constraint_status_error():
         arguments={"kcl_code": "asdf = asdf", "kcl_path": None},
     )
     result = _meta_result(response)
-    assert isinstance(result, str)
-    assert "Failed to get sketch constraint status" in result
+    assert isinstance(result, dict)
+    assert result["is_complete"] is False
+    assert result["kcl_error"] is not None
+    assert result["kcl_error"]["phase"] in {"parse", "execution"}
+    assert isinstance(result["kcl_error"]["text"], str)
+    assert result["kcl_error"]["text"] != ""
 
 
 @pytest.mark.asyncio
