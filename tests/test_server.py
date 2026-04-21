@@ -649,7 +649,7 @@ async def test_get_sketch_constraint_status_error():
     )
     result = _meta_result(response)
     assert isinstance(result, dict)
-    assert result["is_complete"] is False
+    assert result["kcl_executes_successfully"] is False
     assert result["kcl_error"] is not None
     assert result["kcl_error"]["phase"] in {"parse", "execution"}
     assert isinstance(result["kcl_error"]["text"], str)

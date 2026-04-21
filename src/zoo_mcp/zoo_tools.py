@@ -1178,7 +1178,7 @@ def _format_constraint_report(report: kcl.SketchConstraintReport) -> dict:
             + len(report.over_constrained)
             + len(report.errors)
         ),
-        "is_complete": report.is_complete,
+        "kcl_executes_successfully": report.is_complete,
         "kcl_error": None,
     }
     if report.kcl_error is not None:
@@ -1200,7 +1200,7 @@ async def zoo_get_sketch_constraint_status(
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
 
     Returns:
-        dict: A report grouping sketches by constraint status (fully_constrained, under_constrained, over_constrained, errors). Also includes is_complete and kcl_error; when KCL parse/execution fails, is_complete is False and kcl_error contains phase and text describing the failure.
+        dict: A report grouping sketches by constraint status (fully_constrained, under_constrained, over_constrained, errors). Also includes kcl_executes_successfully and kcl_error; when KCL parse/execution fails, kcl_executes_successfully is False and kcl_error contains phase and text describing the failure.
     """
 
     logger.info("Getting sketch constraint status")
