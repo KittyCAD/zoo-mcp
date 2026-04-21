@@ -403,6 +403,8 @@ async def get_sketch_constraint_status(
     Sketches are grouped by constraint status: fully_constrained, under_constrained, over_constrained, and errors.
     Each sketch entry includes the sketch name, status, free_count (under-constrained segments), conflict_count (over-constrained segments), and total_count (total segments analyzed).
 
+    The report also includes is_complete (False when KCL parsing/execution failed before all sketches were analyzed) and kcl_error (None on success, otherwise a dict with phase ("parse" or "execution") and text fields describing the failure). A partial report may still contain sketch entries analyzed prior to the failure.
+
     Args:
         kcl_code (str | None): The KCL code to check constraints for.
         kcl_path (str | None): The path to a KCL file or directory containing a main.kcl file.
