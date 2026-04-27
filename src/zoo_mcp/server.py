@@ -477,6 +477,7 @@ async def mock_execute_kcl(
 @mcp.tool()
 async def multiview_snapshot_of_cad(
     input_file: str,
+    zoom: bool = True,
 ) -> ImageContent | str:
     """Save a multiview snapshot of a CAD file. The input file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
 
@@ -488,6 +489,7 @@ async def multiview_snapshot_of_cad(
 
     Args:
         input_file (str): The path of the file to get the mass from. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
+        zoom (bool): Whether to zoom-to-fit the model before each snapshot. Default is True.
 
     Returns:
         ImageContent | str: The multiview snapshot of the CAD file as an image, or an error message if the operation fails.
@@ -498,6 +500,7 @@ async def multiview_snapshot_of_cad(
     try:
         image = zoo_multiview_snapshot_of_cad(
             input_path=input_file,
+            zoom=zoom,
         )
         return encode_image(image)
     except Exception as e:
@@ -508,6 +511,7 @@ async def multiview_snapshot_of_cad(
 async def multiview_snapshot_of_kcl(
     kcl_code: str | None = None,
     kcl_path: str | None = None,
+    zoom: bool = True,
 ) -> ImageContent | str:
     """Save a multiview snapshot of KCL code. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -520,6 +524,7 @@ async def multiview_snapshot_of_kcl(
     Args:
         kcl_code (str | None): The KCL code to export to a CAD file.
         kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
+        zoom (bool): Whether to zoom-to-fit the model before each snapshot. Default is True.
 
     Returns:
         ImageContent | str: The multiview snapshot of the KCL code as an image, or an error message if the operation fails.
@@ -531,6 +536,7 @@ async def multiview_snapshot_of_kcl(
         image = await zoo_multiview_snapshot_of_kcl(
             kcl_code=kcl_code,
             kcl_path=kcl_path,
+            zoom=zoom,
         )
         return encode_image(image)
     except Exception as e:
@@ -540,6 +546,7 @@ async def multiview_snapshot_of_kcl(
 @mcp.tool()
 async def multi_isometric_snapshot_of_cad(
     input_file: str,
+    zoom: bool = True,
 ) -> ImageContent | str:
     """Save a multi-isometric snapshot of a CAD file showing 4 isometric views. The input file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
 
@@ -551,6 +558,7 @@ async def multi_isometric_snapshot_of_cad(
 
     Args:
         input_file (str): The path of the file to snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
+        zoom (bool): Whether to zoom-to-fit the model before each snapshot. Default is True.
 
     Returns:
         ImageContent | str: The multi-isometric snapshot of the CAD file as an image, or an error message if the operation fails.
@@ -561,6 +569,7 @@ async def multi_isometric_snapshot_of_cad(
     try:
         image = zoo_multi_isometric_snapshot_of_cad(
             input_path=input_file,
+            zoom=zoom,
         )
         return encode_image(image)
     except Exception as e:
@@ -571,6 +580,7 @@ async def multi_isometric_snapshot_of_cad(
 async def multi_isometric_snapshot_of_kcl(
     kcl_code: str | None = None,
     kcl_path: str | None = None,
+    zoom: bool = True,
 ) -> ImageContent | str:
     """Save a multi-isometric snapshot of KCL code showing 4 isometric views. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -583,6 +593,7 @@ async def multi_isometric_snapshot_of_kcl(
     Args:
         kcl_code (str | None): The KCL code to export to a CAD file.
         kcl_path (str | None): The path to a KCL file to export to a CAD file. The path should point to a .kcl file or a directory containing a main.kcl file.
+        zoom (bool): Whether to zoom-to-fit the model before each snapshot. Default is True.
 
     Returns:
         ImageContent | str: The multi-isometric snapshot of the KCL code as an image, or an error message if the operation fails.
@@ -594,6 +605,7 @@ async def multi_isometric_snapshot_of_kcl(
         image = await zoo_multi_isometric_snapshot_of_kcl(
             kcl_code=kcl_code,
             kcl_path=kcl_path,
+            zoom=zoom,
         )
         return encode_image(image)
     except Exception as e:
@@ -604,6 +616,7 @@ async def multi_isometric_snapshot_of_kcl(
 async def snapshot_of_cad(
     input_file: str,
     camera_view: dict[str, list[float]] | str = "isometric",
+    zoom: bool = True,
 ) -> ImageContent | str:
     """Save a snapshot of a CAD file.
 
@@ -616,6 +629,7 @@ async def snapshot_of_cad(
             2. If a dict is provided, supply a dict with the following keys and values:
                "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
                For example camera = {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]} would set the camera to be looking at the origin from the front side (-y direction).
+        zoom (bool): Whether to zoom-to-fit the model before the snapshot. Default is True.
 
     Returns:
         ImageContent | str: The snapshot of the CAD file as an image, or an error message if the operation fails.
@@ -652,6 +666,7 @@ async def snapshot_of_cad(
         image = zoo_snapshot_of_cad(
             input_path=input_file,
             camera=camera,
+            zoom=zoom,
         )
         return encode_image(image)
     except Exception as e:
@@ -663,6 +678,7 @@ async def snapshot_of_kcl(
     kcl_code: str | None = None,
     kcl_path: str | None = None,
     camera_view: dict[str, list[float]] | str = "isometric",
+    zoom: bool = True,
 ) -> ImageContent | str:
     """Save a snapshot of a model represented by KCL. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -676,6 +692,7 @@ async def snapshot_of_kcl(
             2. If a dict is provided, supply a dict with the following keys and values:
                "up" (list of 3 floats) defining the up vector of the camera, "vantage" (list of 3 floats), and "center" (list of 3 floats).
                For example camera = {"up": [0, 0, 1], "vantage": [0, -1, 0], "center": [0, 0, 0]} would set the camera to be looking at the origin from the front side (-y direction).
+        zoom (bool): Whether to zoom-to-fit the model before the snapshot. Default is True.
 
     Returns:
         ImageContent | str: The snapshot of the CAD file as an image, or an error message if the operation fails.
@@ -713,6 +730,7 @@ async def snapshot_of_kcl(
             kcl_code=kcl_code,
             kcl_path=kcl_path,
             camera=camera,
+            zoom=zoom,
         )
         return encode_image(image)
     except Exception as e:

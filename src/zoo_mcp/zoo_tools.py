@@ -1252,6 +1252,7 @@ def zoo_multiview_snapshot_of_cad(
     input_path: Path | str,
     padding: float = 0.1,
     max_image_dimension: int = 512,
+    zoom: bool = True,
 ) -> bytes:
     """Save a multiview snapshot of a CAD file.
 
@@ -1259,6 +1260,7 @@ def zoo_multiview_snapshot_of_cad(
         input_path (Path | str): Path to the CAD file to save a multiview snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         padding (float): The padding to apply to the snapshot. Default is 0.1.
         max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
+        zoom (bool): Whether to zoom-to-fit the model before each snapshot. Default is True.
 
     Returns:
         bytes or None: The JPEG image contents if successful
@@ -1362,26 +1364,27 @@ def zoo_multiview_snapshot_of_cad(
                 )
             )
 
-            focus_id = ModelingCmdId(uuid4())
-            ws.send(
-                WebSocketRequest(
-                    OptionModelingCmdReq(
-                        cmd=ModelingCmd(
-                            OptionZoomToFit(object_ids=[object_id], padding=padding)
-                        ),
-                        cmd_id=ModelingCmdId(focus_id),
+            if zoom:
+                focus_id = ModelingCmdId(uuid4())
+                ws.send(
+                    WebSocketRequest(
+                        OptionModelingCmdReq(
+                            cmd=ModelingCmd(
+                                OptionZoomToFit(object_ids=[object_id], padding=padding)
+                            ),
+                            cmd_id=ModelingCmdId(focus_id),
+                        )
                     )
                 )
-            )
 
-            # Wait for success message.
-            while True:
-                message = ws.recv().model_dump()
-                if message["request_id"] == focus_id:
-                    break
-            if message["success"] is not True:
-                logger.error("Failed to move camera to fit object")
-                raise ZooMCPException("Failed to move camera to fit object")
+                # Wait for success message.
+                while True:
+                    message = ws.recv().model_dump()
+                    if message["request_id"] == focus_id:
+                        break
+                if message["success"] is not True:
+                    logger.error("Failed to move camera to fit object")
+                    raise ZooMCPException("Failed to move camera to fit object")
 
             # Take a snapshot as a JPEG.
             snapshot_id = ModelingCmdId(uuid4())
@@ -1417,6 +1420,7 @@ def zoo_multi_isometric_snapshot_of_cad(
     input_path: Path | str,
     padding: float = 0.1,
     max_image_dimension: int = 512,
+    zoom: bool = True,
 ) -> bytes:
     """Save a multi-isometric snapshot of a CAD file showing 4 isometric views.
 
@@ -1424,6 +1428,7 @@ def zoo_multi_isometric_snapshot_of_cad(
         input_path (Path | str): Path to the CAD file to save a multi-isometric snapshot. The file should be one of the supported formats: .fbx, .gltf, .obj, .ply, .sldprt, .step, .stp, .stl (case-insensitive)
         padding (float): The padding to apply to the snapshot. Default is 0.1.
         max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
+        zoom (bool): Whether to zoom-to-fit the model before each snapshot. Default is True.
 
     Returns:
         bytes or None: The JPEG image contents if successful
@@ -1524,26 +1529,27 @@ def zoo_multi_isometric_snapshot_of_cad(
                 )
             )
 
-            focus_id = ModelingCmdId(uuid4())
-            ws.send(
-                WebSocketRequest(
-                    OptionModelingCmdReq(
-                        cmd=ModelingCmd(
-                            OptionZoomToFit(object_ids=[object_id], padding=padding)
-                        ),
-                        cmd_id=ModelingCmdId(focus_id),
+            if zoom:
+                focus_id = ModelingCmdId(uuid4())
+                ws.send(
+                    WebSocketRequest(
+                        OptionModelingCmdReq(
+                            cmd=ModelingCmd(
+                                OptionZoomToFit(object_ids=[object_id], padding=padding)
+                            ),
+                            cmd_id=ModelingCmdId(focus_id),
+                        )
                     )
                 )
-            )
 
-            # Wait for success message.
-            while True:
-                message = ws.recv().model_dump()
-                if message["request_id"] == focus_id:
-                    break
-            if message["success"] is not True:
-                logger.error("Failed to move camera to fit object")
-                raise ZooMCPException("Failed to move camera to fit object")
+                # Wait for success message.
+                while True:
+                    message = ws.recv().model_dump()
+                    if message["request_id"] == focus_id:
+                        break
+                if message["success"] is not True:
+                    logger.error("Failed to move camera to fit object")
+                    raise ZooMCPException("Failed to move camera to fit object")
 
             # Take a snapshot as a JPEG.
             snapshot_id = ModelingCmdId(uuid4())
@@ -1580,6 +1586,7 @@ async def zoo_multi_isometric_snapshot_of_kcl(
     kcl_path: Path | str | None,
     padding: float = 0.1,
     max_image_dimension: int = 512,
+    zoom: bool = True,
 ) -> bytes:
     """Execute the KCL code and save a multi-isometric snapshot showing 4 isometric views. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -1588,6 +1595,7 @@ async def zoo_multi_isometric_snapshot_of_kcl(
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
         padding (float): The padding to apply to the snapshot. Default is 0.1.
         max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
+        zoom (bool): Whether to zoom-to-fit the model before each snapshot. Default is True.
 
     Returns:
         bytes or None: The JPEG image contents if successful
@@ -1618,7 +1626,10 @@ async def zoo_multi_isometric_snapshot_of_kcl(
                 cast(
                     object,
                     await kcl.execute_code_and_snapshot_views(
-                        kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=views
+                        kcl_code,
+                        kcl.ImageFormat.Jpeg,
+                        snapshot_options=views,
+                        zoom=zoom,
                     ),
                 ),
             )
@@ -1635,6 +1646,7 @@ async def zoo_multi_isometric_snapshot_of_kcl(
                         str(kcl_path_resolved),
                         kcl.ImageFormat.Jpeg,
                         snapshot_options=views,
+                        zoom=zoom,
                     ),
                 ),
             )
@@ -1653,6 +1665,7 @@ async def zoo_multiview_snapshot_of_kcl(
     kcl_path: Path | str | None,
     padding: float = 0.1,
     max_image_dimension: int = 512,
+    zoom: bool = True,
 ) -> bytes:
     """Execute the KCL code and save a multiview snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -1661,6 +1674,7 @@ async def zoo_multiview_snapshot_of_kcl(
         kcl_path (Path | str | None): KCL path, the path should point to a .kcl file or a directory containing a main.kcl file.
         padding (float): The padding to apply to the snapshot. Default is 0.1.
         max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
+        zoom (bool): Whether to zoom-to-fit the model before each snapshot. Default is True.
 
     Returns:
         bytes or None: The JPEG image contents if successful
@@ -1704,7 +1718,10 @@ async def zoo_multiview_snapshot_of_kcl(
                 cast(
                     object,
                     await kcl.execute_code_and_snapshot_views(
-                        kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=views
+                        kcl_code,
+                        kcl.ImageFormat.Jpeg,
+                        snapshot_options=views,
+                        zoom=zoom,
                     ),
                 ),
             )
@@ -1721,6 +1738,7 @@ async def zoo_multiview_snapshot_of_kcl(
                         str(kcl_path_resolved),
                         kcl.ImageFormat.Jpeg,
                         snapshot_options=views,
+                        zoom=zoom,
                     ),
                 ),
             )
@@ -1739,6 +1757,7 @@ def zoo_snapshot_of_cad(
     camera: OptionDefaultCameraLookAt | OptionViewIsometric | None = None,
     padding: float = 0.1,
     max_image_dimension: int = 512,
+    zoom: bool = True,
 ) -> bytes:
     """Save a single view snapshot of a CAD file.
 
@@ -1747,6 +1766,7 @@ def zoo_snapshot_of_cad(
         camera (OptionDefaultCameraLookAt | OptionViewIsometric | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
         padding (float): The padding to apply to the snapshot. Default is 0.1.
         max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
+        zoom (bool): Whether to zoom-to-fit the model before the snapshot. Default is True.
 
     Returns:
         bytes or None: The JPEG image contents if successful
@@ -1828,25 +1848,26 @@ def zoo_snapshot_of_cad(
             )
         )
 
-        focus_id = ModelingCmdId(uuid4())
-        ws.send(
-            WebSocketRequest(
-                OptionModelingCmdReq(
-                    cmd=ModelingCmd(
-                        OptionZoomToFit(object_ids=[object_id], padding=padding)
-                    ),
-                    cmd_id=ModelingCmdId(focus_id),
+        if zoom:
+            focus_id = ModelingCmdId(uuid4())
+            ws.send(
+                WebSocketRequest(
+                    OptionModelingCmdReq(
+                        cmd=ModelingCmd(
+                            OptionZoomToFit(object_ids=[object_id], padding=padding)
+                        ),
+                        cmd_id=ModelingCmdId(focus_id),
+                    )
                 )
             )
-        )
 
-        # Wait for success message.
-        while True:
-            message = ws.recv().model_dump()
-            if message["request_id"] == focus_id:
-                break
-        if message["success"] is not True:
-            raise ZooMCPException("Failed to zoom to fit on CAD file")
+            # Wait for success message.
+            while True:
+                message = ws.recv().model_dump()
+                if message["request_id"] == focus_id:
+                    break
+            if message["success"] is not True:
+                raise ZooMCPException("Failed to zoom to fit on CAD file")
 
         # Take a snapshot as a JPEG.
         snapshot_id = ModelingCmdId(uuid4())
@@ -1877,6 +1898,7 @@ async def zoo_snapshot_of_kcl(
     camera: kcl.CameraLookAt | None = None,
     padding: float = 0.1,
     max_image_dimension: int = 512,
+    zoom: bool = True,
 ) -> bytes:
     """Execute the KCL code and save a single view snapshot of the resulting CAD model. Either kcl_code or kcl_path must be provided. If kcl_path is provided, it should point to a .kcl file or a directory containing a main.kcl file.
 
@@ -1886,6 +1908,7 @@ async def zoo_snapshot_of_kcl(
         camera (kcl.CameraLookAt | None): The camera to use for the snapshot. If None, a default camera (isometric) will be used.
         padding (float): The padding to apply to the snapshot. Default is 0.1.
         max_image_dimension (int): The maximum width or height of the returned image in pixels. Default is 512.
+        zoom (bool): Whether to zoom-to-fit the model before the snapshot. Default is True.
 
     Returns:
         bytes or None: The JPEG image contents if successful
@@ -1904,7 +1927,10 @@ async def zoo_snapshot_of_kcl(
             cast(
                 object,
                 await kcl.execute_code_and_snapshot_views(
-                    kcl_code, kcl.ImageFormat.Jpeg, snapshot_options=[view]
+                    kcl_code,
+                    kcl.ImageFormat.Jpeg,
+                    snapshot_options=[view],
+                    zoom=zoom,
                 ),
             ),
         )
@@ -1921,6 +1947,7 @@ async def zoo_snapshot_of_kcl(
                     str(kcl_path_resolved),
                     kcl.ImageFormat.Jpeg,
                     snapshot_options=[view],
+                    zoom=zoom,
                 ),
             ),
         )
